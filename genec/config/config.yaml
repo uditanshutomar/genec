@@ -1,0 +1,37 @@
+fusion:
+  alpha: 0.5
+  edge_threshold: 0.1
+
+evolution:
+  window_months: 12
+  min_commits: 2
+
+clustering:
+  algorithm: louvain
+  min_cluster_size: 3
+  max_cluster_size: 15
+  min_cohesion: 0.5
+  resolution: 1.0
+
+llm:
+  provider: anthropic
+  model: claude-sonnet-4-20250514
+  max_tokens: 6000
+  temperature: 0.3
+  timeout: 120
+  api_key: null  # Set via ANTHROPIC_API_KEY environment variable
+
+verification:
+  enable_syntactic: true
+  enable_semantic: true
+  enable_behavioral: true
+  java_compiler: javac
+  maven_command: mvn
+  gradle_command: gradle
+
+logging:
+  level: INFO
+
+cache:
+  enable: true
+  directory: data/outputs/cache
