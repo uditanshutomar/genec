@@ -1,6 +1,7 @@
 """Java source code parser using javalang with JDT fallback."""
 
 import os
+import re
 import javalang
 from typing import List, Dict, Optional, Set, Tuple
 from pathlib import Path
@@ -48,6 +49,12 @@ class ParsedField:
 
 class JavaParser:
     """Parser for Java source code using javalang."""
+
+    _KEYWORD_BLACKLIST = {
+        'if', 'for', 'while', 'switch', 'return', 'new', 'super', 'this',
+        'catch', 'throw', 'else', 'case', 'do', 'try', 'default', 'assert',
+        'synchronized'
+    }
 
     def __init__(self):
         """Initialize the Java parser."""
@@ -400,6 +407,8 @@ class JavaParser:
             if not name_node:
                 continue
             param_type = self._node_text(type_node, source_bytes).strip() if type_node else ""
+            if param_type:
+                param_type = re.sub(r'\s*\[\s*\]', '[]', param_type)
             param_name = self._node_text(name_node, source_bytes).strip()
             parameters.append({
                 'name': param_name,
@@ -544,6 +553,22 @@ class JavaParser:
         except Exception as e:
             self.logger.debug(f"Failed to extract method calls: {e}")
 
+        if called_methods:
+            return called_methods
+
+        # Tree-sitter fallback
+        ts_methods = self._extract_method_calls_tree_sitter(method_body)
+        if ts_methods:
+            return ts_methods
+
+        # Regex fallback as last resort
+        tokens = re.findall(r'\b[A-Za-z_][A-Za-z0-9_]*\s*(?=\()', method_body)
+        return {
+            token.strip()
+            for token in tokens
+            if token and token.strip() not in self._KEYWORD_BLACKLIST
+        }
+
         return called_methods
 
     def extract_field_accesses(self, method_body: str) -> Set[str]:
@@ -569,19 +594,116 @@ class JavaParser:
         except Exception as e:
             self.logger.debug(f"Failed to extract field accesses: {e}")
 
-        return accessed_fields
+        if accessed_fields:
+            return accessed_fields
+
+        ts_fields = self._extract_field_accesses_tree_sitter(method_body)
+        if ts_fields:
+            return ts_fields
+
+        tokens = {
+            token for token in re.findall(r'\b[A-Za-z_][A-Za-z0-9_]*\b', method_body)
+            if token not in self._KEYWORD_BLACKLIST and token not in {'this', 'super'}
+        }
+        return tokens
+
+    def _extract_method_calls_tree_sitter(self, method_body: str) -> Set[str]:
+        """Tree-sitter fallback for extracting method calls."""
+        if not self.ts_parser or not method_body.strip():
+            return set()
+
+        try:
+            wrapped = f"class Dummy {{ void dummy() {{ {method_body} }} }}"
+            source_bytes = wrapped.encode('utf-8')
+            tree = self.ts_parser.parse(source_bytes)
+            root = tree.root_node
+
+            calls: Set[str] = set()
+            for node in self._collect_descendants(root, "method_invocation"):
+                name_node = node.child_by_field_name("name")
+                if name_node:
+                    name = self._node_text(name_node, source_bytes).strip()
+                    if name:
+                        calls.add(name)
+
+            for node in self._collect_descendants(root, "super_method_invocation"):
+                name_node = node.child_by_field_name("name")
+                if name_node:
+                    name = self._node_text(name_node, source_bytes).strip()
+                    if name:
+                        calls.add(name)
+
+            return calls
+        except Exception as exc:
+            self.logger.debug(f"Tree-sitter method call extraction failed: {exc}")
+            return set()
+
+    def _extract_field_accesses_tree_sitter(self, method_body: str) -> Set[str]:
+        """Tree-sitter fallback for extracting field accesses."""
+        if not self.ts_parser or not method_body.strip():
+            return set()
+
+        try:
+            wrapped = f"class Dummy {{ void dummy() {{ {method_body} }} }}"
+            source_bytes = wrapped.encode('utf-8')
+            tree = self.ts_parser.parse(source_bytes)
+            root = tree.root_node
+
+            fields: Set[str] = set()
+
+            for node in self._collect_descendants(root, "field_access"):
+                field_node = node.child_by_field_name("field")
+                if field_node:
+                    name = self._node_text(field_node, source_bytes).strip()
+                    if name:
+                        fields.add(name)
+
+            for node in self._collect_descendants(root, "identifier"):
+                name = self._node_text(node, source_bytes).strip()
+                if name and name not in {'this', 'super'}:
+                    fields.add(name)
+
+            return fields
+        except Exception as exc:
+            self.logger.debug(f"Tree-sitter field access extraction failed: {exc}")
+            return set()
+
+    def _flatten_reference_type_name(self, type_ref) -> str:
+        """Build fully qualified type name from a javalang reference."""
+        parts: List[str] = []
+        current = type_ref
+        while current is not None:
+            name = getattr(current, 'name', '')
+            qualifier = getattr(current, 'qualifier', None)
+            if qualifier:
+                name = f"{qualifier}.{name}" if name else qualifier
+            if name:
+                parts.append(name)
+            current = getattr(current, 'sub_type', None)
+        return '.'.join(parts) if parts else str(type_ref)
 
     def _get_type_name(self, type_ref) -> str:
-        """Extract type name from type reference."""
+        """Extract type name from type reference, preserving array dimensions."""
         if type_ref is None:
             return "void"
         if isinstance(type_ref, str):
-            return type_ref
-        if hasattr(type_ref, 'name'):
-            return type_ref.name
-        if hasattr(type_ref, 'type'):
-            return self._get_type_name(type_ref.type)
-        return str(type_ref)
+            base_name = type_ref.strip()
+        elif hasattr(type_ref, 'name') or hasattr(type_ref, 'sub_type'):
+            base_name = self._flatten_reference_type_name(type_ref)
+        elif hasattr(type_ref, 'type'):
+            base_name = self._get_type_name(type_ref.type)
+        else:
+            base_name = str(type_ref)
+
+        dimensions = getattr(type_ref, 'dimensions', None)
+        if dimensions:
+            try:
+                dim_count = len(dimensions)
+            except TypeError:
+                dim_count = 1
+            base_name += '[]' * dim_count
+
+        return base_name
 
     def _build_signature(self, method_name: str, parameters: List[Dict[str, str]]) -> str:
         """Build method signature string."""
