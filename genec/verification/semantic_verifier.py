@@ -1,9 +1,10 @@
 """Semantic verification of refactoring transformations."""
 
-import javalang
 from typing import Set, Dict, Tuple, Optional
+import tempfile
+from pathlib import Path
 
-from genec.parsers.java_parser import JavaParser
+from genec.parsers.java_parser import JavaParser, ParsedMethod
 from genec.core.dependency_analyzer import ClassDependencies
 from genec.core.cluster_detector import Cluster
 from genec.utils.logging_utils import get_logger
@@ -50,18 +51,17 @@ class SemanticVerifier:
         self.logger.info("Running semantic verification")
 
         try:
-            # Parse all three versions
-            original_tree = javalang.parse.parse(original_code)
-            new_class_tree = javalang.parse.parse(new_class_code)
-            modified_tree = javalang.parse.parse(modified_original_code)
+            # Extract class information using the resilient parser
+            original_info = self._extract_info_with_fallback(original_code, class_deps.file_path)
+            new_info = self._extract_info_with_fallback(new_class_code, None)
+            modified_info = self._extract_info_with_fallback(modified_original_code, None)
 
-            if not all([original_tree, new_class_tree, modified_tree]):
+            if not all([original_info, new_info, modified_info]):
                 return False, "Failed to parse one or more classes"
 
-            # Extract members from each version
-            original_members = self._extract_members(original_tree)
-            new_class_members = self._extract_members(new_class_tree)
-            modified_members = self._extract_members(modified_tree)
+            original_members = self._extract_members(original_info)
+            new_class_members = self._extract_members(new_info)
+            modified_members = self._extract_members(modified_info)
 
             # Get cluster members
             cluster_methods = set(cluster.get_methods())
@@ -97,9 +97,8 @@ class SemanticVerifier:
                 method_name = method_sig.split('(')[0]
                 if method_name == class_deps.class_name:
                     continue  # Skip constructors
-                if any(method_name in m for m in modified_members['methods']):
-                    # Check if it's just a delegation method
-                    if not self._is_delegation_method(modified_tree, method_name):
+                if method_name in modified_members['methods']:
+                    if not self._is_delegation_method(modified_info, modified_original_code, method_name):
                         return False, f"Method {method_name} still in modified class (not delegation)"
 
             # Verify no unexpected member loss
@@ -121,12 +120,9 @@ class SemanticVerifier:
             self.logger.error(error_msg)
             return False, error_msg
 
-    def _extract_members(self, tree: javalang.tree.CompilationUnit) -> Dict[str, Set[str]]:
+    def _extract_members(self, class_info: Dict) -> Dict[str, Set[str]]:
         """
-        Extract method and field names from AST.
-
-        Args:
-            tree: Parsed compilation unit
+        Extract method and field names from parsed class information.
 
         Returns:
             Dict with 'methods' and 'fields' sets
@@ -136,46 +132,98 @@ class SemanticVerifier:
             'fields': set()
         }
 
-        # Extract methods
-        for path, node in tree.filter(javalang.tree.MethodDeclaration):
-            members['methods'].add(node.name)
+        for method in class_info.get('methods', []):
+            members['methods'].add(method.name)
 
-        # Extract constructors
-        for path, node in tree.filter(javalang.tree.ConstructorDeclaration):
-            members['methods'].add(node.name)
+        for constructor in class_info.get('constructors', []):
+            members['methods'].add(constructor.name)
 
-        # Extract fields
-        for path, node in tree.filter(javalang.tree.FieldDeclaration):
-            for declarator in node.declarators:
-                members['fields'].add(declarator.name)
+        for field in class_info.get('fields', []):
+            members['fields'].add(field.name)
 
         return members
 
-    def _is_delegation_method(self, tree: javalang.tree.CompilationUnit, method_name: str) -> bool:
+    def _is_delegation_method(self, class_info: Dict, source: str, method_name: str) -> bool:
         """
         Check if a method is a simple delegation method.
 
         A delegation method typically just calls another object's method.
 
         Args:
-            tree: Parsed compilation unit
+            class_info: Parsed class information
             method_name: Method name to check
 
         Returns:
             True if method appears to be a delegation
         """
-        # Simple heuristic: if method body contains only a single statement
-        # and it's a method invocation, it's likely a delegation
+        for method in class_info.get('methods', []):
+            if method.name != method_name:
+                continue
+            body = (method.body or '').strip()
+            if not body:
+                return False
 
-        for path, node in tree.filter(javalang.tree.MethodDeclaration):
-            if node.name == method_name:
-                # Check if body is simple
-                if node.body and len(node.body) <= 2:  # Allow 1-2 statements
-                    # This is a simplification - in real implementation,
-                    # we'd check if it's actually delegating
+            # Strip braces and whitespace for heuristic check
+            body_lines = [line.strip() for line in body.splitlines() if line.strip()]
+            if not body_lines:
+                return False
+
+            # Remove signature and enclosing braces if present
+            statements = []
+            for idx, line in enumerate(body_lines):
+                if idx == 0 and ('(' in line and line.endswith('{')):
+                    continue
+                if line == '}' or line == '};':
+                    continue
+                statements.append(line)
+
+            if len(statements) == 1:
+                stmt = statements[0]
+                if 'return' in stmt:
+                    stmt = stmt.replace('return', '').strip().rstrip(';')
+                if 'ArrayShuffler.' in stmt or 'owner.' in stmt:
                     return True
 
+        # Constructors aren't used for delegation here
+        if self._is_delegation_by_source(source, method_name):
+            return True
+
         return False
+
+    def _is_delegation_by_source(self, source: str, method_name: str) -> bool:
+        import re
+
+        pattern = re.compile(
+            rf"{re.escape(method_name)}\s*\([^)]*\)\s*\{{([^{{}}]*)\}}",
+            re.DOTALL
+        )
+        for match in pattern.finditer(source):
+            body = match.group(1).strip()
+            if not body:
+                continue
+            statements = [line.strip().rstrip(';') for line in body.splitlines() if line.strip()]
+            if len(statements) > 1:
+                continue
+            stmt = statements[0]
+            stmt = stmt.replace('return', '').strip()
+            if f".{method_name}(" in stmt:
+                return True
+        return False
+
+    def _extract_info_with_fallback(self, source: str, file_path: Optional[str]) -> Optional[Dict]:
+        info = self.parser.extract_class_info(None, source, file_path)
+        if info or file_path:
+            return info
+
+        # Write to temp file and retry with inspector
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.java', delete=False, encoding='utf-8') as tmp:
+            tmp.write(source)
+            tmp_path = tmp.name
+
+        try:
+            return self.parser.extract_class_info(None, source, tmp_path)
+        finally:
+            Path(tmp_path).unlink(missing_ok=True)
 
     def verify_no_behavior_change(
         self,

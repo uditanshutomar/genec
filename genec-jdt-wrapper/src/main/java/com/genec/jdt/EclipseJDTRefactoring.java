@@ -213,6 +213,32 @@ public class EclipseJDTRefactoring {
         // Add accessors for extracted fields to maintain encapsulation
         addFieldAccessors(newAst, newClass, extractedFields);
 
+        // Qualify calls to original static helpers that remain in the source class
+        final Set<String> extractedMethodNames = new HashSet<>();
+        for (MethodDeclaration method : extractedMethods) {
+            extractedMethodNames.add(method.getName().getIdentifier());
+        }
+        final Set<String> originalMethodNames = new HashSet<>();
+        for (Object decl : originalTypeDecl.bodyDeclarations()) {
+            if (decl instanceof MethodDeclaration) {
+                MethodDeclaration originalMethod = (MethodDeclaration) decl;
+                originalMethodNames.add(originalMethod.getName().getIdentifier());
+            }
+        }
+        final String originalClassName = originalTypeDecl.getName().getIdentifier();
+        newClass.accept(new ASTVisitor() {
+            @Override
+            public boolean visit(MethodInvocation node) {
+                if (node.getExpression() == null) {
+                    String invokedName = node.getName().getIdentifier();
+                    if (originalMethodNames.contains(invokedName) && !extractedMethodNames.contains(invokedName)) {
+                        node.setExpression(newAst.newSimpleName(originalClassName));
+                    }
+                }
+                return true;
+            }
+        });
+
         newCu.types().add(newClass);
 
         // Convert newly created AST to source code
@@ -233,15 +259,25 @@ public class EclipseJDTRefactoring {
         // Find methods to extract and replace their bodies with delegation to helper class
         Set<String> methodSignatures = normalizeMethodSignatures(spec.getMethods());
         String helperFieldName = toCamelCase(spec.getNewClassName());
+        boolean needsHelperField = false;
         for (Object bodyDecl : originalTypeDecl.bodyDeclarations()) {
             if (bodyDecl instanceof MethodDeclaration) {
                 MethodDeclaration method = (MethodDeclaration) bodyDecl;
                 String signature = getMethodSignature(method);
                 if (methodSignatures.contains(signature)) {
+                    boolean isStaticMethod = Modifier.isStatic(method.getModifiers());
+                    if (!isStaticMethod) {
+                        needsHelperField = true;
+                    }
+
                     Block newBody = ast.newBlock();
 
                     MethodInvocation invocation = ast.newMethodInvocation();
-                    invocation.setExpression(ast.newSimpleName(helperFieldName));
+                    if (isStaticMethod) {
+                        invocation.setExpression(ast.newSimpleName(spec.getNewClassName()));
+                    } else {
+                        invocation.setExpression(ast.newSimpleName(helperFieldName));
+                    }
                     invocation.setName(ast.newSimpleName(method.getName().getIdentifier()));
 
                     List<SingleVariableDeclaration> params = method.parameters();
@@ -303,20 +339,28 @@ public class EclipseJDTRefactoring {
         Map<String, FieldMetadata> fieldMetadata = collectExtractedFieldMetadata();
         Map<String, String> getterNames = new HashMap<>();
         Map<String, String> setterNames = new HashMap<>();
+        Map<String, String> preIncrementNames = new HashMap<>();
+        Map<String, String> postIncrementNames = new HashMap<>();
+        Map<String, String> preDecrementNames = new HashMap<>();
+        Map<String, String> postDecrementNames = new HashMap<>();
         for (String fieldName : fieldNames) {
             FieldMetadata metadata = fieldMetadata.get(fieldName);
             if (metadata == null) {
                 continue;
             }
             getterNames.put(fieldName, "get" + capitalize(fieldName));
-            if (!metadata.isFinal) {
-                setterNames.put(fieldName, "set" + capitalize(fieldName));
+            setterNames.put(fieldName, "set" + capitalize(fieldName));
+            if (supportsIncrementOperations(metadata.type) && !metadata.isFinal) {
+                preIncrementNames.put(fieldName, "increment" + capitalize(fieldName));
+                postIncrementNames.put(fieldName, "postIncrement" + capitalize(fieldName));
+                preDecrementNames.put(fieldName, "decrement" + capitalize(fieldName));
+                postDecrementNames.put(fieldName, "postDecrement" + capitalize(fieldName));
             }
         }
 
         final Set<String> extractedFieldNames = new HashSet<>(fieldNames);
 
-        if (!extractedFieldNames.isEmpty()) {
+        if (needsHelperField && !extractedFieldNames.isEmpty()) {
             originalTypeDecl.accept(new ASTVisitor() {
                 @Override
                 public boolean visit(SimpleName node) {
@@ -324,7 +368,18 @@ public class EclipseJDTRefactoring {
                     if (!extractedFieldNames.contains(identifier)) {
                         return true;
                     }
-                    replaceFieldReference(rewrite, node, identifier, helperFieldName, getterNames, setterNames);
+                    replaceFieldReference(
+                        rewrite,
+                        node,
+                        identifier,
+                        helperFieldName,
+                        getterNames,
+                        setterNames,
+                        preIncrementNames,
+                        postIncrementNames,
+                        preDecrementNames,
+                        postDecrementNames
+                    );
                     return false;
                 }
 
@@ -337,34 +392,47 @@ public class EclipseJDTRefactoring {
                     if (!extractedFieldNames.contains(identifier)) {
                         return true;
                     }
-                    replaceFieldReference(rewrite, node, identifier, helperFieldName, getterNames, setterNames);
+                    replaceFieldReference(
+                        rewrite,
+                        node,
+                        identifier,
+                        helperFieldName,
+                        getterNames,
+                        setterNames,
+                        preIncrementNames,
+                        postIncrementNames,
+                        preDecrementNames,
+                        postDecrementNames
+                    );
                     return false;
                 }
             });
         }
 
-        // Add field for the extracted class instance
-        VariableDeclarationFragment fragment = ast.newVariableDeclarationFragment();
-        fragment.setName(ast.newSimpleName(toCamelCase(spec.getNewClassName())));
+        if (needsHelperField) {
+            // Add field for the extracted class instance
+            VariableDeclarationFragment fragment = ast.newVariableDeclarationFragment();
+            fragment.setName(ast.newSimpleName(helperFieldName));
 
-        ClassInstanceCreation helperInit = ast.newClassInstanceCreation();
-        helperInit.setType(ast.newSimpleType(ast.newSimpleName(spec.getNewClassName())));
-        fragment.setInitializer(helperInit);
+            ClassInstanceCreation helperInit = ast.newClassInstanceCreation();
+            helperInit.setType(ast.newSimpleType(ast.newSimpleName(spec.getNewClassName())));
+            fragment.setInitializer(helperInit);
 
-        FieldDeclaration newField = ast.newFieldDeclaration(fragment);
-        newField.setType(ast.newSimpleType(ast.newSimpleName(spec.getNewClassName())));
-        newField.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PRIVATE_KEYWORD));
+            FieldDeclaration newField = ast.newFieldDeclaration(fragment);
+            newField.setType(ast.newSimpleType(ast.newSimpleName(spec.getNewClassName())));
+            newField.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PRIVATE_KEYWORD));
 
-        // Add Javadoc
-        Javadoc javadoc = ast.newJavadoc();
-        TagElement tag = ast.newTagElement();
-        TextElement text = ast.newTextElement();
-        text.setText("Extracted functionality - created by GenEC refactoring.");
-        tag.fragments().add(text);
-        javadoc.tags().add(tag);
-        newField.setJavadoc(javadoc);
+            // Add Javadoc
+            Javadoc javadoc = ast.newJavadoc();
+            TagElement tag = ast.newTagElement();
+            TextElement text = ast.newTextElement();
+            text.setText("Extracted functionality - created by GenEC refactoring.");
+            tag.fragments().add(text);
+            javadoc.tags().add(tag);
+            newField.setJavadoc(javadoc);
 
-        listRewrite.insertFirst(newField, null);
+            listRewrite.insertFirst(newField, null);
+        }
 
         // Apply changes to document
         Document document = new Document(originalSource);
@@ -455,10 +523,6 @@ public class EclipseJDTRefactoring {
                     || keyword == Modifier.ModifierKeyword.PRIVATE_KEYWORD) {
                     continue;
                 }
-                if (keyword == Modifier.ModifierKeyword.FINAL_KEYWORD && metadata.isFinal) {
-                    newField.modifiers().add(targetAst.newModifier(Modifier.ModifierKeyword.FINAL_KEYWORD));
-                    continue;
-                }
                 if (keyword != Modifier.ModifierKeyword.FINAL_KEYWORD) {
                     newField.modifiers().add(targetAst.newModifier(keyword));
                 }
@@ -494,10 +558,6 @@ public class EclipseJDTRefactoring {
 
             newClass.bodyDeclarations().add(getter);
 
-            if (info.isFinal) {
-                continue;
-            }
-
             MethodDeclaration setter = targetAst.newMethodDeclaration();
             setter.setName(targetAst.newSimpleName("set" + capitalize(info.name)));
             setter.modifiers().add(targetAst.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
@@ -519,6 +579,9 @@ public class EclipseJDTRefactoring {
             setter.setBody(setterBody);
 
             newClass.bodyDeclarations().add(setter);
+            if (supportsIncrementOperations(info.originalType) && !info.isFinal) {
+                addIncrementHelpers(targetAst, newClass, info);
+            }
         }
     }
 
@@ -553,7 +616,11 @@ public class EclipseJDTRefactoring {
         String fieldName,
         String helperFieldName,
         Map<String, String> getterNames,
-        Map<String, String> setterNames
+        Map<String, String> setterNames,
+        Map<String, String> preIncrementNames,
+        Map<String, String> postIncrementNames,
+        Map<String, String> preDecrementNames,
+        Map<String, String> postDecrementNames
     ) {
         ASTNode parent = fieldNode.getParent();
 
@@ -604,57 +671,40 @@ public class EclipseJDTRefactoring {
 
         if (parent instanceof PostfixExpression) {
             PostfixExpression postfix = (PostfixExpression) parent;
-            String setterName = setterNames.get(fieldName);
-            String getterName = getterNames.get(fieldName);
-            if (setterName == null || getterName == null) {
+            String methodName = postfix.getOperator() == PostfixExpression.Operator.INCREMENT
+                ? postIncrementNames.get(fieldName)
+                : postDecrementNames.get(fieldName);
+            if (methodName == null) {
                 return;
             }
-            MethodInvocation getterCall = createHelperInvocation(getterName, helperFieldName);
-            InfixExpression delta = ast.newInfixExpression();
-            delta.setLeftOperand(getterCall);
-            delta.setRightOperand(ast.newNumberLiteral("1"));
-            delta.setOperator(
-                postfix.getOperator() == PostfixExpression.Operator.INCREMENT
-                    ? InfixExpression.Operator.PLUS
-                    : InfixExpression.Operator.MINUS
-            );
-
-            MethodInvocation setterCall = createHelperInvocation(setterName, helperFieldName);
-            setterCall.arguments().add(delta);
-
+            MethodInvocation helperCall = createHelperInvocation(methodName, helperFieldName);
+            if (helperCall == null) {
+                return;
+            }
             if (postfix.getParent() instanceof ExpressionStatement) {
-                rewrite.replace(postfix.getParent(), ast.newExpressionStatement(setterCall), null);
+                rewrite.replace(postfix.getParent(), ast.newExpressionStatement(helperCall), null);
             } else {
-                rewrite.replace(postfix, setterCall, null);
+                rewrite.replace(postfix, helperCall, null);
             }
             return;
         }
 
         if (parent instanceof PrefixExpression) {
             PrefixExpression prefix = (PrefixExpression) parent;
-            String setterName = setterNames.get(fieldName);
-            String getterName = getterNames.get(fieldName);
-            if (setterName == null || getterName == null) {
+            String methodName = prefix.getOperator() == PrefixExpression.Operator.INCREMENT
+                ? preIncrementNames.get(fieldName)
+                : preDecrementNames.get(fieldName);
+            if (methodName == null) {
                 return;
             }
-
-            MethodInvocation getterCall = createHelperInvocation(getterName, helperFieldName);
-            InfixExpression delta = ast.newInfixExpression();
-            delta.setLeftOperand(getterCall);
-            delta.setRightOperand(ast.newNumberLiteral("1"));
-            delta.setOperator(
-                prefix.getOperator() == PrefixExpression.Operator.INCREMENT
-                    ? InfixExpression.Operator.PLUS
-                    : InfixExpression.Operator.MINUS
-            );
-
-            MethodInvocation setterCall = createHelperInvocation(setterName, helperFieldName);
-            setterCall.arguments().add(delta);
-
+            MethodInvocation helperCall = createHelperInvocation(methodName, helperFieldName);
+            if (helperCall == null) {
+                return;
+            }
             if (prefix.getParent() instanceof ExpressionStatement) {
-                rewrite.replace(prefix.getParent(), ast.newExpressionStatement(setterCall), null);
+                rewrite.replace(prefix.getParent(), ast.newExpressionStatement(helperCall), null);
             } else {
-                rewrite.replace(prefix, setterCall, null);
+                rewrite.replace(prefix, helperCall, null);
             }
             return;
         }
@@ -702,6 +752,87 @@ public class EclipseJDTRefactoring {
         return null;
     }
 
+    private boolean supportsIncrementOperations(Type type) {
+        if (!(type instanceof PrimitiveType)) {
+            return false;
+        }
+        PrimitiveType.Code code = ((PrimitiveType) type).getPrimitiveTypeCode();
+        return code == PrimitiveType.INT
+            || code == PrimitiveType.LONG
+            || code == PrimitiveType.SHORT
+            || code == PrimitiveType.BYTE
+            || code == PrimitiveType.FLOAT
+            || code == PrimitiveType.DOUBLE
+            || code == PrimitiveType.CHAR;
+    }
+
+    private void addIncrementHelpers(AST targetAst, TypeDeclaration newClass, ExtractedFieldInfo info) {
+        String capitalized = capitalize(info.name);
+
+        MethodDeclaration prefixInc = targetAst.newMethodDeclaration();
+        prefixInc.setName(targetAst.newSimpleName("increment" + capitalized));
+        prefixInc.modifiers().add(targetAst.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+        prefixInc.setReturnType2((Type) ASTNode.copySubtree(targetAst, info.originalType));
+        Block prefixIncBody = targetAst.newBlock();
+        PrefixExpression prefixIncExpr = targetAst.newPrefixExpression();
+        prefixIncExpr.setOperator(PrefixExpression.Operator.INCREMENT);
+        prefixIncExpr.setOperand(createFieldAccess(targetAst, info.name));
+        ReturnStatement prefixIncReturn = targetAst.newReturnStatement();
+        prefixIncReturn.setExpression(prefixIncExpr);
+        prefixIncBody.statements().add(prefixIncReturn);
+        prefixInc.setBody(prefixIncBody);
+        newClass.bodyDeclarations().add(prefixInc);
+
+        MethodDeclaration postInc = targetAst.newMethodDeclaration();
+        postInc.setName(targetAst.newSimpleName("postIncrement" + capitalized));
+        postInc.modifiers().add(targetAst.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+        postInc.setReturnType2((Type) ASTNode.copySubtree(targetAst, info.originalType));
+        Block postIncBody = targetAst.newBlock();
+        ReturnStatement postIncReturn = targetAst.newReturnStatement();
+        PostfixExpression postIncExpr = targetAst.newPostfixExpression();
+        postIncExpr.setOperator(PostfixExpression.Operator.INCREMENT);
+        postIncExpr.setOperand(createFieldAccess(targetAst, info.name));
+        postIncReturn.setExpression(postIncExpr);
+        postIncBody.statements().add(postIncReturn);
+        postInc.setBody(postIncBody);
+        newClass.bodyDeclarations().add(postInc);
+
+        MethodDeclaration prefixDec = targetAst.newMethodDeclaration();
+        prefixDec.setName(targetAst.newSimpleName("decrement" + capitalized));
+        prefixDec.modifiers().add(targetAst.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+        prefixDec.setReturnType2((Type) ASTNode.copySubtree(targetAst, info.originalType));
+        Block prefixDecBody = targetAst.newBlock();
+        PrefixExpression prefixDecExpr = targetAst.newPrefixExpression();
+        prefixDecExpr.setOperator(PrefixExpression.Operator.DECREMENT);
+        prefixDecExpr.setOperand(createFieldAccess(targetAst, info.name));
+        ReturnStatement prefixDecReturn = targetAst.newReturnStatement();
+        prefixDecReturn.setExpression(prefixDecExpr);
+        prefixDecBody.statements().add(prefixDecReturn);
+        prefixDec.setBody(prefixDecBody);
+        newClass.bodyDeclarations().add(prefixDec);
+
+        MethodDeclaration postDec = targetAst.newMethodDeclaration();
+        postDec.setName(targetAst.newSimpleName("postDecrement" + capitalized));
+        postDec.modifiers().add(targetAst.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+        postDec.setReturnType2((Type) ASTNode.copySubtree(targetAst, info.originalType));
+        Block postDecBody = targetAst.newBlock();
+        ReturnStatement postDecReturn = targetAst.newReturnStatement();
+        PostfixExpression postDecExpr = targetAst.newPostfixExpression();
+        postDecExpr.setOperator(PostfixExpression.Operator.DECREMENT);
+        postDecExpr.setOperand(createFieldAccess(targetAst, info.name));
+        postDecReturn.setExpression(postDecExpr);
+        postDecBody.statements().add(postDecReturn);
+        postDec.setBody(postDecBody);
+        newClass.bodyDeclarations().add(postDec);
+    }
+
+    private FieldAccess createFieldAccess(AST targetAst, String fieldName) {
+        FieldAccess access = targetAst.newFieldAccess();
+        access.setExpression(targetAst.newThisExpression());
+        access.setName(targetAst.newSimpleName(fieldName));
+        return access;
+    }
+
     /**
      * Get method signature in format: methodName(Type1,Type2,...)
      */
@@ -713,7 +844,20 @@ public class EclipseJDTRefactoring {
         List<SingleVariableDeclaration> params = method.parameters();
         for (int i = 0; i < params.size(); i++) {
             if (i > 0) sig.append(",");
-            sig.append(params.get(i).getType().toString());
+            SingleVariableDeclaration param = params.get(i);
+
+            // Handle varargs: last parameter might be varargs
+            if (param.isVarargs()) {
+                // For varargs, append the type + "..."
+                String typeStr = param.getType().toString();
+                // Remove any existing [] from the type since varargs uses ...
+                if (typeStr.endsWith("[]")) {
+                    typeStr = typeStr.substring(0, typeStr.length() - 2);
+                }
+                sig.append(typeStr).append("...");
+            } else {
+                sig.append(param.getType().toString());
+            }
         }
 
         sig.append(")");

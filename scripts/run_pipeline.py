@@ -113,6 +113,43 @@ def main():
     else:
         print("No verified suggestions generated.")
 
+    # Persist all suggestions (including failed ones) for debugging
+    if result.suggestions:
+        suggestion_dir = output_dir / result.class_name
+        suggestion_dir.mkdir(parents=True, exist_ok=True)
+
+        status_by_cluster = {
+            verification.suggestion_id: verification.status
+            for verification in result.verification_results
+        }
+
+        for idx, suggestion in enumerate(result.suggestions, 1):
+            status = status_by_cluster.get(suggestion.cluster_id, "NOT_VERIFIED")
+            prefix = f"{idx:02d}_{suggestion.proposed_class_name}_{status}"
+
+            new_class_path = suggestion_dir / f"{prefix}_New.java"
+            modified_path = suggestion_dir / f"{prefix}_Original.java"
+            metadata_path = suggestion_dir / f"{prefix}_metadata.txt"
+
+            with open(new_class_path, 'w', encoding='utf-8') as f:
+                f.write(suggestion.new_class_code)
+
+            with open(modified_path, 'w', encoding='utf-8') as f:
+                f.write(suggestion.modified_original_code)
+
+            with open(metadata_path, 'w', encoding='utf-8') as f:
+                f.write(f"Proposed Class: {suggestion.proposed_class_name}\n")
+                f.write(f"Status: {status}\n")
+                f.write("Members:\n")
+                for member in suggestion.cluster.member_names:
+                    member_type = suggestion.cluster.member_types.get(member, 'unknown')
+                    f.write(f"  - {member} ({member_type})\n")
+                f.write("\nRationale:\n")
+                f.write(suggestion.rationale.strip())
+                f.write("\n")
+
+            print(f"Saved suggestion #{idx} artifacts to {suggestion_dir}")
+
     # Summary
     print(f"\n{'='*80}")
     print("SUMMARY")

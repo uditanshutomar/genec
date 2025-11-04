@@ -21,8 +21,9 @@ Architecture:
 import json
 import subprocess
 import os
+import re
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, List, Set
 
 from genec.core.cluster_detector import Cluster
 from genec.core.dependency_analyzer import ClassDependencies
@@ -124,6 +125,14 @@ class JDTCodeGenerator:
             f"using Eclipse JDT: {new_class_name}"
         )
 
+        original_method_set = set(cluster.get_methods())
+        methods = self._augment_methods(cluster, class_deps)
+        if set(methods) != original_method_set:
+            self.logger.info(
+                "Added helper methods to extraction cluster: %s",
+                sorted(set(methods) - original_method_set)
+            )
+
         # Infer fields if not explicitly in cluster
         fields = list(cluster.get_fields())
         if not fields:
@@ -135,7 +144,7 @@ class JDTCodeGenerator:
             'projectPath': repo_path,
             'classFile': class_file,
             'newClassName': new_class_name,
-            'methods': cluster.get_methods(),
+            'methods': methods,
             'fields': fields
         }
 
@@ -230,6 +239,64 @@ class JDTCodeGenerator:
 
         return list(used_fields)
 
+    def _augment_methods(self, cluster: Cluster, class_deps: ClassDependencies) -> List[str]:
+        """
+        Ensure the extraction includes private helper methods required by the cluster.
+        """
+        methods: Set[str] = set(cluster.get_methods())
+        if not methods:
+            return []
+
+        # Map method names to signatures and modifiers for quick lookup
+        name_to_sigs: Dict[str, List[str]] = {}
+        modifiers_by_sig: Dict[str, List[str]] = {}
+        method_by_sig: Dict[str, ClassDependencies] = {}
+        for method in class_deps.methods:
+            name_to_sigs.setdefault(method.name, []).append(method.signature)
+            modifiers_by_sig[method.signature] = method.modifiers or []
+            method_by_sig[method.signature] = method
+
+        candidate_names = set(name_to_sigs.keys())
+        initial_method_names = {sig.split('(')[0] for sig in methods}
+
+        added = True
+        while added:
+            added = False
+            for signature in list(methods):
+                called_names = set(class_deps.method_calls.get(signature, []))
+                method_info = method_by_sig.get(signature)
+                if method_info and method_info.body:
+                    called_names.update(self._find_called_method_names(method_info.body, candidate_names))
+
+                for called_name in called_names:
+                    for candidate_sig in name_to_sigs.get(called_name, []):
+                        if candidate_sig in methods:
+                            continue
+                        modifiers = [m.lower() for m in modifiers_by_sig.get(candidate_sig, [])]
+                        should_add = 'private' in modifiers
+                        if not should_add and called_name in initial_method_names:
+                            should_add = True
+                        if should_add:
+                            methods.add(candidate_sig)
+                            added = True
+
+        # Update cluster metadata so downstream components know about new methods
+        for sig in methods:
+            if sig not in cluster.member_types or cluster.member_types[sig] != 'method':
+                cluster.member_types[sig] = 'method'
+                if sig not in cluster.member_names:
+                    cluster.member_names.append(sig)
+
+        return list(methods)
+
+    def _find_called_method_names(self, body: str, candidates: Set[str]) -> Set[str]:
+        names: Set[str] = set()
+        for match in re.finditer(r'([A-Za-z_][A-Za-z0-9_]*)\s*\(', body):
+            name = match.group(1)
+            if name in candidates and name not in self._KEYWORD_BLACKLIST:
+                names.add(name)
+        return names
+
     def is_available(self) -> bool:
         """
         Check if Eclipse JDT wrapper is available.
@@ -250,3 +317,8 @@ class JDTCodeGenerator:
             return result.returncode == 0
         except:
             return False
+    _KEYWORD_BLACKLIST = {
+        'if', 'for', 'while', 'switch', 'return', 'new', 'super', 'this',
+        'catch', 'throw', 'else', 'case', 'do', 'try', 'default', 'assert',
+        'synchronized'
+    }

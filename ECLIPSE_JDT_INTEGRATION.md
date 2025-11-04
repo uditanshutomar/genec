@@ -141,6 +141,7 @@ print('JDT Available:', gen.is_available())
 
 - The JDT-powered Extract Class flow now creates the helper class, migrates the selected members, and rewrites the original methods into delegating stubs that call the helper instance.
 - Constructor assignments and other direct field touches now go through generated helper accessors (`helper.getField()/setField(...)`), so the original class no longer manipulates extracted state directly.
+- Numeric fields gain helper-side increment/decrement utilities; expressions like `++field` or `field++` translate to helper calls that preserve Java evaluation order.
 - Extracted fields remain private inside the helper; basic getters/setters are synthesized automatically. We still owe smarter accessor synthesis for complex modifiers (e.g., immutable or computed fields).
 
 ## Development Status

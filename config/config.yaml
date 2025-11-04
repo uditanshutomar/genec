@@ -1,49 +1,41 @@
 fusion:
-  alpha: 1.0  # Weight for static vs evolutionary graph fusion (1.0 = only static)
-  edge_threshold: 0.05  # Minimum edge weight to keep in fused graph
-
+  alpha: 1.0
+  edge_threshold: 0.05
 evolution:
-  window_months: 12  # How far back to look in Git history
-  min_commits: 2  # Minimum commits for a method to be considered
-
+  window_months: 12
+  min_commits: 2
 clustering:
-  algorithm: 'louvain'
+  algorithm: louvain
   min_cluster_size: 3
-  max_cluster_size: 50  # Allow larger fallback clusters for god classes
-  min_cohesion: 0.3  # Minimum internal cohesion for a cluster (skipped for fallback)
-  resolution: 0.8  # Louvain resolution parameter
-
+  max_cluster_size: 50
+  min_cohesion: 0.3
+  resolution: 0.8
 chunking:
-  enabled: true  # Use AST-based chunking to reduce LLM token usage by 90-96%
-  include_imports: true  # Include import statements in cluster context
-  include_unused_fields_comment: true  # Show unused fields as comment for LLM context
-
+  enabled: true
+  include_imports: true
+  include_unused_fields_comment: true
 llm:
-  provider: 'anthropic'
-  model: 'claude-sonnet-4-20250514'
+  provider: anthropic
+  model: claude-sonnet-4-20250514
   max_tokens: 4000
   temperature: 0.3
-  timeout: 120  # seconds
-
+  timeout: 120
 code_generation:
-  engine: 'eclipse_jdt'  # Options: 'eclipse_jdt' (recommended) or 'string_manipulation' (legacy)
-  jdt_wrapper_jar: 'genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar'
-  timeout: 60  # Timeout for code generation in seconds
-
+  engine: eclipse_jdt
+  jdt_wrapper_jar: genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar
+  timeout: 60
 verification:
   enable_syntactic: true
   enable_semantic: true
   enable_behavioral: true
-  java_compiler: 'javac'
-  maven_command: 'mvn'
-  gradle_command: 'gradle'
-
+  java_compiler: javac
+  maven_command: mvn
+  gradle_command: gradle
 logging:
-  level: 'INFO'
+  level: INFO
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-  file: 'data/outputs/genec.log'
-
+  file: data/outputs/genec.log
 cache:
   enable: true
-  directory: 'data/outputs/cache'
+  directory: data/outputs/cache
   ttl_days: 7

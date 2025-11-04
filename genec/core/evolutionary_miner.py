@@ -68,39 +68,42 @@ class EvolutionaryMiner:
             EvolutionaryData object with coupling information
         """
         self.logger.info(f"Mining evolutionary coupling for {class_file}")
+        normalized_class_file = Path(class_file).as_posix() if class_file else class_file
+
+        try:
+            repo = Repo(repo_path)
+        except Exception as e:
+            self.logger.error(f"Failed to open repository {repo_path}: {e}")
+            return EvolutionaryData(class_file=normalized_class_file)
+
+        repo_signature = self._get_repo_signature(repo, normalized_class_file)
 
         # Check cache
-        cache_key = self._get_cache_key(class_file, window_months)
+        cache_key = self._get_cache_key(normalized_class_file, window_months, repo_signature)
         if self.cache_dir and self._is_cache_valid(cache_key):
             cached_data = self._load_from_cache(cache_key)
             if cached_data:
                 self.logger.info("Using cached evolutionary data")
                 return cached_data
 
-        try:
-            repo = Repo(repo_path)
-        except Exception as e:
-            self.logger.error(f"Failed to open repository {repo_path}: {e}")
-            return EvolutionaryData(class_file=class_file)
-
         # Calculate date range
         end_date = datetime.now()
         start_date = end_date - timedelta(days=window_months * 30)
 
         # Get commits affecting the file
-        commits = self._get_file_commits(repo, class_file, start_date, end_date)
+        commits = self._get_file_commits(repo, normalized_class_file, start_date, end_date)
 
         if not commits:
-            self.logger.warning(f"No commits found for {class_file} in the time window")
-            return EvolutionaryData(class_file=class_file)
+            self.logger.warning(f"No commits found for {normalized_class_file} in the time window")
+            return EvolutionaryData(class_file=normalized_class_file)
 
-        self.logger.info(f"Found {len(commits)} commits affecting {class_file}")
+        self.logger.info(f"Found {len(commits)} commits affecting {normalized_class_file}")
 
         # Track method changes per commit
-        evo_data = EvolutionaryData(class_file=class_file, total_commits=len(commits))
+        evo_data = EvolutionaryData(class_file=normalized_class_file, total_commits=len(commits))
 
         for commit in commits:
-            changed_methods = self._extract_changed_methods(repo, commit, class_file)
+            changed_methods = self._extract_changed_methods(repo, commit, normalized_class_file)
 
             # Update method commit counts
             for method in changed_methods:
@@ -324,9 +327,9 @@ class EvolutionaryMiner:
         key = (method1, method2) if method1 < method2 else (method2, method1)
         return evo_data.coupling_strengths.get(key, 0.0)
 
-    def _get_cache_key(self, class_file: str, window_months: int) -> str:
+    def _get_cache_key(self, class_file: str, window_months: int, repo_signature: str) -> str:
         """Generate cache key for a class file."""
-        key_str = f"{class_file}:{window_months}"
+        key_str = f"{class_file}:{window_months}:{repo_signature}"
         return hashlib.md5(key_str.encode()).hexdigest()
 
     def _is_cache_valid(self, cache_key: str, ttl_days: int = 7) -> bool:
@@ -366,3 +369,20 @@ class EvolutionaryMiner:
                 pickle.dump(data, f)
         except Exception as e:
             self.logger.warning(f"Failed to save cache: {e}")
+
+    def _get_repo_signature(self, repo: Repo, class_file: str) -> str:
+        """Compute a signature for the repo state relevant to caching."""
+        try:
+            head_commit = repo.head.commit.hexsha
+        except Exception:
+            head_commit = "EMPTY"
+
+        file_signature = "MISSING"
+        try:
+            tree = repo.head.commit.tree
+            blob = tree / class_file
+            file_signature = blob.hexsha
+        except Exception:
+            file_signature = "MISSING"
+
+        return f"{head_commit}:{file_signature}"
