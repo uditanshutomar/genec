@@ -21,47 +21,70 @@
         <gson.version>2.10.1</gson.version>
     </properties>
 
+    <repositories>
+        <!-- Eclipse Maven Repository for JDT dependencies -->
+        <repository>
+            <id>eclipse-release</id>
+            <url>https://repo.eclipse.org/content/repositories/releases/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
-        <!-- Eclipse JDT Core -->
+        <!-- Eclipse JDT Core for AST parsing -->
         <dependency>
             <groupId>org.eclipse.jdt</groupId>
             <artifactId>org.eclipse.jdt.core</artifactId>
             <version>${eclipse.jdt.version}</version>
+            <exclusions>
+                <!-- Exclude problematic dependencies -->
+                <exclusion>
+                    <groupId>xml-apis</groupId>
+                    <artifactId>xml-apis-ext</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.platform</groupId>
+                    <artifactId>org.eclipse.swt</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-        <!-- Eclipse Core Runtime -->
+        <!-- Eclipse Core Runtime (minimal) -->
         <dependency>
             <groupId>org.eclipse.platform</groupId>
             <artifactId>org.eclipse.core.runtime</artifactId>
             <version>3.29.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.platform</groupId>
+                    <artifactId>org.eclipse.swt</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-        <!-- Eclipse Core Resources -->
-        <dependency>
-            <groupId>org.eclipse.platform</groupId>
-            <artifactId>org.eclipse.core.resources</artifactId>
-            <version>3.19.0</version>
-        </dependency>
-
-        <!-- Eclipse Text -->
+        <!-- Eclipse Text for Document manipulation -->
         <dependency>
             <groupId>org.eclipse.platform</groupId>
             <artifactId>org.eclipse.text</artifactId>
             <version>3.13.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.platform</groupId>
+                    <artifactId>org.eclipse.swt</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-        <!-- Eclipse LTK (Language Toolkit for Refactoring) -->
+        <!-- Eclipse JFace Text for text manipulation -->
         <dependency>
             <groupId>org.eclipse.platform</groupId>
-            <artifactId>org.eclipse.ltk.core.refactoring</artifactId>
-            <version>3.14.0</version>
-        </dependency>
-
-        <!-- Eclipse JDT UI (for refactoring support) -->
-        <dependency>
-            <groupId>org.eclipse.jdt</groupId>
-            <artifactId>org.eclipse.jdt.ui</artifactId>
-            <version>3.31.0</version>
+            <artifactId>org.eclipse.jface.text</artifactId>
+            <version>3.24.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.platform</groupId>
+                    <artifactId>org.eclipse.swt</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- JSON support for Python communication -->
