@@ -137,6 +137,12 @@ print('JDT Available:', gen.is_available())
 "
 ```
 
+## Current Behavior & Known Issues
+
+- The JDT-powered Extract Class flow now creates the new helper class and migrates the selected members successfully.
+- The original class is still left with duplicated method bodies after the refactoring; we suspect the wrapper is missing the cleanup step because of signature matching mismatches.
+- Temporary workaround: manually remove the duplicated members in the source project until the signature matching is fixed.
+
 ## Development Status
 
 ### Phase 1: Infrastructure ✅ COMPLETE
@@ -147,11 +153,11 @@ print('JDT Available:', gen.is_available())
 - [x] Configuration system
 
 ### Phase 2: JDT Implementation 🚧 TODO
-- [ ] Eclipse workspace setup
-- [ ] JDT AST parsing
-- [ ] Extract Class refactoring execution
+- [x] Eclipse workspace setup
+- [x] JDT AST parsing
+- [x] Extract Class refactoring execution *(cleanup pending; see Known Issues)*
 - [ ] Type checking and validation
-- [ ] Actual code generation
+- [x] Actual code generation *(new helper class written to disk)*
 
 ### Phase 3: Testing & Production 📋 PLANNED
 - [ ] Unit tests for wrapper
@@ -161,15 +167,13 @@ print('JDT Available:', gen.is_available())
 
 ## Current Limitations
 
-**Phase 1 (Current):**
-- JDT wrapper returns **placeholder code**
-- Does NOT execute actual Eclipse refactoring yet
-- Serves as infrastructure/proof-of-concept
+**Current behavior:**
+- Extract Class runs end-to-end and writes the new helper class, but the original class still contains the extracted members.
+- Cleanup is blocked by signature matching gaps when we try to remove the migrated methods/fields from the source class.
 
-**Phase 2 (Next):**
-- Implement actual JDT refactoring
-- Real AST manipulation
-- Production-quality code generation
+**Next focus:**
+- Implement robust member matching to delete the extracted members from the original class.
+- Add automated verification (type checking + regression tests) to guarantee the refactoring passes compilation.
 
 ## Comparison: JDT vs String Manipulation
 
