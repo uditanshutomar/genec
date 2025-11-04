@@ -1,0 +1,13 @@
+Proposed Class: ArrayToNumericConverter
+Status: FAILED_SEMANTIC
+Members:
+  - byteArrayToInt(byte,int,int,int,int) (method)
+  - byteArrayToLong(byte,int,long,int,int) (method)
+  - byteArrayToShort(byte,int,short,int,int) (method)
+  - byteArrayToUuid(byte,int) (method)
+  - intArrayToLong(int,int,long,int,int) (method)
+  - shortArrayToInt(short,int,int,int,int) (method)
+  - shortArrayToLong(short,int,long,int,int) (method)
+
+Rationale:
+This extraction improves design by applying the Single Responsibility Principle (SRP), as the new class focuses solely on converting arrays of primitive types to numeric values, rather than being mixed with other conversion utilities. The high cohesion among these methods—they all share the same bit-shifting conversion pattern and similar parameter structures—creates a more maintainable and understandable unit. This separation of concerns also reduces coupling by isolating array-to-numeric conversion logic, making it easier to modify, test, and reuse independently of other conversion operations.

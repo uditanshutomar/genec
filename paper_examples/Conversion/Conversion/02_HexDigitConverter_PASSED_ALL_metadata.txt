@@ -1,0 +1,10 @@
+Proposed Class: HexDigitConverter
+Status: PASSED_ALL
+Members:
+  - hexDigitMsb0ToBinary(char) (method)
+  - hexDigitMsb0ToInt(char) (method)
+  - hexDigitToBinary(char) (method)
+  - hexDigitToInt(char) (method)
+
+Rationale:
+Extracting these methods into a HexDigitConverter class improves adherence to the Single Responsibility Principle by creating a focused class dedicated solely to hexadecimal digit conversion operations. This separation of concerns reduces the coupling of the original Conversion class by removing specialized hex conversion logic, allowing it to focus on its primary responsibilities. The extraction also increases cohesion by grouping related hex digit conversion methods together, making the code more maintainable and easier to understand.
