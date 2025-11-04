@@ -84,6 +84,11 @@ class GenECPipeline:
                 'min_cohesion': 0.5,
                 'resolution': 1.0
             },
+            'chunking': {
+                'enabled': True,
+                'include_imports': True,
+                'include_unused_fields_comment': True
+            },
             'llm': {
                 'provider': 'anthropic',
                 'model': 'claude-sonnet-4-20250514',
@@ -129,12 +134,14 @@ class GenECPipeline:
 
         # LLM interface
         llm_config = self.config.get('llm', {})
+        chunking_config = self.config.get('chunking', {})
         self.llm_interface = LLMInterface(
             api_key=llm_config.get('api_key'),
             model=llm_config.get('model', 'claude-sonnet-4-20250514'),
             max_tokens=llm_config.get('max_tokens', 4000),
             temperature=llm_config.get('temperature', 0.3),
-            timeout=llm_config.get('timeout', 120)
+            timeout=llm_config.get('timeout', 120),
+            use_chunking=chunking_config.get('enabled', True)
         )
 
         # Store verification config for later initialization

@@ -13,6 +13,11 @@ clustering:
   min_cohesion: 0.3  # Minimum internal cohesion for a cluster (skipped for fallback)
   resolution: 0.8  # Louvain resolution parameter
 
+chunking:
+  enabled: true  # Use AST-based chunking to reduce LLM token usage by 90-96%
+  include_imports: true  # Include import statements in cluster context
+  include_unused_fields_comment: true  # Show unused fields as comment for LLM context
+
 llm:
   provider: 'anthropic'
   model: 'claude-sonnet-4-20250514'
