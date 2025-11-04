@@ -139,9 +139,9 @@ print('JDT Available:', gen.is_available())
 
 ## Current Behavior & Known Issues
 
-- The JDT-powered Extract Class flow now creates the new helper class, migrates the selected members, and removes them from the original class via JDT AST rewrites.
-- The modified original class gains a helper field for the extracted type; callers still need follow-up work (e.g., delegating to the helper) that we have not automated yet.
-- Keep an eye on field movement: if other unextracted methods still rely on those fields, additional wiring or delegation code is required.
+- The JDT-powered Extract Class flow now creates the helper class, migrates the selected members, and rewrites the original methods into delegating stubs that call the helper instance.
+- Constructor assignments and other direct field touches are rewritten to interact with the helper (`helper.field`), so the original class no longer operates on removed state directly.
+- Helper fields are published for now to keep the bridging simple; tighten encapsulation once we introduce generated accessors.
 
 ## Development Status
 
@@ -168,12 +168,12 @@ print('JDT Available:', gen.is_available())
 ## Current Limitations
 
 **Current behavior:**
-- Extract Class runs end-to-end; the helper class is generated and the source class is cleaned up.
-- Follow-on delegation and compilation guarantees still rely on downstream verification steps.
+- Extract Class runs end-to-end; helper generation plus delegation rewrites keep existing call sites compiling.
+- Follow-on validation (type checking + regression suites) still relies on the verification engine.
 
 **Next focus:**
+- Harden delegation generation (encapsulation of helper state, smarter accessor synthesis).
 - Implement robust validation/type checking so we fail fast if the cleaned class no longer compiles.
-- Generate delegation glue where necessary (e.g., updating call sites to use the helper) before handing results to the user.
 
 ## Comparison: JDT vs String Manipulation
 

@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Eclipse JDT-based Extract Class refactoring implementation.
@@ -195,14 +196,45 @@ public class EclipseJDTRefactoring {
         // Get the list rewrite for the type's body declarations
         ListRewrite listRewrite = rewrite.getListRewrite(originalTypeDecl, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
 
-        // Find and remove extracted methods
+        // Find methods to extract and replace their bodies with delegation to helper class
         Set<String> methodSignatures = normalizeMethodSignatures(spec.getMethods());
+        String helperFieldName = toCamelCase(spec.getNewClassName());
         for (Object bodyDecl : originalTypeDecl.bodyDeclarations()) {
             if (bodyDecl instanceof MethodDeclaration) {
                 MethodDeclaration method = (MethodDeclaration) bodyDecl;
                 String signature = getMethodSignature(method);
                 if (methodSignatures.contains(signature)) {
-                    listRewrite.remove(method, null);
+                    Block newBody = ast.newBlock();
+
+                    MethodInvocation invocation = ast.newMethodInvocation();
+                    invocation.setExpression(ast.newSimpleName(helperFieldName));
+                    invocation.setName(ast.newSimpleName(method.getName().getIdentifier()));
+
+                    List<SingleVariableDeclaration> params = method.parameters();
+                    for (SingleVariableDeclaration param : params) {
+                        invocation.arguments().add(ast.newSimpleName(param.getName().getIdentifier()));
+                    }
+
+                    boolean isVoid = method.getReturnType2() == null;
+                    if (!isVoid) {
+                        Type returnType = method.getReturnType2();
+                        if (returnType.isPrimitiveType()) {
+                            PrimitiveType primitive = (PrimitiveType) returnType;
+                            isVoid = primitive.getPrimitiveTypeCode() == PrimitiveType.VOID;
+                        }
+                    }
+
+                    Statement delegateStatement;
+                    if (isVoid) {
+                        delegateStatement = ast.newExpressionStatement(invocation);
+                    } else {
+                        ReturnStatement returnStatement = ast.newReturnStatement();
+                        returnStatement.setExpression(invocation);
+                        delegateStatement = returnStatement;
+                    }
+
+                    newBody.statements().add(delegateStatement);
+                    rewrite.set(method, MethodDeclaration.BODY_PROPERTY, newBody, null);
                 }
             }
         }
@@ -238,6 +270,10 @@ public class EclipseJDTRefactoring {
         VariableDeclarationFragment fragment = ast.newVariableDeclarationFragment();
         fragment.setName(ast.newSimpleName(toCamelCase(spec.getNewClassName())));
 
+        ClassInstanceCreation helperInit = ast.newClassInstanceCreation();
+        helperInit.setType(ast.newSimpleType(ast.newSimpleName(spec.getNewClassName())));
+        fragment.setInitializer(helperInit);
+
         FieldDeclaration newField = ast.newFieldDeclaration(fragment);
         newField.setType(ast.newSimpleType(ast.newSimpleName(spec.getNewClassName())));
         newField.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PRIVATE_KEYWORD));
@@ -258,7 +294,17 @@ public class EclipseJDTRefactoring {
         TextEdit edits = rewrite.rewriteAST(document, null);
         edits.apply(document);
 
-        return document.get();
+        String modifiedSource = document.get();
+        for (String fieldName : fieldNames) {
+            String pattern = "(?<!"
+                + Pattern.quote(helperFieldName)
+                + "\\.)\\b"
+                + Pattern.quote(fieldName)
+                + "\\b";
+            modifiedSource = modifiedSource.replaceAll(pattern, helperFieldName + "." + fieldName);
+        }
+
+        return modifiedSource;
     }
 
     /**
@@ -278,6 +324,8 @@ public class EclipseJDTRefactoring {
                     if (fieldNames.contains(fieldName)) {
                         // Copy the field to the new AST
                         FieldDeclaration copiedField = (FieldDeclaration) ASTNode.copySubtree(targetAst, field);
+                        copiedField.modifiers().clear();
+                        copiedField.modifiers().add(targetAst.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
                         result.put(fieldName, copiedField);
                     }
                 }
