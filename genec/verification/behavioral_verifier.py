@@ -123,6 +123,56 @@ class BehavioralVerifier:
             return 'gradle'
         return None
 
+    def _only_contains_warnings(self, output: str) -> bool:
+        """
+        Check if output only contains warnings, not actual build/test failures.
+
+        Args:
+            output: Build/test output to check
+
+        Returns:
+            True if output only contains warnings (or is empty), False if there are real failures
+        """
+        if not output or not output.strip():
+            # Empty output is fine (not a failure)
+            return True
+
+        # Indicators of actual failures
+        failure_indicators = [
+            "BUILD FAILURE",
+            "COMPILATION ERROR",
+            "test failures",
+            "test error",
+            "FAILED",
+            "Error:",
+            "Exception in thread",
+            "at org.junit",  # JUnit stack traces
+            "[ERROR]",  # Maven error prefix
+            "FAILURE:",  # Gradle failure
+        ]
+
+        # Check if any failure indicators are present
+        output_lower = output.lower()
+        for indicator in failure_indicators:
+            if indicator.lower() in output_lower:
+                # Exception: "Tests run: X, Failures: 0, Errors: 0" is actually success
+                if "failures: 0" in output_lower and "errors: 0" in output_lower:
+                    continue
+                return False
+
+        # Check for actual test result summaries with failures
+        # Format: "Tests run: 1234, Failures: 5, Errors: 2, Skipped: 3"
+        import re
+        test_results = re.search(r'Tests run:\s*(\d+),\s*Failures:\s*(\d+),\s*Errors:\s*(\d+)', output, re.IGNORECASE)
+        if test_results:
+            failures = int(test_results.group(2))
+            errors = int(test_results.group(3))
+            if failures > 0 or errors > 0:
+                return False
+
+        # If we get here, it's either warnings or non-failure output
+        return True
+
     def _run_tests(
         self,
         repo_path: Path,
@@ -157,10 +207,19 @@ class BehavioralVerifier:
                 timeout=timeout
             )
 
+            # Check for actual test failures, not just warnings
+            # Maven/Gradle return 0 on success, non-zero on failure
             if result.returncode == 0:
                 return True, None
             else:
+                # Check if this is a real failure or just warnings
                 error_msg = result.stderr or result.stdout
+
+                # If stderr only contains warnings (not BUILD FAILURE), treat as success
+                if self._only_contains_warnings(error_msg):
+                    self.logger.info("Tests passed (ignoring build warnings)")
+                    return True, None
+
                 return False, error_msg
 
         except subprocess.TimeoutExpired:

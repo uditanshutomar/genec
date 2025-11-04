@@ -193,8 +193,13 @@ class SemanticVerifier:
     def _is_delegation_by_source(self, source: str, method_name: str) -> bool:
         import re
 
+        # Pattern to match method with name, handling:
+        # - Generic type parameters
+        # - Multi-line signatures
+        # - throws clauses
+        # - Opening brace on same or different line
         pattern = re.compile(
-            rf"{re.escape(method_name)}\s*\([^)]*\)\s*\{{([^{{}}]*)\}}",
+            rf"(?:public|protected|private|static|\s)*\s+{re.escape(method_name)}\s*\([^{{]*?\)\s*(?:throws\s+[^{{]*?)?\s*\{{([^{{}}]*)\}}",
             re.DOTALL
         )
         for match in pattern.finditer(source):
@@ -204,8 +209,11 @@ class SemanticVerifier:
             statements = [line.strip().rstrip(';') for line in body.splitlines() if line.strip()]
             if len(statements) > 1:
                 continue
+            if not statements:
+                continue
             stmt = statements[0]
             stmt = stmt.replace('return', '').strip()
+            # Check if it's calling another class's method with the same name
             if f".{method_name}(" in stmt:
                 return True
         return False
