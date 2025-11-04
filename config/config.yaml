@@ -25,6 +25,11 @@ llm:
   temperature: 0.3
   timeout: 120  # seconds
 
+code_generation:
+  engine: 'eclipse_jdt'  # Options: 'eclipse_jdt' (recommended) or 'string_manipulation' (legacy)
+  jdt_wrapper_jar: 'genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar'
+  timeout: 60  # Timeout for code generation in seconds
+
 verification:
   enable_syntactic: true
   enable_semantic: true

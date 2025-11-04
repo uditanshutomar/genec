@@ -12,6 +12,7 @@ from genec.core.graph_builder import GraphBuilder
 from genec.core.cluster_detector import ClusterDetector, Cluster
 from genec.core.llm_interface import LLMInterface, RefactoringSuggestion
 from genec.core.code_generator import CodeGenerator, CodeGenerationError
+from genec.core.jdt_code_generator import JDTCodeGenerator
 from genec.core.verification_engine import VerificationEngine, VerificationResult
 from genec.metrics.cohesion_calculator import CohesionCalculator
 from genec.metrics.coupling_calculator import CouplingCalculator
@@ -97,6 +98,11 @@ class GenECPipeline:
                 'timeout': 120,
                 'api_key': None
             },
+            'code_generation': {
+                'engine': 'eclipse_jdt',
+                'jdt_wrapper_jar': 'genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar',
+                'timeout': 60
+            },
             'verification': {
                 'enable_syntactic': True,
                 'enable_semantic': True,
@@ -143,6 +149,25 @@ class GenECPipeline:
             timeout=llm_config.get('timeout', 120),
             use_chunking=chunking_config.get('enabled', True)
         )
+
+        # Code Generator - Eclipse JDT or String Manipulation
+        codegen_config = self.config.get('code_generation', {})
+        engine = codegen_config.get('engine', 'eclipse_jdt')
+
+        if engine == 'eclipse_jdt':
+            try:
+                self.code_generator_class = JDTCodeGenerator
+                self.jdt_wrapper_jar = codegen_config.get('jdt_wrapper_jar')
+                self.jdt_timeout = codegen_config.get('timeout', 60)
+                self.logger.info("Using Eclipse JDT for code generation")
+            except Exception as e:
+                self.logger.warning(
+                    f"Eclipse JDT unavailable ({e}), falling back to string manipulation"
+                )
+                self.code_generator_class = None
+        else:
+            self.code_generator_class = None
+            self.logger.info("Using string manipulation for code generation (legacy)")
 
         # Store verification config for later initialization
         self.verify_config = self.config.get('verification', {})
@@ -294,15 +319,35 @@ class GenECPipeline:
                     if not suggestion:
                         continue
 
-                    generator = CodeGenerator(original_code, class_deps)
-
-                    try:
-                        generated = generator.generate(cluster, suggestion.proposed_class_name)
-                    except CodeGenerationError as e:
-                        self.logger.warning(
-                            f"Skipping cluster {cluster.id} ({suggestion.proposed_class_name}): {e}"
+                    # Use appropriate code generator (JDT or string manipulation)
+                    if self.code_generator_class == JDTCodeGenerator:
+                        generator = JDTCodeGenerator(
+                            jdt_wrapper_jar=self.jdt_wrapper_jar,
+                            timeout=self.jdt_timeout
                         )
-                        continue
+                        try:
+                            generated = generator.generate(
+                                cluster=cluster,
+                                new_class_name=suggestion.proposed_class_name,
+                                class_file=class_file,
+                                repo_path=repo_path,
+                                class_deps=class_deps
+                            )
+                        except CodeGenerationError as e:
+                            self.logger.warning(
+                                f"Skipping cluster {cluster.id} ({suggestion.proposed_class_name}): {e}"
+                            )
+                            continue
+                    else:
+                        # Fallback to string manipulation
+                        generator = CodeGenerator(original_code, class_deps)
+                        try:
+                            generated = generator.generate(cluster, suggestion.proposed_class_name)
+                        except CodeGenerationError as e:
+                            self.logger.warning(
+                                f"Skipping cluster {cluster.id} ({suggestion.proposed_class_name}): {e}"
+                            )
+                            continue
 
                     suggestion.new_class_code = generated.new_class_code
                     suggestion.modified_original_code = generated.modified_original_code
