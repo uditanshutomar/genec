@@ -89,11 +89,11 @@ public class EclipseJDTRefactoring {
 
         CompilationUnit parsedCU = (CompilationUnit) parser.createAST(null);
 
-        // Get the AST and enable modification recording
-        ast = AST.newAST(AST.JLS17, true);  // true enables recording
+        // Record modifications on the parsed compilation unit so ASTRewrite can track edits
+        parsedCU.recordModifications();
 
-        // Copy the entire compilation unit to the new AST with recording enabled
-        compilationUnit = (CompilationUnit) ASTNode.copySubtree(ast, parsedCU);
+        compilationUnit = parsedCU;
+        ast = compilationUnit.getAST();
     }
 
     /**

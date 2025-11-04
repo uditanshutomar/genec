@@ -139,9 +139,9 @@ print('JDT Available:', gen.is_available())
 
 ## Current Behavior & Known Issues
 
-- The JDT-powered Extract Class flow now creates the new helper class and migrates the selected members successfully.
-- The original class is still left with duplicated method bodies after the refactoring; we suspect the wrapper is missing the cleanup step because of signature matching mismatches.
-- Temporary workaround: manually remove the duplicated members in the source project until the signature matching is fixed.
+- The JDT-powered Extract Class flow now creates the new helper class, migrates the selected members, and removes them from the original class via JDT AST rewrites.
+- The modified original class gains a helper field for the extracted type; callers still need follow-up work (e.g., delegating to the helper) that we have not automated yet.
+- Keep an eye on field movement: if other unextracted methods still rely on those fields, additional wiring or delegation code is required.
 
 ## Development Status
 
@@ -155,7 +155,7 @@ print('JDT Available:', gen.is_available())
 ### Phase 2: JDT Implementation 🚧 TODO
 - [x] Eclipse workspace setup
 - [x] JDT AST parsing
-- [x] Extract Class refactoring execution *(cleanup pending; see Known Issues)*
+- [x] Extract Class refactoring execution *(methods/fields removed via ASTRewrite)*
 - [ ] Type checking and validation
 - [x] Actual code generation *(new helper class written to disk)*
 
@@ -168,12 +168,12 @@ print('JDT Available:', gen.is_available())
 ## Current Limitations
 
 **Current behavior:**
-- Extract Class runs end-to-end and writes the new helper class, but the original class still contains the extracted members.
-- Cleanup is blocked by signature matching gaps when we try to remove the migrated methods/fields from the source class.
+- Extract Class runs end-to-end; the helper class is generated and the source class is cleaned up.
+- Follow-on delegation and compilation guarantees still rely on downstream verification steps.
 
 **Next focus:**
-- Implement robust member matching to delete the extracted members from the original class.
-- Add automated verification (type checking + regression tests) to guarantee the refactoring passes compilation.
+- Implement robust validation/type checking so we fail fast if the cleaned class no longer compiles.
+- Generate delegation glue where necessary (e.g., updating call sites to use the helper) before handing results to the user.
 
 ## Comparison: JDT vs String Manipulation
 
