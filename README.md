@@ -10,6 +10,10 @@ A hybrid framework for automated Extract Class refactoring in Java that combines
 - **Cluster Detection**: Uses Louvain algorithm to identify cohesive method groups
 - **LLM-Guided Refactoring**: Generates refactoring suggestions using Claude Sonnet 4
 - **Multi-Layer Verification**: Validates refactorings syntactically, semantically, and behaviorally
+- **Extraction Validation**: Static analysis prevents invalid extractions before code generation
+- **LLM Semantic Validation**: Intelligent override of conservative static rejections
+- **Pattern Transformation Guidance**: Suggests design patterns to enable blocked extractions
+- **Structural Scaffolding**: Generates accessor/facade plans for complex architectural changes
 
 ## Installation
 
@@ -26,6 +30,35 @@ export ANTHROPIC_API_KEY='your-api-key-here'
 ```
 
 Edit `config/config.yaml` to customize parameters.
+
+### Validation Configuration
+
+The pipeline includes three-tier validation that prevents invalid extractions:
+
+```yaml
+verification:
+  enable_extraction_validation: true     # Static analysis before code generation
+  suggest_pattern_transformations: true  # LLM design pattern suggestions
+  enable_semantic: true                  # Semantic AST validation
+
+structural_transforms:
+  enabled: true                          # Generate scaffolding plans
+  compile_check: true                    # Validate with build command
+  max_methods: 40                        # Size limit for structural plans
+  max_fields: 20                         # Size limit for structural plans
+  compile_command: ["mvn", "-q", "-DskipTests", "compile"]
+  compile_timeout_seconds: 300
+```
+
+**Validation Tiers**:
+1. **Static Validation** (~instant): Detects abstract methods, inner classes, missing private dependencies
+2. **LLM Semantic** (~3-5s per cluster): Validates borderline cases, overrides if confidence >= 0.7
+3. **Pattern Transformation** (~3-5s per cluster): Suggests design patterns to enable blocked extractions
+
+**Output**:
+- Valid suggestions → `data/outputs/{ClassName}/suggestion_{N}/`
+- Pattern guidance → `data/outputs/{ClassName}/transformation_guidance/`
+- Structural plans → `data/outputs/structural_plans/{ClassName}/`
 
 ## Usage
 
@@ -77,15 +110,24 @@ genec/
 │   ├── llm_interface.py          # Claude API integration
 │   ├── verification_engine.py    # Multi-layer verification
 │   └── pipeline.py               # Main orchestration
+├── llm/
+│   ├── anthropic_client.py       # Centralized LLM client with retry
+│   └── __init__.py               # LLM utilities
 ├── parsers/
 │   └── java_parser.py            # Java AST parsing
 ├── metrics/
 │   ├── cohesion_calculator.py    # LCOM5 calculation
 │   └── coupling_calculator.py    # CBO calculation
 ├── verification/
+│   ├── extraction_validator.py   # Static extraction validation
+│   ├── llm_semantic_validator.py # LLM-based semantic validation
+│   ├── llm_pattern_transformer.py # Design pattern suggestions
 │   ├── syntactic_verifier.py     # Compilation checks
 │   ├── semantic_verifier.py      # AST validation
 │   └── behavioral_verifier.py    # Test execution
+├── structural/
+│   ├── transformer.py            # Structural scaffolding plans
+│   └── compile_validator.py     # Build validation
 └── evaluation/
     ├── ground_truth_builder.py   # RefactoringMiner integration
     └── comparator.py             # Precision/Recall/F1
@@ -97,8 +139,14 @@ genec/
 2. **Evolutionary Mining**: Analyze Git history for co-changing methods
 3. **Graph Building**: Create and fuse static + evolutionary graphs
 4. **Cluster Detection**: Apply Louvain algorithm, filter and rank clusters
+   - **Extraction Validation**: Static analysis for abstract methods, inner classes, private dependencies
+   - **Auto-fix**: Iterative transitive closure for missing private method dependencies
+   - **LLM Semantic Validation**: Intelligent override for borderline cases (confidence >= 0.7)
 5. **LLM Generation**: Generate refactoring suggestions via Claude API
 6. **Verification**: Validate through syntactic, semantic, behavioral layers
+7. **Transformation Guidance** (for rejected clusters):
+   - **Pattern Suggestions**: Design patterns to enable blocked extractions
+   - **Structural Plans**: Accessor/facade scaffolding for complex changes
 
 ## Metrics
 
