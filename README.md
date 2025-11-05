@@ -161,6 +161,11 @@ genec/
 pytest tests/
 ```
 
+## Documentation
+
+- **[Architecture Guide](docs/ARCHITECTURE.md)**: Detailed architecture documentation including the three-tier validation system
+- **[Developer Guide](docs/DEVELOPER_GUIDE.md)**: Guide for extending GenEC and adding new validation rules
+
 ## License
 
 MIT License
