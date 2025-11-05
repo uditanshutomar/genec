@@ -1,5 +1,6 @@
 """Semantic verification of refactoring transformations."""
 
+import re
 from typing import Set, Dict, Tuple, Optional
 import tempfile
 from pathlib import Path
@@ -178,10 +179,24 @@ class SemanticVerifier:
                 statements.append(line)
 
             if len(statements) == 1:
-                stmt = statements[0]
-                if 'return' in stmt:
-                    stmt = stmt.replace('return', '').strip().rstrip(';')
-                if 'ArrayShuffler.' in stmt or 'owner.' in stmt:
+                stmt = statements[0].rstrip(';').strip()
+
+                # Allow optional return keyword
+                stmt = re.sub(r'^\s*return\s+', '', stmt).strip()
+
+                # Remove explicit this/super qualifiers that don't affect delegation
+                stmt = re.sub(r'^(?:this|super)\.', '', stmt)
+
+                # Extract call target before argument list
+                target = stmt.split('(')[0].strip()
+                if not target:
+                    continue
+
+                # Collapse chained this./super. occurrences within the target (e.g., this.helper.method)
+                target = target.replace('this.', '').replace('super.', '')
+
+                # Ensure the statement invokes another object's method with the same name
+                if '.' in target and target.split('.')[-1] == method_name:
                     return True
 
         # Constructors aren't used for delegation here
