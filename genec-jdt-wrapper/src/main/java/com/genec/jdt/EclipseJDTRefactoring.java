@@ -32,15 +32,17 @@ public class EclipseJDTRefactoring {
         final String name;
         final Type type;
         final boolean isFinal;
+        final boolean isStatic;
         final List<Modifier.ModifierKeyword> otherModifiers;
         final Expression initializer;
 
-        FieldMetadata(String name, Type type, boolean isFinal,
+        FieldMetadata(String name, Type type, boolean isFinal, boolean isStatic,
                       List<Modifier.ModifierKeyword> otherModifiers,
                       Expression initializer) {
             this.name = name;
             this.type = type;
             this.isFinal = isFinal;
+            this.isStatic = isStatic;
             this.otherModifiers = otherModifiers;
             this.initializer = initializer;
         }
@@ -182,6 +184,12 @@ public class EclipseJDTRefactoring {
 
         // Extract fields that should be moved
         Set<String> fieldNames = new HashSet<>(spec.getFields() != null ? spec.getFields() : Collections.emptyList());
+
+        // Also extract static fields referenced by extracted methods
+        Set<String> methodSignatures = normalizeMethodSignatures(spec.getMethods());
+        Set<String> referencedStaticFields = findReferencedStaticFields(methodSignatures);
+        fieldNames.addAll(referencedStaticFields);
+
         Map<String, ExtractedFieldInfo> extractedFields = extractFields(newAst, fieldNames);
         for (ExtractedFieldInfo fieldInfo : extractedFields.values()) {
             newClass.bodyDeclarations().add(fieldInfo.declaration);
@@ -204,7 +212,6 @@ public class EclipseJDTRefactoring {
         }
 
         // Extract methods that should be moved
-        Set<String> methodSignatures = normalizeMethodSignatures(spec.getMethods());
         List<MethodDeclaration> extractedMethods = extractMethods(newAst, methodSignatures, extractedFields.keySet());
         for (MethodDeclaration method : extractedMethods) {
             newClass.bodyDeclarations().add(method);
@@ -214,6 +221,7 @@ public class EclipseJDTRefactoring {
         addFieldAccessors(newAst, newClass, extractedFields);
 
         // Qualify calls to original static helpers that remain in the source class
+        // IMPORTANT: Only qualify calls to methods that were NOT extracted
         final Set<String> extractedMethodNames = new HashSet<>();
         for (MethodDeclaration method : extractedMethods) {
             extractedMethodNames.add(method.getName().getIdentifier());
@@ -226,18 +234,25 @@ public class EclipseJDTRefactoring {
             }
         }
         final String originalClassName = originalTypeDecl.getName().getIdentifier();
-        newClass.accept(new ASTVisitor() {
-            @Override
-            public boolean visit(MethodInvocation node) {
-                if (node.getExpression() == null) {
-                    String invokedName = node.getName().getIdentifier();
-                    if (originalMethodNames.contains(invokedName) && !extractedMethodNames.contains(invokedName)) {
-                        node.setExpression(newAst.newSimpleName(originalClassName));
+
+        // Visit each extracted method to qualify calls to non-extracted methods
+        for (MethodDeclaration extractedMethod : extractedMethods) {
+            extractedMethod.accept(new ASTVisitor() {
+                @Override
+                public boolean visit(MethodInvocation node) {
+                    // Only process unqualified method calls
+                    if (node.getExpression() == null) {
+                        String invokedName = node.getName().getIdentifier();
+                        // If this call is to a method that exists in original class but was NOT extracted,
+                        // qualify it with the original class name
+                        if (originalMethodNames.contains(invokedName) && !extractedMethodNames.contains(invokedName)) {
+                            node.setExpression(newAst.newSimpleName(originalClassName));
+                        }
                     }
+                    return true;
                 }
-                return true;
-            }
-        });
+            });
+        }
 
         newCu.types().add(newClass);
 
@@ -443,6 +458,66 @@ public class EclipseJDTRefactoring {
     }
 
     /**
+     * Find static fields that are referenced by the methods being extracted.
+     * Static fields should be moved with the methods that use them.
+     */
+    private Set<String> findReferencedStaticFields(Set<String> methodSignatures) {
+        Set<String> referencedFields = new HashSet<>();
+
+        // Get all static fields in the class
+        Map<String, Boolean> staticFields = new HashMap<>();
+        for (Object bodyDecl : originalTypeDecl.bodyDeclarations()) {
+            if (bodyDecl instanceof FieldDeclaration) {
+                FieldDeclaration field = (FieldDeclaration) bodyDecl;
+                if (Modifier.isStatic(field.getModifiers())) {
+                    for (Object fragmentObj : field.fragments()) {
+                        VariableDeclarationFragment fragment = (VariableDeclarationFragment) fragmentObj;
+                        staticFields.put(fragment.getName().getIdentifier(), true);
+                    }
+                }
+            }
+        }
+
+        // Find which static fields are referenced in extracted methods
+        for (Object bodyDecl : originalTypeDecl.bodyDeclarations()) {
+            if (bodyDecl instanceof MethodDeclaration) {
+                MethodDeclaration method = (MethodDeclaration) bodyDecl;
+                String signature = getMethodSignature(method);
+
+                if (methodSignatures.contains(signature)) {
+                    // Visit this method's AST to find field references
+                    method.accept(new ASTVisitor() {
+                        @Override
+                        public boolean visit(SimpleName node) {
+                            String name = node.getIdentifier();
+                            if (staticFields.containsKey(name)) {
+                                // Check if this is actually a field reference (not a method call or variable)
+                                ASTNode parent = node.getParent();
+                                if (!(parent instanceof MethodInvocation &&
+                                      ((MethodInvocation) parent).getName() == node)) {
+                                    referencedFields.add(name);
+                                }
+                            }
+                            return true;
+                        }
+
+                        @Override
+                        public boolean visit(FieldAccess node) {
+                            String name = node.getName().getIdentifier();
+                            if (staticFields.containsKey(name)) {
+                                referencedFields.add(name);
+                            }
+                            return true;
+                        }
+                    });
+                }
+            }
+        }
+
+        return referencedFields;
+    }
+
+    /**
      * Extract fields from original class that should be moved to new class.
      */
     private Map<String, FieldMetadata> collectExtractedFieldMetadata() {
@@ -471,6 +546,7 @@ public class EclipseJDTRefactoring {
                 }
             }
             boolean isFinal = Modifier.isFinal(fieldDeclaration.getModifiers());
+            boolean isStatic = Modifier.isStatic(fieldDeclaration.getModifiers());
 
             for (Object fragmentObj : fieldDeclaration.fragments()) {
                 VariableDeclarationFragment fragment = (VariableDeclarationFragment) fragmentObj;
@@ -485,6 +561,7 @@ public class EclipseJDTRefactoring {
                     fieldName,
                     fieldDeclaration.getType(),
                     isFinal,
+                    isStatic,
                     modifierKeywords,
                     initializer
                 );
@@ -515,17 +592,35 @@ public class EclipseJDTRefactoring {
 
             FieldDeclaration newField = targetAst.newFieldDeclaration(fragment);
             newField.setType((Type) ASTNode.copySubtree(targetAst, metadata.type));
-            newField.modifiers().add(targetAst.newModifier(Modifier.ModifierKeyword.PRIVATE_KEYWORD));
 
+            // For static fields, preserve original visibility; for instance fields, make private
+            boolean visibilityAdded = false;
+            if (metadata.isStatic) {
+                // Preserve original visibility for static fields
+                for (Modifier.ModifierKeyword keyword : metadata.otherModifiers) {
+                    if (keyword == Modifier.ModifierKeyword.PUBLIC_KEYWORD
+                        || keyword == Modifier.ModifierKeyword.PROTECTED_KEYWORD
+                        || keyword == Modifier.ModifierKeyword.PRIVATE_KEYWORD) {
+                        newField.modifiers().add(targetAst.newModifier(keyword));
+                        visibilityAdded = true;
+                        break;
+                    }
+                }
+                // If no explicit visibility, static fields default to package-private (no modifier)
+            } else {
+                // Instance fields are always private in extracted class
+                newField.modifiers().add(targetAst.newModifier(Modifier.ModifierKeyword.PRIVATE_KEYWORD));
+                visibilityAdded = true;
+            }
+
+            // Add other modifiers (static, final, etc.)
             for (Modifier.ModifierKeyword keyword : metadata.otherModifiers) {
                 if (keyword == Modifier.ModifierKeyword.PUBLIC_KEYWORD
                     || keyword == Modifier.ModifierKeyword.PROTECTED_KEYWORD
                     || keyword == Modifier.ModifierKeyword.PRIVATE_KEYWORD) {
-                    continue;
+                    continue;  // Already handled above
                 }
-                if (keyword != Modifier.ModifierKeyword.FINAL_KEYWORD) {
-                    newField.modifiers().add(targetAst.newModifier(keyword));
-                }
+                newField.modifiers().add(targetAst.newModifier(keyword));
             }
 
             ExtractedFieldInfo info = new ExtractedFieldInfo(
@@ -867,6 +962,7 @@ public class EclipseJDTRefactoring {
     /**
      * Normalize method signatures from GenEC format to internal format.
      * GenEC may send signatures like "methodName(Type1,Type2)" or "methodName(Type1 param1, Type2 param2)"
+     * Also handles array notation differences: byte vs byte[], String... vs String[]
      */
     private Set<String> normalizeMethodSignatures(List<String> methodSigs) {
         Set<String> normalized = new HashSet<>();
@@ -879,6 +975,32 @@ public class EclipseJDTRefactoring {
 
             // Also add the original in case it's already normalized
             normalized.add(sig);
+
+            // Create variant with [] stripped from arrays (javalang sometimes omits [])
+            // "method(byte[],int)" -> also match "method(byte,int)"
+            String arrayStripped = normalized_sig.replaceAll("\\[\\]", "");
+            if (!arrayStripped.equals(normalized_sig)) {
+                normalized.add(arrayStripped);
+            }
+
+            // Create variant with [] added to potential array types before comma or )
+            // This handles case where Python sends "byte" but Java has "byte[]"
+            // Match word characters followed by comma or closing paren, add []
+            String withArrays = normalized_sig.replaceAll("\\b(byte|char|short|int|long|float|double|boolean)(?=[,)])", "$1[]");
+            if (!withArrays.equals(normalized_sig)) {
+                normalized.add(withArrays);
+            }
+
+            // Also handle varargs: String... <-> String[]
+            String varargsToArray = normalized_sig.replace("...", "[]");
+            if (!varargsToArray.equals(normalized_sig)) {
+                normalized.add(varargsToArray);
+            }
+
+            String arrayToVarargs = normalized_sig.replace("[]", "...");
+            if (!arrayToVarargs.equals(normalized_sig)) {
+                normalized.add(arrayToVarargs);
+            }
         }
 
         return normalized;
