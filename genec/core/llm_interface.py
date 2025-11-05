@@ -1,17 +1,20 @@
 """LLM interface for generating refactoring suggestions using Claude API."""
 
-import os
 import re
 import time
 from dataclasses import dataclass
 from typing import Optional, List
 import xml.etree.ElementTree as ET
 
-import anthropic
-
 from genec.core.cluster_detector import Cluster
 from genec.core.dependency_analyzer import ClassDependencies
 from genec.core.cluster_context_builder import ClusterContextBuilder
+from genec.llm import (
+    AnthropicClientWrapper,
+    LLMConfig,
+    LLMRequestFailed,
+    LLMServiceUnavailable,
+)
 from genec.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
@@ -52,7 +55,6 @@ class LLMInterface:
             use_chunking: Whether to use AST-based chunking for large classes (recommended)
         """
         self.logger = get_logger(self.__class__.__name__)
-        self.api_key = api_key or os.environ.get('ANTHROPIC_API_KEY')
         self.model = model
         self.max_tokens = max_tokens
         self.temperature = temperature
@@ -67,15 +69,16 @@ class LLMInterface:
             self.context_builder = None
             self.logger.info("Using full class code in prompts (legacy mode)")
 
-        if not self.api_key:
+        llm_config = LLMConfig(
+            model=self.model,
+            timeout=self.timeout,
+        )
+        self.llm = AnthropicClientWrapper(api_key=api_key, config=llm_config)
+        if not self.llm.enabled:
             self.logger.warning(
                 "Anthropic API key not provided; LLM-based suggestions will be skipped."
             )
-            self.client = None
-            self._available = False
-        else:
-            self.client = anthropic.Anthropic(api_key=self.api_key)
-            self._available = True
+        self._available = self.llm.enabled
 
     def generate_refactoring_suggestion(
         self,
@@ -120,11 +123,19 @@ class LLMInterface:
                     else:
                         self.logger.warning(f"Failed to parse response (attempt {attempt + 1})")
 
-            except Exception as e:
-                self.logger.error(f"Error calling Claude API (attempt {attempt + 1}): {e}")
+            except (LLMServiceUnavailable, LLMRequestFailed) as e:
+                self.logger.error(
+                    f"LLM call failed (attempt {attempt + 1}): {e}"
+                )
 
                 if attempt < max_retries - 1:
                     # Exponential backoff
+                    wait_time = 2 ** attempt
+                    self.logger.info(f"Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+            except Exception as e:
+                self.logger.error(f"Unexpected error during LLM call (attempt {attempt + 1}): {e}")
+                if attempt < max_retries - 1:
                     wait_time = 2 ** attempt
                     self.logger.info(f"Retrying in {wait_time} seconds...")
                     time.sleep(wait_time)
@@ -220,27 +231,13 @@ Please provide only the XML tags specified above."""
             return None
 
         try:
-            message = self.client.messages.create(
+            return self.llm.send_message(
+                prompt,
                 model=self.model,
                 max_tokens=self.max_tokens,
                 temperature=self.temperature,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ],
-                timeout=self.timeout
             )
-
-            # Extract text from response
-            if message.content and len(message.content) > 0:
-                return message.content[0].text
-
-            return None
-
-        except anthropic.APIError as e:
-            self.logger.error(f"Anthropic API error: {e}")
-            raise
-        except Exception as e:
-            self.logger.error(f"Unexpected error: {e}")
+        except (LLMServiceUnavailable, LLMRequestFailed):
             raise
 
     def _parse_response(

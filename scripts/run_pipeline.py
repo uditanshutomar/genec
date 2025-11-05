@@ -150,6 +150,49 @@ def main():
 
             print(f"Saved suggestion #{idx} artifacts to {suggestion_dir}")
 
+    # Save transformation guidance for rejected clusters
+    rejected_clusters = [c for c in result.all_clusters if hasattr(c, 'rejection_issues') and hasattr(c, 'transformation_strategy') and c.transformation_strategy is not None]
+
+    if rejected_clusters:
+        transformations_dir = output_dir / "transformation_guidance"
+        transformations_dir.mkdir(parents=True, exist_ok=True)
+
+        print(f"\n{'='*80}")
+        print("TRANSFORMATION GUIDANCE FOR REJECTED CLUSTERS")
+        print(f"{'='*80}\n")
+
+        for idx, cluster in enumerate(rejected_clusters, 1):
+            strategy = cluster.transformation_strategy
+
+            print(f"\nCluster {cluster.id}: {strategy.pattern_name} pattern suggested (confidence: {strategy.confidence:.2f})")
+
+            # Save detailed guidance to file
+            guidance_file = transformations_dir / f"cluster_{cluster.id}_{strategy.pattern_name.replace(' ', '_')}.txt"
+
+            with open(guidance_file, 'w', encoding='utf-8') as f:
+                f.write(f"CLUSTER {cluster.id} - TRANSFORMATION GUIDANCE\n")
+                f.write(f"{'='*80}\n\n")
+                f.write(f"Pattern: {strategy.pattern_name}\n")
+                f.write(f"Confidence: {strategy.confidence:.2f}\n\n")
+                f.write(f"Description:\n{strategy.description}\n\n")
+                f.write(f"Required Modifications:\n")
+                for i, mod in enumerate(strategy.modifications_needed, 1):
+                    f.write(f"  {i}. {mod}\n")
+
+                if strategy.code_changes:
+                    f.write(f"\nCode Structure:\n")
+                    f.write(strategy.code_changes.get('transformation', ''))
+                    f.write(f"\n")
+
+                f.write(f"\nRejection Issues:\n")
+                for issue in cluster.rejection_issues:
+                    if issue.severity == 'error':
+                        f.write(f"  - [{issue.severity.upper()}] {issue.issue_type}: {issue.description}\n")
+
+            print(f"  Saved to: {guidance_file}")
+
+        print(f"\nSaved {len(rejected_clusters)} transformation guidance files to {transformations_dir}")
+
     # Summary
     print(f"\n{'='*80}")
     print("SUMMARY")

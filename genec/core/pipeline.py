@@ -14,6 +14,11 @@ from genec.core.llm_interface import LLMInterface, RefactoringSuggestion
 from genec.core.code_generator import CodeGenerator, CodeGenerationError
 from genec.core.jdt_code_generator import JDTCodeGenerator
 from genec.core.verification_engine import VerificationEngine, VerificationResult
+from genec.structural import StructuralTransformer, StructuralTransformResult
+from genec.structural.compile_validator import (
+    StructuralCompileValidator,
+    CompileResult,
+)
 from genec.metrics.cohesion_calculator import CohesionCalculator
 from genec.metrics.coupling_calculator import CouplingCalculator
 from genec.utils.logging_utils import setup_logger, get_logger
@@ -34,6 +39,7 @@ class PipelineResult:
     original_metrics: Dict[str, float] = field(default_factory=dict)
     graph_metrics: Dict[str, float] = field(default_factory=dict)
     execution_time: float = 0.0
+    structural_actions: List[str] = field(default_factory=list)
 
 
 class GenECPipeline:
@@ -111,6 +117,16 @@ class GenECPipeline:
                 'maven_command': 'mvn',
                 'gradle_command': 'gradle'
             },
+            'structural_transforms': {
+                'enabled': False,
+                'require_confirmation': True,
+                'compile_check': True,
+                'max_methods': 40,
+                'max_fields': 20,
+                'output_dir': 'data/outputs/structural_plans',
+                'compile_command': ['mvn', '-q', '-DskipTests', 'compile'],
+                'compile_timeout_seconds': 300
+            },
             'logging': {'level': 'INFO'},
             'cache': {'enable': True, 'directory': 'data/outputs/cache'}
         }
@@ -171,6 +187,25 @@ class GenECPipeline:
 
         # Store verification config for later initialization
         self.verify_config = self.config.get('verification', {})
+        self.structural_config = self.config.get('structural_transforms', {})
+        # Ensure defaults for structural config
+        self.structural_config.setdefault('enabled', False)
+        self.structural_config.setdefault('require_confirmation', True)
+        self.structural_config.setdefault('compile_check', True)
+        self.structural_config.setdefault('max_methods', 40)
+        self.structural_config.setdefault('max_fields', 20)
+        self.structural_config.setdefault('output_dir', 'data/outputs/structural_plans')
+        if self.structural_config.get('enabled'):
+            self.logger.info(
+                "Structural transformation stage enabled (max_methods=%s, max_fields=%s)",
+                self.structural_config['max_methods'],
+                self.structural_config['max_fields']
+            )
+            output_dir = Path(self.structural_config.get('output_dir', 'data/outputs/structural_plans'))
+            self.structural_transformer = StructuralTransformer(output_dir)
+        else:
+            self.logger.info("Structural transformation stage disabled")
+            self.structural_transformer = None
         self.verification_engine = None  # Will be initialized with repo_path in run_full_pipeline
 
         # Metrics calculators
@@ -283,7 +318,8 @@ class GenECPipeline:
             all_clusters = self.cluster_detector.detect_clusters(G_fused)
             result.all_clusters = all_clusters
 
-            filtered_clusters = self.cluster_detector.filter_clusters(all_clusters)
+            # Pass class_deps to enable extraction validation
+            filtered_clusters = self.cluster_detector.filter_clusters(all_clusters, class_deps)
             result.filtered_clusters = filtered_clusters
 
             ranked_clusters = self.cluster_detector.rank_clusters(filtered_clusters)
@@ -297,6 +333,26 @@ class GenECPipeline:
 
             if not ranked_clusters:
                 self.logger.warning("No viable clusters found")
+
+                if self.structural_config.get('enabled'):
+                    structural_results = self._run_structural_stage(
+                        all_clusters,
+                        class_deps,
+                        repo_path,
+                        class_file,
+                    )
+                    result.structural_actions = [
+                        self._summarize_structural_result(r) for r in structural_results
+                    ]
+                    if structural_results and self.structural_config.get('compile_check', True):
+                        compile_summary = self._run_structural_compile_check(repo_path)
+                        if compile_summary:
+                            result.structural_actions.append(compile_summary)
+                    if structural_results:
+                        self.logger.info(
+                            "Generated %s structural transformation plan(s)",
+                            len(structural_results),
+                        )
                 return result
 
             # Stage 5: Generate suggestions (LLM for naming + deterministic code)
@@ -528,6 +584,90 @@ class GenECPipeline:
             cluster_id += 1
 
         return clusters
+
+    def _run_structural_stage(
+        self,
+        clusters: List[Cluster],
+        class_deps: ClassDependencies,
+        repo_path: str,
+        class_file: str
+    ) -> List[StructuralTransformResult]:
+        """Generate structural transformation plans for rejected clusters."""
+        if not self.structural_transformer:
+            return []
+
+        candidates = [
+            cluster for cluster in clusters
+            if getattr(cluster, "rejection_issues", None)
+        ]
+
+        if not candidates:
+            self.logger.info(
+                "Structural stage enabled but no rejected clusters captured."
+            )
+            return []
+
+        self.logger.info(
+            "Running structural transformation stage for %s rejected cluster(s)",
+            len(candidates)
+        )
+
+        structural_results: List[StructuralTransformResult] = []
+        for cluster in candidates:
+            try:
+                result = self.structural_transformer.attempt_transform(
+                    cluster,
+                    class_deps,
+                    self.structural_config,
+                    repo_path,
+                    class_file
+                )
+                if result.actions:
+                    structural_results.append(result)
+            except Exception as exc:  # pragma: no cover - defensive
+                self.logger.error(
+                    "Structural transformation failed for cluster %s: %s",
+                    cluster.id,
+                    exc
+                )
+
+        return structural_results
+
+    def _summarize_structural_result(
+        self,
+        result: StructuralTransformResult
+    ) -> str:
+        """Convert structural result into concise summary text."""
+        plan_paths = [
+            action.artifacts.get("plan_path")
+            for action in result.actions
+            if action.artifacts
+        ]
+        plan_paths = [p for p in plan_paths if p]
+        plan_info = plan_paths[0] if plan_paths else (
+            str(result.plan_path) if result.plan_path else "n/a"
+        )
+        notes = result.notes or ""
+        return f"Cluster {result.cluster_id}: plan → {plan_info}. {notes}".strip()
+
+    def _run_structural_compile_check(self, repo_path: str) -> Optional[str]:
+        """Run compile check after structural planning."""
+        command = self.structural_config.get('compile_command')
+        timeout = self.structural_config.get('compile_timeout_seconds', 300)
+
+        if not command:
+            self.logger.info("Structural compile check skipped (no command configured).")
+            return None
+
+        validator = StructuralCompileValidator(command, timeout_seconds=timeout)
+        compile_result = validator.run(repo_path)
+
+        if compile_result.success:
+            self.logger.info("Structural compile check passed.")
+        else:
+            self.logger.error("Structural compile check failed.")
+
+        return f"Structural compile check: {compile_result.summary()}"
 
     def check_prerequisites(self) -> Dict[str, bool]:
         """

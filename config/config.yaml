@@ -27,10 +27,25 @@ code_generation:
 verification:
   enable_syntactic: true
   enable_semantic: true
-  enable_behavioral: true
+  enable_behavioral: false
+  enable_extraction_validation: true
+  suggest_pattern_transformations: true
   java_compiler: javac
   maven_command: mvn
   gradle_command: gradle
+structural_transforms:
+  enabled: true
+  require_confirmation: true
+  compile_check: true
+  max_methods: 40
+  max_fields: 20
+  output_dir: data/outputs/structural_plans
+  compile_command:
+    - mvn
+    - -q
+    - -DskipTests
+    - compile
+  compile_timeout_seconds: 300
 logging:
   level: INFO
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

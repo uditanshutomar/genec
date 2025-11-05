@@ -273,7 +273,12 @@ class JDTCodeGenerator:
                         if candidate_sig in methods:
                             continue
                         modifiers = [m.lower() for m in modifiers_by_sig.get(candidate_sig, [])]
+                        # Add private helper methods
                         should_add = 'private' in modifiers
+                        # Add static helper methods (they're often utilities used by the cluster)
+                        if not should_add and 'static' in modifiers:
+                            should_add = True
+                        # Add methods with same name as initially selected methods (overloads)
                         if not should_add and called_name in initial_method_names:
                             should_add = True
                         if should_add:

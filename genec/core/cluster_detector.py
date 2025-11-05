@@ -23,6 +23,7 @@ class Cluster:
     internal_cohesion: float = 0.0
     external_coupling: float = 0.0
     rank_score: Optional[float] = None
+    rejection_issues: List = field(default_factory=list)
 
     def __len__(self):
         return len(self.member_names)
@@ -130,17 +131,24 @@ class ClusterDetector:
 
         return clusters
 
-    def filter_clusters(self, clusters: List[Cluster]) -> List[Cluster]:
+    def filter_clusters(self, clusters: List[Cluster], class_deps: Optional[ClassDependencies] = None) -> List[Cluster]:
         """
         Filter clusters by size and quality constraints.
 
         Args:
             clusters: List of clusters to filter
+            class_deps: Class dependencies for extraction validation (optional)
 
         Returns:
             Filtered list of clusters
         """
         self.logger.info("Filtering clusters by size and quality")
+
+        # Initialize extraction validator if class_deps provided
+        extraction_validator = None
+        if class_deps:
+            from genec.verification.extraction_validator import ExtractionValidator
+            extraction_validator = ExtractionValidator()
 
         filtered = []
         for cluster in clusters:
@@ -170,6 +178,26 @@ class ClusterDetector:
             if len(cluster.get_methods()) == 0:
                 self.logger.debug(f"Cluster {cluster.id} has no methods")
                 continue
+
+            # Validate extraction safety
+            if extraction_validator:
+                is_valid, issues = extraction_validator.validate_extraction(cluster, class_deps)
+                if not is_valid:
+                    self.logger.info(
+                        f"Cluster {cluster.id} cannot be safely extracted: "
+                        f"{len([i for i in issues if i.severity == 'error'])} blocking issues"
+                    )
+                    for issue in issues:
+                        if issue.severity == 'error':
+                            self.logger.debug(
+                                f"  - {issue.issue_type}: {issue.description}"
+                            )
+                        elif issue.issue_type == 'pattern_suggestion':
+                            self.logger.info(f"  - {issue.description}")
+
+                    # Store rejection info with transformation guidance
+                    cluster.rejection_issues = issues
+                    continue
 
             filtered.append(cluster)
 
