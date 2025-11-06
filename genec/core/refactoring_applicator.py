@@ -1,0 +1,265 @@
+"""
+Refactoring Applicator - Applies generated refactorings to source files.
+
+This module is responsible for writing refactored code to the filesystem,
+creating backups, and managing the refactoring application process.
+"""
+
+import os
+import shutil
+from pathlib import Path
+from typing import Optional, Tuple
+from dataclasses import dataclass
+from datetime import datetime
+
+from genec.core.llm_interface import RefactoringSuggestion
+from genec.utils.logging_utils import get_logger
+
+logger = get_logger(__name__)
+
+
+@dataclass
+class RefactoringApplication:
+    """Result of applying a refactoring."""
+    success: bool
+    new_class_path: Optional[str] = None
+    original_class_path: Optional[str] = None
+    backup_path: Optional[str] = None
+    error_message: Optional[str] = None
+
+
+class RefactoringApplicator:
+    """
+    Applies refactoring suggestions to source files.
+
+    Features:
+    - Creates backups before modifying files
+    - Writes new extracted class
+    - Updates original class
+    - Rollback support if verification fails
+    """
+
+    def __init__(self, create_backups: bool = True, backup_dir: Optional[str] = None):
+        """
+        Initialize refactoring applicator.
+
+        Args:
+            create_backups: Whether to create backups before modifying files
+            backup_dir: Directory for backups (default: .genec_backups)
+        """
+        self.create_backups = create_backups
+        self.backup_dir = backup_dir or ".genec_backups"
+        self.logger = get_logger(self.__class__.__name__)
+
+    def apply_refactoring(
+        self,
+        suggestion: RefactoringSuggestion,
+        original_class_file: str,
+        repo_path: str,
+        dry_run: bool = False
+    ) -> RefactoringApplication:
+        """
+        Apply a refactoring suggestion to the filesystem.
+
+        Args:
+            suggestion: The refactoring suggestion to apply
+            original_class_file: Path to the original class file
+            repo_path: Path to repository root
+            dry_run: If True, don't actually write files (for testing)
+
+        Returns:
+            RefactoringApplication with status and file paths
+        """
+        try:
+            # Validate inputs
+            if not suggestion.new_class_code:
+                return RefactoringApplication(
+                    success=False,
+                    error_message="No new class code generated"
+                )
+
+            if not suggestion.modified_original_code:
+                return RefactoringApplication(
+                    success=False,
+                    error_message="No modified original code generated"
+                )
+
+            # Compute file paths
+            original_path = Path(original_class_file).resolve()
+            new_class_path = self._compute_new_class_path(
+                original_path,
+                suggestion.proposed_class_name,
+                repo_path
+            )
+
+            # Create backup if enabled
+            backup_path = None
+            if self.create_backups and not dry_run:
+                backup_path = self._create_backup(original_path)
+                self.logger.info(f"Created backup: {backup_path}")
+
+            if dry_run:
+                self.logger.info(f"[DRY RUN] Would write new class: {new_class_path}")
+                self.logger.info(f"[DRY RUN] Would update original: {original_path}")
+                return RefactoringApplication(
+                    success=True,
+                    new_class_path=str(new_class_path),
+                    original_class_path=str(original_path),
+                    backup_path=backup_path
+                )
+
+            # Write new extracted class
+            self._write_file(new_class_path, suggestion.new_class_code)
+            self.logger.info(f"Created new class: {new_class_path}")
+
+            # Update original class
+            self._write_file(original_path, suggestion.modified_original_code)
+            self.logger.info(f"Updated original class: {original_path}")
+
+            return RefactoringApplication(
+                success=True,
+                new_class_path=str(new_class_path),
+                original_class_path=str(original_path),
+                backup_path=backup_path
+            )
+
+        except Exception as e:
+            self.logger.error(f"Failed to apply refactoring: {e}", exc_info=True)
+            return RefactoringApplication(
+                success=False,
+                error_message=str(e)
+            )
+
+    def rollback_refactoring(
+        self,
+        application: RefactoringApplication
+    ) -> bool:
+        """
+        Rollback a refactoring by restoring from backup.
+
+        Args:
+            application: The RefactoringApplication to rollback
+
+        Returns:
+            True if rollback successful, False otherwise
+        """
+        try:
+            if not application.backup_path or not os.path.exists(application.backup_path):
+                self.logger.warning("No backup found, cannot rollback")
+                return False
+
+            # Delete new class if it was created
+            if application.new_class_path and os.path.exists(application.new_class_path):
+                os.remove(application.new_class_path)
+                self.logger.info(f"Deleted new class: {application.new_class_path}")
+
+            # Restore original from backup
+            if application.original_class_path:
+                shutil.copy2(application.backup_path, application.original_class_path)
+                self.logger.info(f"Restored original from backup: {application.original_class_path}")
+
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Rollback failed: {e}", exc_info=True)
+            return False
+
+    def _compute_new_class_path(
+        self,
+        original_path: Path,
+        new_class_name: str,
+        repo_path: str
+    ) -> Path:
+        """
+        Compute the path for the new extracted class.
+
+        Places it in the same directory as the original class.
+
+        Args:
+            original_path: Path to original class file
+            new_class_name: Name of new class
+            repo_path: Repository root path
+
+        Returns:
+            Path for new class file
+        """
+        # Place new class in same directory as original
+        new_file_name = f"{new_class_name}.java"
+        new_path = original_path.parent / new_file_name
+
+        return new_path
+
+    def _create_backup(self, file_path: Path) -> str:
+        """
+        Create a backup of a file.
+
+        Args:
+            file_path: Path to file to backup
+
+        Returns:
+            Path to backup file
+        """
+        # Create backup directory if it doesn't exist
+        backup_dir = Path(self.backup_dir)
+        backup_dir.mkdir(parents=True, exist_ok=True)
+
+        # Generate backup filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_name = f"{file_path.stem}_{timestamp}{file_path.suffix}"
+        backup_path = backup_dir / backup_name
+
+        # Copy file to backup location
+        shutil.copy2(file_path, backup_path)
+
+        return str(backup_path)
+
+    def _write_file(self, file_path: Path, content: str):
+        """
+        Write content to a file.
+
+        Args:
+            file_path: Path to file
+            content: Content to write
+        """
+        # Create parent directories if they don't exist
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Write content
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+
+    def cleanup_backups(self, keep_recent: int = 5):
+        """
+        Clean up old backups, keeping only the most recent ones.
+
+        Args:
+            keep_recent: Number of recent backups to keep per file
+        """
+        try:
+            backup_dir = Path(self.backup_dir)
+            if not backup_dir.exists():
+                return
+
+            # Group backups by base filename
+            backups_by_file = {}
+            for backup_file in backup_dir.glob("*.java"):
+                # Extract base name (remove timestamp)
+                parts = backup_file.stem.split('_')
+                if len(parts) >= 3:  # name_YYYYMMDD_HHMMSS
+                    base_name = '_'.join(parts[:-2])
+                    if base_name not in backups_by_file:
+                        backups_by_file[base_name] = []
+                    backups_by_file[base_name].append(backup_file)
+
+            # Keep only recent backups
+            for base_name, backups in backups_by_file.items():
+                # Sort by modification time (newest first)
+                backups.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+
+                # Delete old backups
+                for old_backup in backups[keep_recent:]:
+                    old_backup.unlink()
+                    self.logger.info(f"Deleted old backup: {old_backup}")
+
+        except Exception as e:
+            self.logger.warning(f"Failed to cleanup backups: {e}")

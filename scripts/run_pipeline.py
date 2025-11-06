@@ -3,12 +3,25 @@
 
 import argparse
 import sys
+import os
 from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from genec.core.pipeline import GenECPipeline
+
+# Temporary: load a hardcoded Anthropic API key (INSECURE — remove later)
+try:
+    # import here so the script still runs if the module isn't present
+    from genec.utils.secrets import get_anthropic_api_key
+
+    # set the environment variable for downstream consumers that read os.environ
+    os.environ.setdefault("ANTHROPIC_API_KEY", get_anthropic_api_key())
+except Exception:
+    # If the secrets module isn't configured or raises, continue — the rest of
+    # the pipeline may rely on other secret-loading strategies or environment.
+    pass
 
 
 def main():
@@ -38,8 +51,8 @@ def main():
     parser.add_argument(
         '--max-suggestions',
         type=int,
-        default=5,
-        help='Maximum number of suggestions to generate (default: 5)'
+        default=None,
+        help='Maximum number of suggestions to generate (default: None = all valid clusters)'
     )
 
     parser.add_argument(
@@ -208,6 +221,26 @@ def main():
         print(f"\nOriginal Class Metrics:")
         for metric, value in result.original_metrics.items():
             print(f"  {metric}: {value:.3f}")
+
+    # Show applied refactorings at the end
+    if result.applied_refactorings:
+        successful_applications = [app for app in result.applied_refactorings if app.success]
+        if successful_applications:
+            print(f"\n{'='*80}")
+            print("APPLIED REFACTORINGS")
+            print(f"{'='*80}")
+            print(f"\nSuccessfully applied {len(successful_applications)} refactoring(s):\n")
+
+            for i, app in enumerate(successful_applications, 1):
+                print(f"{i}. New class created:")
+                print(f"   {app.new_class_path}")
+
+            print(f"\nOriginal class modified:")
+            print(f"   {app.original_class_path}")
+
+            if app.backup_path:
+                print(f"\nBackup saved to:")
+                print(f"   {app.backup_path}")
 
     # Visualize graphs if requested
     if args.visualize and result.filtered_clusters:

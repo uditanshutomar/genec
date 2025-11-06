@@ -46,6 +46,12 @@ structural_transforms:
     - -DskipTests
     - compile
   compile_timeout_seconds: 300
+refactoring_application:
+  enabled: true           # Enable refactoring application stage
+  auto_apply: true        # Automatically apply verified refactorings
+  create_backups: true    # Create backups before modifying files
+  backup_dir: .genec_backups  # Directory for backups
+  dry_run: false          # If true, only simulate (don't actually write files)
 logging:
   level: INFO
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

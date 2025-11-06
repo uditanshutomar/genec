@@ -9,6 +9,7 @@ com/genec/jdt/EclipseJDTRefactoring$2.class
 com/genec/jdt/RefactoringSpec.class
 com/genec/jdt/ClassInspector$InspectorVisitor.class
 com/genec/jdt/ClassInspector$FieldDTO.class
+com/genec/jdt/EclipseJDTRefactoring$3.class
 com/genec/jdt/RefactoringResult.class
 com/genec/jdt/ClassInspector$ParameterDTO.class
 com/genec/jdt/EclipseJDTRefactoring$ExtractedFieldInfo.class

@@ -14,6 +14,7 @@ from genec.core.llm_interface import LLMInterface, RefactoringSuggestion
 from genec.core.code_generator import CodeGenerator, CodeGenerationError
 from genec.core.jdt_code_generator import JDTCodeGenerator
 from genec.core.verification_engine import VerificationEngine, VerificationResult
+from genec.core.refactoring_applicator import RefactoringApplicator, RefactoringApplication
 from genec.structural import StructuralTransformer, StructuralTransformResult
 from genec.structural.compile_validator import (
     StructuralCompileValidator,
@@ -36,6 +37,7 @@ class PipelineResult:
     filtered_clusters: List[Cluster] = field(default_factory=list)
     ranked_clusters: List[Cluster] = field(default_factory=list)
     verification_results: List[VerificationResult] = field(default_factory=list)
+    applied_refactorings: List[RefactoringApplication] = field(default_factory=list)
     original_metrics: Dict[str, float] = field(default_factory=dict)
     graph_metrics: Dict[str, float] = field(default_factory=dict)
     execution_time: float = 0.0
@@ -127,6 +129,13 @@ class GenECPipeline:
                 'compile_command': ['mvn', '-q', '-DskipTests', 'compile'],
                 'compile_timeout_seconds': 300
             },
+            'refactoring_application': {
+                'enabled': False,
+                'auto_apply': False,
+                'create_backups': True,
+                'backup_dir': '.genec_backups',
+                'dry_run': True
+            },
             'logging': {'level': 'INFO'},
             'cache': {'enable': True, 'directory': 'data/outputs/cache'}
         }
@@ -208,6 +217,25 @@ class GenECPipeline:
             self.structural_transformer = None
         self.verification_engine = None  # Will be initialized with repo_path in run_full_pipeline
 
+        # Refactoring applicator
+        self.refactoring_config = self.config.get('refactoring_application', {})
+        self.refactoring_config.setdefault('enabled', False)
+        self.refactoring_config.setdefault('auto_apply', False)
+        self.refactoring_config.setdefault('create_backups', True)
+        self.refactoring_config.setdefault('backup_dir', '.genec_backups')
+        self.refactoring_config.setdefault('dry_run', True)
+
+        if self.refactoring_config.get('enabled'):
+            self.refactoring_applicator = RefactoringApplicator(
+                create_backups=self.refactoring_config.get('create_backups', True),
+                backup_dir=self.refactoring_config.get('backup_dir', '.genec_backups')
+            )
+            mode = "DRY RUN" if self.refactoring_config.get('dry_run') else "LIVE"
+            self.logger.info(f"Refactoring application enabled [{mode}]")
+        else:
+            self.refactoring_applicator = None
+            self.logger.info("Refactoring application disabled")
+
         # Metrics calculators
         self.cohesion_calculator = CohesionCalculator()
         self.coupling_calculator = CouplingCalculator()
@@ -216,7 +244,7 @@ class GenECPipeline:
         self,
         class_file: str,
         repo_path: str,
-        max_suggestions: int = 5
+        max_suggestions: int = None
     ) -> PipelineResult:
         """
         Run the complete GenEC pipeline.
@@ -224,7 +252,7 @@ class GenECPipeline:
         Args:
             class_file: Path to Java class file
             repo_path: Path to Git repository
-            max_suggestions: Maximum number of suggestions to generate
+            max_suggestions: Maximum number of suggestions to generate (None = all valid clusters)
 
         Returns:
             PipelineResult with all outputs
@@ -356,7 +384,8 @@ class GenECPipeline:
                 return result
 
             # Stage 5: Generate suggestions (LLM for naming + deterministic code)
-            self.logger.info(f"\n[Stage 5/6] Generating refactoring suggestions (top {max_suggestions})...")
+            num_to_process = "all" if max_suggestions is None else f"top {max_suggestions}"
+            self.logger.info(f"\n[Stage 5/6] Generating refactoring suggestions ({num_to_process})...")
 
             suggestions: List[RefactoringSuggestion] = []
 
@@ -365,7 +394,8 @@ class GenECPipeline:
                     "LLM interface unavailable; skipping suggestion generation."
                 )
             else:
-                for cluster in ranked_clusters[:max_suggestions]:
+                clusters_to_process = ranked_clusters if max_suggestions is None else ranked_clusters[:max_suggestions]
+                for cluster in clusters_to_process:
                     suggestion = self.llm_interface.generate_refactoring_suggestion(
                         cluster,
                         original_code,
@@ -420,7 +450,7 @@ class GenECPipeline:
                 fallback_clusters = self._build_field_based_clusters(class_deps)
                 seen = set()
                 for cluster in fallback_clusters:
-                    if len(suggestions) >= max_suggestions:
+                    if max_suggestions is not None and len(suggestions) >= max_suggestions:
                         break
                     key = tuple(sorted(cluster.member_names))
                     if key in seen:
@@ -478,6 +508,48 @@ class GenECPipeline:
                             f"{verification_result.error_message}"
                         )
 
+            # Stage 7: Apply refactorings (if enabled)
+            if self.refactoring_applicator and result.verified_suggestions:
+                self.logger.info(f"\n[Stage 7/7] Applying verified refactorings...")
+
+                dry_run = self.refactoring_config.get('dry_run', True)
+                auto_apply = self.refactoring_config.get('auto_apply', False)
+
+                if not auto_apply and not dry_run:
+                    self.logger.warning(
+                        "auto_apply=False: Refactorings will not be applied. "
+                        "Set auto_apply=True to enable automatic application."
+                    )
+                else:
+                    for i, suggestion in enumerate(result.verified_suggestions, 1):
+                        self.logger.info(
+                            f"Applying refactoring {i}/{len(result.verified_suggestions)}: "
+                            f"{suggestion.proposed_class_name}"
+                        )
+
+                        application = self.refactoring_applicator.apply_refactoring(
+                            suggestion=suggestion,
+                            original_class_file=class_file,
+                            repo_path=repo_path,
+                            dry_run=dry_run
+                        )
+
+                        result.applied_refactorings.append(application)
+
+                        if application.success:
+                            if dry_run:
+                                self.logger.info(
+                                    f"[DRY RUN] Would create: {application.new_class_path}"
+                                )
+                            else:
+                                self.logger.info(
+                                    f"Successfully applied refactoring: {application.new_class_path}"
+                                )
+                        else:
+                            self.logger.error(
+                                f"Failed to apply refactoring: {application.error_message}"
+                            )
+
             # Calculate execution time
             result.execution_time = time.time() - start_time
 
@@ -489,6 +561,9 @@ class GenECPipeline:
             self.logger.info(f"Clusters detected: {len(result.all_clusters)}")
             self.logger.info(f"Suggestions generated: {len(result.suggestions)}")
             self.logger.info(f"Verified suggestions: {len(result.verified_suggestions)}")
+            if result.applied_refactorings:
+                successful_applications = sum(1 for app in result.applied_refactorings if app.success)
+                self.logger.info(f"Applied refactorings: {successful_applications}/{len(result.applied_refactorings)}")
             self.logger.info(f"Execution time: {result.execution_time:.2f} seconds")
             self.logger.info("=" * 80)
 
