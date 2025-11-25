@@ -57,3 +57,6 @@ Thumbs.db
 *_rsa
 config/secrets.yaml
 *.secret
+
+# java
+target/*
