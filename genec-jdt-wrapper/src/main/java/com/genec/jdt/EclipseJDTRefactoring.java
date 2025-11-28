@@ -37,8 +37,8 @@ public class EclipseJDTRefactoring {
         final Expression initializer;
 
         FieldMetadata(String name, Type type, boolean isFinal, boolean isStatic,
-                      List<Modifier.ModifierKeyword> otherModifiers,
-                      Expression initializer) {
+                List<Modifier.ModifierKeyword> otherModifiers,
+                Expression initializer) {
             this.name = name;
             this.type = type;
             this.isFinal = isFinal;
@@ -82,9 +82,8 @@ public class EclipseJDTRefactoring {
 
             if (originalTypeDecl == null) {
                 return new RefactoringResult(
-                    false,
-                    "Could not find class declaration in file: " + spec.getClassFile()
-                );
+                        false,
+                        "Could not find class declaration in file: " + spec.getClassFile());
             }
 
             // 3. Generate the new extracted class
@@ -97,18 +96,16 @@ public class EclipseJDTRefactoring {
             String newClassPath = computeNewClassPath();
 
             return new RefactoringResult(
-                true,
-                "Successfully extracted " + spec.getMethods().size() + " methods into " + spec.getNewClassName(),
-                newClassCode,
-                modifiedOriginalCode,
-                newClassPath
-            );
+                    true,
+                    "Successfully extracted " + spec.getMethods().size() + " methods into " + spec.getNewClassName(),
+                    newClassCode,
+                    modifiedOriginalCode,
+                    newClassPath);
 
         } catch (Exception e) {
             return new RefactoringResult(
-                false,
-                "Refactoring failed: " + e.getMessage() + "\n" + getStackTrace(e)
-            );
+                    false,
+                    "Refactoring failed: " + e.getMessage() + "\n" + getStackTrace(e));
         }
     }
 
@@ -123,7 +120,8 @@ public class EclipseJDTRefactoring {
 
         CompilationUnit parsedCU = (CompilationUnit) parser.createAST(null);
 
-        // Record modifications on the parsed compilation unit so ASTRewrite can track edits
+        // Record modifications on the parsed compilation unit so ASTRewrite can track
+        // edits
         parsedCU.recordModifications();
 
         compilationUnit = parsedCU;
@@ -188,6 +186,12 @@ public class EclipseJDTRefactoring {
         // Also extract static fields referenced by extracted methods
         Set<String> methodSignatures = normalizeMethodSignatures(spec.getMethods());
         Set<String> referencedStaticFields = findReferencedStaticFields(methodSignatures);
+
+        // FIX: Do not extract static fields that are also referenced by remaining
+        // methods
+        Set<String> remainingReferencedStaticFields = findReferencedStaticFieldsInRemainingMethods(methodSignatures);
+        referencedStaticFields.removeAll(remainingReferencedStaticFields);
+
         fieldNames.addAll(referencedStaticFields);
 
         Map<String, ExtractedFieldInfo> extractedFields = extractFields(newAst, fieldNames);
@@ -197,7 +201,8 @@ public class EclipseJDTRefactoring {
 
         // Add reference to original class (for delegation pattern)
         if (!extractedFields.isEmpty()) {
-            // Add a field to store reference to original class for accessing non-extracted members
+            // Add a field to store reference to original class for accessing non-extracted
+            // members
             String originalClassName = originalTypeDecl.getName().getIdentifier();
             VariableDeclarationFragment fragment = newAst.newVariableDeclarationFragment();
             fragment.setName(newAst.newSimpleName(toCamelCase(originalClassName)));
@@ -243,10 +248,45 @@ public class EclipseJDTRefactoring {
                     // Only process unqualified method calls
                     if (node.getExpression() == null) {
                         String invokedName = node.getName().getIdentifier();
-                        // If this call is to a method that exists in original class but was NOT extracted,
+                        // If this call is to a method that exists in original class but was NOT
+                        // extracted,
                         // qualify it with the original class name
                         if (originalMethodNames.contains(invokedName) && !extractedMethodNames.contains(invokedName)) {
                             node.setExpression(newAst.newSimpleName(originalClassName));
+                        }
+                    }
+                    return true;
+                }
+
+                @Override
+                @SuppressWarnings("unchecked")
+                public boolean visit(SimpleName node) {
+                    String name = node.getIdentifier();
+                    if (remainingReferencedStaticFields.contains(name)) {
+                        ASTNode parent = node.getParent();
+                        if (parent instanceof QualifiedName && ((QualifiedName) parent).getName() == node) {
+                            return true; // Already qualified
+                        }
+                        if (parent instanceof FieldAccess && ((FieldAccess) parent).getName() == node) {
+                            Expression expr = ((FieldAccess) parent).getExpression();
+                            if (expr instanceof SimpleName
+                                    && ((SimpleName) expr).getIdentifier().equals(originalClassName)) {
+                                return true; // Already qualified
+                            }
+                        }
+
+                        // Replace with qualified name
+                        StructuralPropertyDescriptor location = node.getLocationInParent();
+                        if (location.isChildProperty()) {
+                            parent.setStructuralProperty(location, newAst.newQualifiedName(
+                                    newAst.newSimpleName(originalClassName),
+                                    newAst.newSimpleName(name)));
+                        } else if (location.isChildListProperty()) {
+                            List<Object> list = (List<Object>) parent.getStructuralProperty(location);
+                            int index = list.indexOf(node);
+                            list.set(index, newAst.newQualifiedName(
+                                    newAst.newSimpleName(originalClassName),
+                                    newAst.newSimpleName(name)));
                         }
                     }
                     return true;
@@ -271,7 +311,8 @@ public class EclipseJDTRefactoring {
         // Get the list rewrite for the type's body declarations
         ListRewrite listRewrite = rewrite.getListRewrite(originalTypeDecl, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
 
-        // Find methods to extract and replace their bodies with delegation to helper class
+        // Find methods to extract and replace their bodies with delegation to helper
+        // class
         Set<String> methodSignatures = normalizeMethodSignatures(spec.getMethods());
         String helperFieldName = toCamelCase(spec.getNewClassName());
         boolean needsHelperField = false;
@@ -326,6 +367,11 @@ public class EclipseJDTRefactoring {
 
         // Find and remove extracted fields
         Set<String> fieldNames = new HashSet<>(spec.getFields() != null ? spec.getFields() : Collections.emptyList());
+
+        // FIX: Do not remove static fields that are referenced by remaining methods
+        Set<String> remainingReferencedStaticFields = findReferencedStaticFieldsInRemainingMethods(methodSignatures);
+        fieldNames.removeAll(remainingReferencedStaticFields);
+
         for (Object bodyDecl : originalTypeDecl.bodyDeclarations()) {
             if (bodyDecl instanceof FieldDeclaration) {
                 FieldDeclaration field = (FieldDeclaration) bodyDecl;
@@ -344,7 +390,8 @@ public class EclipseJDTRefactoring {
                 } else {
                     // Otherwise, remove individual fragments
                     for (VariableDeclarationFragment fragment : toRemove) {
-                        ListRewrite fragmentRewrite = rewrite.getListRewrite(field, FieldDeclaration.FRAGMENTS_PROPERTY);
+                        ListRewrite fragmentRewrite = rewrite.getListRewrite(field,
+                                FieldDeclaration.FRAGMENTS_PROPERTY);
                         fragmentRewrite.remove(fragment, null);
                     }
                 }
@@ -384,17 +431,16 @@ public class EclipseJDTRefactoring {
                         return true;
                     }
                     replaceFieldReference(
-                        rewrite,
-                        node,
-                        identifier,
-                        helperFieldName,
-                        getterNames,
-                        setterNames,
-                        preIncrementNames,
-                        postIncrementNames,
-                        preDecrementNames,
-                        postDecrementNames
-                    );
+                            rewrite,
+                            node,
+                            identifier,
+                            helperFieldName,
+                            getterNames,
+                            setterNames,
+                            preIncrementNames,
+                            postIncrementNames,
+                            preDecrementNames,
+                            postDecrementNames);
                     return false;
                 }
 
@@ -408,17 +454,16 @@ public class EclipseJDTRefactoring {
                         return true;
                     }
                     replaceFieldReference(
-                        rewrite,
-                        node,
-                        identifier,
-                        helperFieldName,
-                        getterNames,
-                        setterNames,
-                        preIncrementNames,
-                        postIncrementNames,
-                        preDecrementNames,
-                        postDecrementNames
-                    );
+                            rewrite,
+                            node,
+                            identifier,
+                            helperFieldName,
+                            getterNames,
+                            setterNames,
+                            preIncrementNames,
+                            postIncrementNames,
+                            preDecrementNames,
+                            postDecrementNames);
                     return false;
                 }
             });
@@ -494,7 +539,7 @@ public class EclipseJDTRefactoring {
                                 // Check if this is actually a field reference (not a method call or variable)
                                 ASTNode parent = node.getParent();
                                 if (!(parent instanceof MethodInvocation &&
-                                      ((MethodInvocation) parent).getName() == node)) {
+                                        ((MethodInvocation) parent).getName() == node)) {
                                     referencedFields.add(name);
                                 }
                             }
@@ -518,6 +563,63 @@ public class EclipseJDTRefactoring {
     }
 
     /**
+     * Find static fields that are referenced by methods NOT being extracted.
+     */
+    private Set<String> findReferencedStaticFieldsInRemainingMethods(Set<String> extractedMethodSignatures) {
+        Set<String> referencedFields = new HashSet<>();
+
+        // Get all static fields
+        Map<String, Boolean> staticFields = new HashMap<>();
+        for (Object bodyDecl : originalTypeDecl.bodyDeclarations()) {
+            if (bodyDecl instanceof FieldDeclaration) {
+                FieldDeclaration field = (FieldDeclaration) bodyDecl;
+                if (Modifier.isStatic(field.getModifiers())) {
+                    for (Object fragmentObj : field.fragments()) {
+                        VariableDeclarationFragment fragment = (VariableDeclarationFragment) fragmentObj;
+                        staticFields.put(fragment.getName().getIdentifier(), true);
+                    }
+                }
+            }
+        }
+
+        // Check remaining methods
+        for (Object bodyDecl : originalTypeDecl.bodyDeclarations()) {
+            if (bodyDecl instanceof MethodDeclaration) {
+                MethodDeclaration method = (MethodDeclaration) bodyDecl;
+                String signature = getMethodSignature(method);
+
+                if (!extractedMethodSignatures.contains(signature)) {
+                    // Visit this method's AST to find field references
+                    method.accept(new ASTVisitor() {
+                        @Override
+                        public boolean visit(SimpleName node) {
+                            String name = node.getIdentifier();
+                            if (staticFields.containsKey(name)) {
+                                ASTNode parent = node.getParent();
+                                if (!(parent instanceof MethodInvocation
+                                        && ((MethodInvocation) parent).getName() == node)) {
+                                    referencedFields.add(name);
+                                }
+                            }
+                            return true;
+                        }
+
+                        @Override
+                        public boolean visit(FieldAccess node) {
+                            String name = node.getName().getIdentifier();
+                            if (staticFields.containsKey(name)) {
+                                referencedFields.add(name);
+                            }
+                            return true;
+                        }
+                    });
+                }
+            }
+        }
+        return referencedFields;
+    }
+
+    /**
      * Extract fields from original class that should be moved to new class.
      */
     private Map<String, FieldMetadata> collectExtractedFieldMetadata() {
@@ -526,7 +628,8 @@ public class EclipseJDTRefactoring {
         }
 
         Map<String, FieldMetadata> metadata = new LinkedHashMap<>();
-        Set<String> requestedFields = new HashSet<>(spec.getFields() != null ? spec.getFields() : Collections.emptyList());
+        Set<String> requestedFields = new HashSet<>(
+                spec.getFields() != null ? spec.getFields() : Collections.emptyList());
         if (requestedFields.isEmpty()) {
             extractedFieldMetadata = metadata;
             return metadata;
@@ -558,13 +661,12 @@ public class EclipseJDTRefactoring {
 
                 Expression initializer = fragment.getInitializer();
                 FieldMetadata info = new FieldMetadata(
-                    fieldName,
-                    fieldDeclaration.getType(),
-                    isFinal,
-                    isStatic,
-                    modifierKeywords,
-                    initializer
-                );
+                        fieldName,
+                        fieldDeclaration.getType(),
+                        isFinal,
+                        isStatic,
+                        modifierKeywords,
+                        initializer);
                 metadata.put(fieldName, info);
             }
         }
@@ -593,20 +695,22 @@ public class EclipseJDTRefactoring {
             FieldDeclaration newField = targetAst.newFieldDeclaration(fragment);
             newField.setType((Type) ASTNode.copySubtree(targetAst, metadata.type));
 
-            // For static fields, preserve original visibility; for instance fields, make private
+            // For static fields, preserve original visibility; for instance fields, make
+            // private
             boolean visibilityAdded = false;
             if (metadata.isStatic) {
                 // Preserve original visibility for static fields
                 for (Modifier.ModifierKeyword keyword : metadata.otherModifiers) {
                     if (keyword == Modifier.ModifierKeyword.PUBLIC_KEYWORD
-                        || keyword == Modifier.ModifierKeyword.PROTECTED_KEYWORD
-                        || keyword == Modifier.ModifierKeyword.PRIVATE_KEYWORD) {
+                            || keyword == Modifier.ModifierKeyword.PROTECTED_KEYWORD
+                            || keyword == Modifier.ModifierKeyword.PRIVATE_KEYWORD) {
                         newField.modifiers().add(targetAst.newModifier(keyword));
                         visibilityAdded = true;
                         break;
                     }
                 }
-                // If no explicit visibility, static fields default to package-private (no modifier)
+                // If no explicit visibility, static fields default to package-private (no
+                // modifier)
             } else {
                 // Instance fields are always private in extracted class
                 newField.modifiers().add(targetAst.newModifier(Modifier.ModifierKeyword.PRIVATE_KEYWORD));
@@ -616,26 +720,26 @@ public class EclipseJDTRefactoring {
             // Add other modifiers (static, final, etc.)
             for (Modifier.ModifierKeyword keyword : metadata.otherModifiers) {
                 if (keyword == Modifier.ModifierKeyword.PUBLIC_KEYWORD
-                    || keyword == Modifier.ModifierKeyword.PROTECTED_KEYWORD
-                    || keyword == Modifier.ModifierKeyword.PRIVATE_KEYWORD) {
-                    continue;  // Already handled above
+                        || keyword == Modifier.ModifierKeyword.PROTECTED_KEYWORD
+                        || keyword == Modifier.ModifierKeyword.PRIVATE_KEYWORD) {
+                    continue; // Already handled above
                 }
                 newField.modifiers().add(targetAst.newModifier(keyword));
             }
 
             ExtractedFieldInfo info = new ExtractedFieldInfo(
-                fieldName,
-                newField,
-                metadata.isFinal,
-                metadata.type
-            );
+                    fieldName,
+                    newField,
+                    metadata.isFinal,
+                    metadata.type);
             result.put(fieldName, info);
         }
 
         return result;
     }
 
-    private void addFieldAccessors(AST targetAst, TypeDeclaration newClass, Map<String, ExtractedFieldInfo> extractedFields) {
+    private void addFieldAccessors(AST targetAst, TypeDeclaration newClass,
+            Map<String, ExtractedFieldInfo> extractedFields) {
         for (ExtractedFieldInfo info : extractedFields.values()) {
             MethodDeclaration getter = targetAst.newMethodDeclaration();
             getter.setName(targetAst.newSimpleName("get" + capitalize(info.name)));
@@ -652,6 +756,10 @@ public class EclipseJDTRefactoring {
             getter.setBody(getterBody);
 
             newClass.bodyDeclarations().add(getter);
+
+            if (info.isFinal) {
+                continue;
+            }
 
             MethodDeclaration setter = targetAst.newMethodDeclaration();
             setter.setName(targetAst.newSimpleName("set" + capitalize(info.name)));
@@ -683,7 +791,8 @@ public class EclipseJDTRefactoring {
     /**
      * Extract methods from original class that should be moved to new class.
      */
-    private List<MethodDeclaration> extractMethods(AST targetAst, Set<String> methodSignatures, Set<String> extractedFields) {
+    private List<MethodDeclaration> extractMethods(AST targetAst, Set<String> methodSignatures,
+            Set<String> extractedFields) {
         List<MethodDeclaration> result = new ArrayList<>();
 
         for (Object bodyDecl : originalTypeDecl.bodyDeclarations()) {
@@ -694,6 +803,24 @@ public class EclipseJDTRefactoring {
                 if (methodSignatures.contains(signature)) {
                     // Copy the method to the new AST
                     MethodDeclaration copiedMethod = (MethodDeclaration) ASTNode.copySubtree(targetAst, method);
+
+                    // FIX: Ensure extracted methods are public so they can be accessed by original
+                    // class
+                    @SuppressWarnings("unchecked")
+                    List<IExtendedModifier> modifiers = copiedMethod.modifiers();
+                    for (Iterator<IExtendedModifier> it = modifiers.iterator(); it.hasNext();) {
+                        Object obj = it.next();
+                        if (obj instanceof Modifier) {
+                            Modifier mod = (Modifier) obj;
+                            if (mod.getKeyword() == Modifier.ModifierKeyword.PUBLIC_KEYWORD ||
+                                    mod.getKeyword() == Modifier.ModifierKeyword.PROTECTED_KEYWORD ||
+                                    mod.getKeyword() == Modifier.ModifierKeyword.PRIVATE_KEYWORD) {
+                                it.remove();
+                            }
+                        }
+                    }
+                    modifiers.add(0, targetAst.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+
                     result.add(copiedMethod);
                 }
             }
@@ -706,17 +833,16 @@ public class EclipseJDTRefactoring {
      * Replace references to extracted fields with helper accessor calls.
      */
     private void replaceFieldReference(
-        ASTRewrite rewrite,
-        ASTNode fieldNode,
-        String fieldName,
-        String helperFieldName,
-        Map<String, String> getterNames,
-        Map<String, String> setterNames,
-        Map<String, String> preIncrementNames,
-        Map<String, String> postIncrementNames,
-        Map<String, String> preDecrementNames,
-        Map<String, String> postDecrementNames
-    ) {
+            ASTRewrite rewrite,
+            ASTNode fieldNode,
+            String fieldName,
+            String helperFieldName,
+            Map<String, String> getterNames,
+            Map<String, String> setterNames,
+            Map<String, String> preIncrementNames,
+            Map<String, String> postIncrementNames,
+            Map<String, String> preDecrementNames,
+            Map<String, String> postDecrementNames) {
         ASTNode parent = fieldNode.getParent();
 
         if (parent instanceof Assignment) {
@@ -767,8 +893,8 @@ public class EclipseJDTRefactoring {
         if (parent instanceof PostfixExpression) {
             PostfixExpression postfix = (PostfixExpression) parent;
             String methodName = postfix.getOperator() == PostfixExpression.Operator.INCREMENT
-                ? postIncrementNames.get(fieldName)
-                : postDecrementNames.get(fieldName);
+                    ? postIncrementNames.get(fieldName)
+                    : postDecrementNames.get(fieldName);
             if (methodName == null) {
                 return;
             }
@@ -787,8 +913,8 @@ public class EclipseJDTRefactoring {
         if (parent instanceof PrefixExpression) {
             PrefixExpression prefix = (PrefixExpression) parent;
             String methodName = prefix.getOperator() == PrefixExpression.Operator.INCREMENT
-                ? preIncrementNames.get(fieldName)
-                : preDecrementNames.get(fieldName);
+                    ? preIncrementNames.get(fieldName)
+                    : preDecrementNames.get(fieldName);
             if (methodName == null) {
                 return;
             }
@@ -853,12 +979,12 @@ public class EclipseJDTRefactoring {
         }
         PrimitiveType.Code code = ((PrimitiveType) type).getPrimitiveTypeCode();
         return code == PrimitiveType.INT
-            || code == PrimitiveType.LONG
-            || code == PrimitiveType.SHORT
-            || code == PrimitiveType.BYTE
-            || code == PrimitiveType.FLOAT
-            || code == PrimitiveType.DOUBLE
-            || code == PrimitiveType.CHAR;
+                || code == PrimitiveType.LONG
+                || code == PrimitiveType.SHORT
+                || code == PrimitiveType.BYTE
+                || code == PrimitiveType.FLOAT
+                || code == PrimitiveType.DOUBLE
+                || code == PrimitiveType.CHAR;
     }
 
     private void addIncrementHelpers(AST targetAst, TypeDeclaration newClass, ExtractedFieldInfo info) {
@@ -938,7 +1064,8 @@ public class EclipseJDTRefactoring {
 
         List<SingleVariableDeclaration> params = method.parameters();
         for (int i = 0; i < params.size(); i++) {
-            if (i > 0) sig.append(",");
+            if (i > 0)
+                sig.append(",");
             SingleVariableDeclaration param = params.get(i);
 
             // Handle varargs: last parameter might be varargs
@@ -961,8 +1088,10 @@ public class EclipseJDTRefactoring {
 
     /**
      * Normalize method signatures from GenEC format to internal format.
-     * GenEC may send signatures like "methodName(Type1,Type2)" or "methodName(Type1 param1, Type2 param2)"
-     * Also handles array notation differences: byte vs byte[], String... vs String[]
+     * GenEC may send signatures like "methodName(Type1,Type2)" or "methodName(Type1
+     * param1, Type2 param2)"
+     * Also handles array notation differences: byte vs byte[], String... vs
+     * String[]
      */
     private Set<String> normalizeMethodSignatures(List<String> methodSigs) {
         Set<String> normalized = new HashSet<>();
@@ -986,7 +1115,8 @@ public class EclipseJDTRefactoring {
             // Create variant with [] added to potential array types before comma or )
             // This handles case where Python sends "byte" but Java has "byte[]"
             // Match word characters followed by comma or closing paren, add []
-            String withArrays = normalized_sig.replaceAll("\\b(byte|char|short|int|long|float|double|boolean)(?=[,)])", "$1[]");
+            String withArrays = normalized_sig.replaceAll("\\b(byte|char|short|int|long|float|double|boolean)(?=[,)])",
+                    "$1[]");
             if (!withArrays.equals(normalized_sig)) {
                 normalized.add(withArrays);
             }

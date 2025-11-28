@@ -27,12 +27,13 @@ code_generation:
 verification:
   enable_syntactic: true
   enable_semantic: true
-  enable_behavioral: false
+  enable_behavioral: true
   enable_extraction_validation: true
   suggest_pattern_transformations: true
   java_compiler: javac
   maven_command: mvn
   gradle_command: gradle
+  max_workers: 4
 structural_transforms:
   enabled: true
   require_confirmation: true

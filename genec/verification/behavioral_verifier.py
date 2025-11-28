@@ -177,7 +177,7 @@ class BehavioralVerifier:
         self,
         repo_path: Path,
         build_system: str,
-        timeout: int = 300
+        timeout: int = 900
     ) -> Tuple[bool, Optional[str]]:
         """
         Run test suite.

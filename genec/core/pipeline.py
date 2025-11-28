@@ -11,8 +11,7 @@ from genec.core.evolutionary_miner import EvolutionaryMiner, EvolutionaryData
 from genec.core.graph_builder import GraphBuilder
 from genec.core.cluster_detector import ClusterDetector, Cluster
 from genec.core.llm_interface import LLMInterface, RefactoringSuggestion
-from genec.core.code_generator import CodeGenerator, CodeGenerationError
-from genec.core.jdt_code_generator import JDTCodeGenerator
+from genec.core.jdt_code_generator import JDTCodeGenerator, CodeGenerationError
 from genec.core.verification_engine import VerificationEngine, VerificationResult
 from genec.core.refactoring_applicator import RefactoringApplicator, RefactoringApplication
 from genec.structural import StructuralTransformer, StructuralTransformResult
@@ -186,13 +185,10 @@ class GenECPipeline:
                 self.jdt_timeout = codegen_config.get('timeout', 60)
                 self.logger.info("Using Eclipse JDT for code generation")
             except Exception as e:
-                self.logger.warning(
-                    f"Eclipse JDT unavailable ({e}), falling back to string manipulation"
-                )
-                self.code_generator_class = None
+                self.logger.error(f"Eclipse JDT unavailable: {e}")
+                raise
         else:
-            self.code_generator_class = None
-            self.logger.info("Using string manipulation for code generation (legacy)")
+            raise ValueError(f"Unknown code generation engine: {engine}")
 
         # Store verification config for later initialization
         self.verify_config = self.config.get('verification', {})
@@ -399,41 +395,31 @@ class GenECPipeline:
                     suggestion = self.llm_interface.generate_refactoring_suggestion(
                         cluster,
                         original_code,
-                        class_deps
+                        class_deps,
+                        evo_data=evo_data
                     )
 
                     if not suggestion:
                         continue
 
-                    # Use appropriate code generator (JDT or string manipulation)
-                    if self.code_generator_class == JDTCodeGenerator:
-                        generator = JDTCodeGenerator(
-                            jdt_wrapper_jar=self.jdt_wrapper_jar,
-                            timeout=self.jdt_timeout
+                    # Use JDT code generator
+                    generator = JDTCodeGenerator(
+                        jdt_wrapper_jar=self.jdt_wrapper_jar,
+                        timeout=self.jdt_timeout
+                    )
+                    try:
+                        generated = generator.generate(
+                            cluster=cluster,
+                            new_class_name=suggestion.proposed_class_name,
+                            class_file=class_file,
+                            repo_path=repo_path,
+                            class_deps=class_deps
                         )
-                        try:
-                            generated = generator.generate(
-                                cluster=cluster,
-                                new_class_name=suggestion.proposed_class_name,
-                                class_file=class_file,
-                                repo_path=repo_path,
-                                class_deps=class_deps
-                            )
-                        except CodeGenerationError as e:
-                            self.logger.warning(
-                                f"Skipping cluster {cluster.id} ({suggestion.proposed_class_name}): {e}"
-                            )
-                            continue
-                    else:
-                        # Fallback to string manipulation
-                        generator = CodeGenerator(original_code, class_deps)
-                        try:
-                            generated = generator.generate(cluster, suggestion.proposed_class_name)
-                        except CodeGenerationError as e:
-                            self.logger.warning(
-                                f"Skipping cluster {cluster.id} ({suggestion.proposed_class_name}): {e}"
-                            )
-                            continue
+                    except CodeGenerationError as e:
+                        self.logger.warning(
+                            f"Skipping cluster {cluster.id} ({suggestion.proposed_class_name}): {e}"
+                        )
+                        continue
 
                     suggestion.new_class_code = generated.new_class_code
                     suggestion.modified_original_code = generated.modified_original_code
@@ -460,15 +446,25 @@ class GenECPipeline:
                     suggestion = self.llm_interface.generate_refactoring_suggestion(
                         cluster,
                         original_code,
-                        class_deps
+                        class_deps,
+                        evo_data=evo_data
                     )
 
                     if not suggestion:
                         continue
 
-                    generator = CodeGenerator(original_code, class_deps)
+                    generator = JDTCodeGenerator(
+                        jdt_wrapper_jar=self.jdt_wrapper_jar,
+                        timeout=self.jdt_timeout
+                    )
                     try:
-                        generated = generator.generate(cluster, suggestion.proposed_class_name)
+                        generated = generator.generate(
+                            cluster=cluster,
+                            new_class_name=suggestion.proposed_class_name,
+                            class_file=class_file,
+                            repo_path=repo_path,
+                            class_deps=class_deps
+                        )
                     except CodeGenerationError as e:
                         self.logger.warning(
                             f"Skipping fallback cluster {cluster.id} ({suggestion.proposed_class_name}): {e}"
@@ -485,11 +481,17 @@ class GenECPipeline:
                 self.logger.warning("No suggestions to verify; skipping verification stage.")
             else:
                 self.logger.info("\n[Stage 6/6] Verifying refactoring suggestions...")
+                
+                # Parallel Verification
+                import concurrent.futures
+                
+                # Determine max workers (default to 4 or config)
+                max_workers = self.verify_config.get('max_workers', 4)
+                self.logger.info(f"Verifying {len(suggestions)} suggestions in parallel (max_workers={max_workers})")
 
-                for i, suggestion in enumerate(suggestions, 1):
-                    self.logger.info(f"Verifying suggestion {i}/{len(suggestions)}: {suggestion.proposed_class_name}")
-
-                    verification_result = self.verification_engine.verify_refactoring(
+                def verify_single_suggestion(suggestion):
+                    self.logger.info(f"Verifying suggestion: {suggestion.proposed_class_name}")
+                    return self.verification_engine.verify_refactoring(
                         suggestion,
                         original_code,
                         class_file,
@@ -497,16 +499,28 @@ class GenECPipeline:
                         class_deps
                     )
 
-                    result.verification_results.append(verification_result)
+                with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+                    future_to_suggestion = {
+                        executor.submit(verify_single_suggestion, s): s 
+                        for s in suggestions
+                    }
+                    
+                    for future in concurrent.futures.as_completed(future_to_suggestion):
+                        suggestion = future_to_suggestion[future]
+                        try:
+                            verification_result = future.result()
+                            result.verification_results.append(verification_result)
 
-                    if verification_result.status == 'PASSED_ALL':
-                        result.verified_suggestions.append(suggestion)
-                        self.logger.info(f"Suggestion PASSED all verification layers")
-                    else:
-                        self.logger.warning(
-                            f"Suggestion FAILED: {verification_result.status} - "
-                            f"{verification_result.error_message}"
-                        )
+                            if verification_result.status == 'PASSED_ALL':
+                                result.verified_suggestions.append(suggestion)
+                                self.logger.info(f"Suggestion {suggestion.proposed_class_name} PASSED all verification layers")
+                            else:
+                                self.logger.warning(
+                                    f"Suggestion {suggestion.proposed_class_name} FAILED: {verification_result.status} - "
+                                    f"{verification_result.error_message}"
+                                )
+                        except Exception as exc:
+                            self.logger.error(f"Verification generated an exception for {suggestion.proposed_class_name}: {exc}")
 
             # Stage 7: Apply refactorings (if enabled)
             if self.refactoring_applicator and result.verified_suggestions:

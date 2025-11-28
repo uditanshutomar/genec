@@ -15,6 +15,7 @@ from genec.llm import (
     LLMRequestFailed,
     LLMServiceUnavailable,
 )
+from genec.core.evolutionary_miner import EvolutionaryData
 from genec.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
@@ -54,7 +55,7 @@ class LLMInterface:
             timeout: Request timeout in seconds
             use_chunking: Whether to use AST-based chunking for large classes (recommended)
         """
-        self.logger = get_logger(self.__class__.__name__)
+        self.logger = get_logger(f"GenEC.{self.__class__.__name__}")
         self.model = model
         self.max_tokens = max_tokens
         self.temperature = temperature
@@ -85,6 +86,7 @@ class LLMInterface:
         cluster: Cluster,
         original_code: str,
         class_deps: ClassDependencies,
+        evo_data: Optional[EvolutionaryData] = None,
         max_retries: int = 3
     ) -> Optional[RefactoringSuggestion]:
         """
@@ -106,7 +108,7 @@ class LLMInterface:
             return None
 
         # Build prompt
-        prompt = self._build_prompt(cluster, original_code, class_deps)
+        prompt = self._build_prompt(cluster, original_code, class_deps, evo_data)
 
         # Call Claude API with retries
         for attempt in range(max_retries):
@@ -147,70 +149,62 @@ class LLMInterface:
         self,
         cluster: Cluster,
         original_code: str,
-        class_deps: ClassDependencies
+        class_deps: ClassDependencies,
+        evo_data: Optional[EvolutionaryData] = None
     ) -> str:
         """
         Build structured prompt for Claude.
-
-        Uses AST-based chunking (if enabled) to send only relevant context
-        instead of the full class code, reducing token usage by 90-96%.
-
-        Args:
-            cluster: Cluster to extract
-            original_code: Original class source code (used if chunking disabled)
-            class_deps: Class dependencies
-
-        Returns:
-            Formatted prompt string
+        
+        Optimized for JDT-based generation: sends only signatures and fields
+        to minimize token usage while still allowing for accurate naming.
         """
         methods = cluster.get_methods()
         fields = cluster.get_fields()
 
-        method_list = "\n".join([f"  - {m}" for m in methods]) if methods else "  (none)"
-        field_list = "\n".join([f"  - {f}" for f in fields]) if fields else "  (none)"
+        # Build a lightweight representation of the cluster members
+        # We don't need the full body to name the class, just signatures + javadoc summary
+        member_context = []
+        
+        if methods:
+            member_context.append("Methods:")
+            for m in methods:
+                javadoc = self._extract_javadoc_summary(m, original_code)
+                if javadoc:
+                    member_context.append(f"  - {m}")
+                    member_context.append(f"    Description: {javadoc}")
+                else:
+                    member_context.append(f"  - {m}")
+        
+        if fields:
+            member_context.append("Fields:")
+            for f in fields:
+                member_context.append(f"  - {f}")
+                
+        context_str = "\n".join(member_context)
 
-        # Use chunked context if enabled, otherwise fall back to full class
-        if self.use_chunking and self.context_builder:
-            code_context = self.context_builder.build_context(cluster, class_deps)
-            context_label = "Cluster Context"
-            self.logger.debug(f"Using chunked context (~{len(code_context)} chars)")
-        else:
-            code_context = original_code
-            context_label = "Original Class"
-            self.logger.debug(f"Using full class code (~{len(original_code)} chars)")
+        # Format evolutionary context
+        evo_context = self._format_evolutionary_context(cluster, evo_data) if evo_data else ""
 
-        prompt = f"""You are a software refactoring expert. Your task is to apply the Extract Class refactoring pattern to improve code quality.
+        prompt = f"""You are a software refactoring expert. Your task is to apply the Extract Class refactoring pattern.
+I have identified a cluster of cohesive methods and fields that should be extracted from a large God Class.
 
-**{context_label}:**
-```java
-{code_context}
-```
+**Cluster Members (Signatures & Context):**
+{context_str}
 
-**Members to Extract:**
-
-- Methods:
-{method_list}
-- Fields:
-{field_list}
+{evo_context}
 
 **Your Task:**
-
-1. Propose a descriptive class name following Java naming conventions that clearly represents the responsibility of these extracted members.
-
-2. Write a 2-3 sentence rationale explaining why this extraction improves the design. Cite specific design principles such as:
-   - Single Responsibility Principle (SRP)
-   - Separation of Concerns
-   - Cohesion and Coupling
-   - Information Hiding
+1. Analyze the method names, signatures, and descriptions to understand the responsibility of this cluster.
+2. Propose a descriptive class name (Java convention) for this new class.
+3. Write a brief rationale (2-3 sentences) explaining why these members belong together.
 
 **Output Format:**
-
 Provide your response in the following XML format:
 
 <class_name>ProposedClassName</class_name>
 
 <rationale>
-Your 2-3 sentence explanation here, citing design principles.
+Your explanation here.
 </rationale>
 
 Please provide only the XML tags specified above."""
@@ -385,3 +379,115 @@ Please provide only the XML tags specified above."""
     def is_available(self) -> bool:
         """Return True if the LLM client is ready for use."""
         return self._available
+
+    def _extract_javadoc_summary(self, method_signature: str, original_code: str) -> Optional[str]:
+        """
+        Extract the first sentence of the Javadoc for a given method.
+        
+        Args:
+            method_signature: The signature of the method to find.
+            original_code: The full source code.
+            
+        Returns:
+            The first sentence of the Javadoc, or None if not found.
+        """
+        try:
+            # Extract method name from signature
+            # Signature format: "public void methodName(Args...)"
+            match = re.search(r'\s+(\w+)\(', method_signature)
+            if not match:
+                return None
+            method_name = match.group(1)
+            
+            # Find the method definition in the code
+            # This is a heuristic regex; it might not be perfect but works for most standard Java formatting
+            # Look for Javadoc block followed by method definition
+            # (/\*\*.*?\*/)\s*(?:@\w+\s*)*.*?\s+methodName\(
+            
+            # Escape method name for regex
+            safe_name = re.escape(method_name)
+            
+            # Regex to find Javadoc before the method
+            # 1. Capture Javadoc group
+            # 2. Allow annotations and modifiers between Javadoc and method name
+            pattern = re.compile(
+                r'(/\*\*.*?\*/)\s*(?:@[a-zA-Z0-9_]+\(?.*?\)?\s*)*(?:public|protected|private|static|final|synchronized|native|strictfp|\s)*[\w<>\[\]]+\s+' + safe_name + r'\(',
+                re.DOTALL
+            )
+            
+            match = pattern.search(original_code)
+            if match:
+                javadoc_block = match.group(1)
+                # Strip /** and */ and *
+                content = re.sub(r'/\*\*|\*/|^\s*\*', '', javadoc_block, flags=re.MULTILINE)
+                # Clean up whitespace
+                content = ' '.join(content.split())
+                # Get first sentence (split by dot followed by space or end of string)
+                first_sentence = re.split(r'\.\s', content)[0]
+                if first_sentence and not first_sentence.endswith('.'):
+                    first_sentence += '.'
+                return first_sentence.strip()
+                
+        except Exception:
+            pass
+        return None
+
+    def _format_evolutionary_context(self, cluster: Cluster, evo_data: EvolutionaryData) -> str:
+        """
+        Format evolutionary coupling data for the prompt.
+        
+        Args:
+            cluster: The cluster being extracted.
+            evo_data: The evolutionary data.
+            
+        Returns:
+            Formatted string describing historical coupling.
+        """
+        if not evo_data or not evo_data.cochange_matrix:
+            return ""
+            
+        methods = cluster.get_methods()
+        if len(methods) < 2:
+            return ""
+            
+        # Check for strong coupling pairs within the cluster
+        strong_couplings = []
+        method_names = [re.search(r'\s+(\w+)\(', m).group(1) for m in methods if re.search(r'\s+(\w+)\(', m)]
+        
+        # We need to map signatures back to the simple names used in evo_data keys if necessary,
+        # but evo_data usually stores pairs of (methodA, methodB).
+        # Assuming evo_data keys are based on the identifiers found in git diffs.
+        
+        # Let's just look for any pairs in the cluster that have high co-change counts
+        threshold = 2 # Minimum co-changes to mention
+        
+        # This is a simplification. In a real scenario, we'd need robust mapping.
+        # Here we just check if any pair of methods in the cluster has a high co-change count.
+        
+        count = 0
+        total_co_changes = 0
+        
+        # Iterate over all pairs in the cluster
+        import itertools
+        for m1, m2 in itertools.combinations(method_names, 2):
+            # Check both orders
+            pair1 = (m1, m2)
+            pair2 = (m2, m1)
+            
+            c = evo_data.cochange_matrix.get(pair1, 0) + evo_data.cochange_matrix.get(pair2, 0)
+            if c >= threshold:
+                count += 1
+                total_co_changes += c
+                if len(strong_couplings) < 3: # Limit to top 3 examples
+                    strong_couplings.append(f"{m1} and {m2} ({c} commits)")
+        
+        if count > 0:
+            context = "**Evolutionary Context:**\n"
+            context += f"Analysis of git history shows that methods in this cluster frequently change together ({count} strongly coupled pairs).\n"
+            context += "Examples of co-evolution:\n"
+            for sc in strong_couplings:
+                context += f"- {sc}\n"
+            context += "This historical coupling reinforces that these methods are logically related and should be refactored together."
+            return context
+            
+        return ""

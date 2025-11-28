@@ -24,11 +24,22 @@ import os
 import re
 from pathlib import Path
 from typing import Optional, Dict, List, Set
+from dataclasses import dataclass
 
 from genec.core.cluster_detector import Cluster
 from genec.core.dependency_analyzer import ClassDependencies
-from genec.core.code_generator import GeneratedCode, CodeGenerationError
 from genec.utils.logging_utils import get_logger
+
+
+class CodeGenerationError(Exception):
+    """Raised when deterministic code generation cannot proceed."""
+
+
+@dataclass
+class GeneratedCode:
+    """Container for generated code artifacts."""
+    new_class_code: str
+    modified_original_code: str
 
 
 logger = get_logger(__name__)

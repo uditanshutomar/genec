@@ -12,7 +12,7 @@ Usage:
 Note: Prefer environment variables, OS keychain, or CI secret stores.
 """
 
-ANTHROPIC_API_KEY = "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" 
+ANTHROPIC_API_KEY = "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" 
 \
 ""
 def get_anthropic_api_key():
