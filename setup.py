@@ -25,4 +25,9 @@ setup(
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3.10",
     ],
+    entry_points={
+        "console_scripts": [
+            "genec=genec.cli:main",
+        ],
+    },
 )

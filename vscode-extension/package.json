@@ -1,0 +1,56 @@
+{
+    "name": "genec-vscode",
+    "displayName": "GenEC Refactoring",
+    "description": "AI-powered Extract Class refactoring for Java",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.80.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "genec.refactorClass",
+                "title": "GenEC: Refactor Current Class"
+            }
+        ],
+        "menus": {
+            "editor/context": [
+                {
+                    "command": "genec.refactorClass",
+                    "group": "refactor",
+                    "when": "resourceLangId == java"
+                }
+            ]
+        },
+        "configuration": {
+            "title": "GenEC",
+            "properties": {
+                "genec.pythonPath": {
+                    "type": "string",
+                    "default": "python3",
+                    "description": "Path to Python interpreter with genec installed"
+                },
+                "genec.apiKey": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Anthropic API Key (optional)"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.80.0",
+        "@types/node": "18.x",
+        "typescript": "^5.1.3"
+    }
+}
