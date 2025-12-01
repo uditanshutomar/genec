@@ -7,7 +7,7 @@ import org.eclipse.jdt.core.dom.*;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +33,7 @@ public class ClassInspector {
         }
 
         try {
-            String source = Files.readString(Paths.get(filePath), StandardCharsets.UTF_8);
+            String source = Files.readString(Path.of(filePath), StandardCharsets.UTF_8);
             InspectorResult result = inspect(source);
             System.out.println(gson.toJson(result));
         } catch (IOException e) {
