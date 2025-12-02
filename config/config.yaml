@@ -16,7 +16,7 @@ fusion:
     enabled: false                # Enable graph export
     output_dir: output/graphs     # Output directory for exported graphs
     formats:                      # Export formats (graphml, gml, dot, json, csv, adjlist)
-      - graphml                   # Note: May fallback to JSON with NumPy 2.0
+      - graphml
       - json
 evolution:
   # Git history analysis window

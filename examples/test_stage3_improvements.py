@@ -215,10 +215,6 @@ def test_graph_export():
             try:
                 builder.export_graph(G, str(output_file), format=fmt)
 
-                # For GraphML, may fallback to JSON due to NumPy 2.0 issue
-                if fmt == 'graphml' and not output_file.exists():
-                    output_file = tmpdir / "test_graph.json"
-
                 # Verify file was created
                 assert output_file.exists(), f"Export file not created: {output_file}"
 
@@ -348,11 +344,6 @@ def test_integration():
         # Export graph
         graph_file = tmpdir / "payment_processor_fused.graphml"
         builder.export_graph(G_fused, str(graph_file), format='graphml')
-
-        # Handle fallback to JSON
-        if not graph_file.exists():
-            graph_file = tmpdir / "payment_processor_fused.json"
-
         print(f"  ✓ Graph exported: {graph_file.stat().st_size} bytes")
 
         # Export centrality

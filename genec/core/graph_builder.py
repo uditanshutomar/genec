@@ -161,9 +161,7 @@ class GraphBuilder:
                     method = hotspot.get("method", "")
                     score = hotspot.get("hotspot_score", 0.0)
                     hotspot_scores[method] = score
-                self.logger.info(
-                    f"Loaded {len(hotspot_scores)} hotspot scores for adaptive fusion"
-                )
+                self.logger.info(f"Loaded {len(hotspot_scores)} hotspot scores for adaptive fusion")
             else:
                 self.logger.warning(
                     f"Adaptive fusion enabled but no hotspot data provided. "
@@ -458,29 +456,7 @@ class GraphBuilder:
 
         try:
             if format == "graphml":
-                try:
-                    nx.write_graphml(G, str(output_path))
-                except (AttributeError, TypeError) as e:
-                    if "np.float_" in str(e) or "numpy" in str(e).lower():
-                        # NumPy 2.0 compatibility issue with NetworkX
-                        # Fallback to JSON format
-                        self.logger.warning(
-                            "GraphML export failed due to NumPy 2.0 incompatibility, "
-                            "using JSON fallback"
-                        )
-                        # Remove the empty GraphML file if it exists
-                        if output_path.exists():
-                            output_path.unlink()
-                        # Write as JSON instead
-                        output_path = output_path.with_suffix(".json")
-                        from networkx.readwrite import json_graph
-
-                        data = json_graph.node_link_data(G)
-                        with open(output_path, "w") as f:
-                            json.dump(data, f, indent=2)
-                        self.logger.info(f"Fallback: Graph saved as JSON to {output_path}")
-                    else:
-                        raise
+                nx.write_graphml(G, str(output_path))
 
             elif format == "gml":
                 nx.write_gml(G, str(output_path))

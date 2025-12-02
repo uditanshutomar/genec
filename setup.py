@@ -9,7 +9,7 @@ setup(
     install_requires=[
         "javalang==0.13.0",
         "gitpython==3.1.40",
-        "networkx==3.1",
+        "networkx>=3.2",  # 3.2+ required for NumPy 2.0 compatibility
         "python-louvain==0.16",
         "anthropic>=0.40.0",
         "pandas>=2.0.0",
