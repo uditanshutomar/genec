@@ -333,12 +333,21 @@ class GenECPipeline:
             # Get hotspot data for adaptive fusion
             hotspot_data = None
             adaptive_fusion = fusion_config.get("adaptive_fusion", False)
-            if adaptive_fusion and hasattr(evo_data, "method_stats"):
+            if adaptive_fusion and evo_data.method_names:
                 # Calculate hotspots from evolutionary data
-                hotspot_data = self.evolutionary_miner.get_method_hotspots(
-                    evo_data, top_n=len(evo_data.method_names)
-                )
-                self.logger.info(f"Using adaptive fusion with {len(hotspot_data)} hotspot scores")
+                try:
+                    hotspot_data = self.evolutionary_miner.get_method_hotspots(
+                        evo_data, top_n=len(evo_data.method_names)
+                    )
+                    self.logger.info(
+                        f"Using adaptive fusion with {len(hotspot_data)} hotspot scores"
+                    )
+                except Exception as e:
+                    self.logger.warning(
+                        f"Failed to calculate hotspots for adaptive fusion: {e}. "
+                        f"Falling back to regular fusion."
+                    )
+                    hotspot_data = None
 
             G_fused = self.graph_builder.fuse_graphs(
                 G_static,

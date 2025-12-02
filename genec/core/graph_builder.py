@@ -155,12 +155,20 @@ class GraphBuilder:
 
         # Build hotspot lookup for adaptive fusion
         hotspot_scores = {}
-        if adaptive_fusion and hotspot_data:
-            for hotspot in hotspot_data:
-                method = hotspot.get("method", "")
-                score = hotspot.get("hotspot_score", 0.0)
-                hotspot_scores[method] = score
-            self.logger.info(f"Loaded {len(hotspot_scores)} hotspot scores for adaptive fusion")
+        if adaptive_fusion:
+            if hotspot_data:
+                for hotspot in hotspot_data:
+                    method = hotspot.get("method", "")
+                    score = hotspot.get("hotspot_score", 0.0)
+                    hotspot_scores[method] = score
+                self.logger.info(
+                    f"Loaded {len(hotspot_scores)} hotspot scores for adaptive fusion"
+                )
+            else:
+                self.logger.warning(
+                    f"Adaptive fusion enabled but no hotspot data provided. "
+                    f"Falling back to regular fusion with alpha={alpha}"
+                )
 
         # Normalize edge weights to [0, 1] range
         static_weights = [d["weight"] for u, v, d in G_static.edges(data=True)]
