@@ -1,6 +1,23 @@
 fusion:
   alpha: 1.0
   edge_threshold: 0.05
+
+  # Adaptive fusion (Stage 3 enhancement)
+  adaptive_fusion: false          # Enable hotspot-based adaptive fusion
+
+  # Centrality metrics (Stage 3 enhancement)
+  centrality:
+    enabled: true                 # Calculate centrality metrics
+    top_n: 10                     # Number of top nodes to return per metric
+    add_to_graph: true            # Add centrality as node attributes
+
+  # Graph export (Stage 3 enhancement)
+  export:
+    enabled: false                # Enable graph export
+    output_dir: output/graphs     # Output directory for exported graphs
+    formats:                      # Export formats (graphml, gml, dot, json, csv, adjlist)
+      - graphml
+      - json
 evolution:
   # Git history analysis window
   window_months: 36              # How far back to look in git history (months)

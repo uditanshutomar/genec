@@ -329,16 +329,75 @@ class GenECPipeline:
             G_evo = self.graph_builder.build_evolutionary_graph(evo_data, method_map)
 
             fusion_config = self.config.get("fusion", {})
+
+            # Get hotspot data for adaptive fusion
+            hotspot_data = None
+            adaptive_fusion = fusion_config.get("adaptive_fusion", False)
+            if adaptive_fusion and hasattr(evo_data, "method_stats"):
+                # Calculate hotspots from evolutionary data
+                hotspot_data = self.evolutionary_miner.get_method_hotspots(
+                    evo_data, top_n=len(evo_data.method_names)
+                )
+                self.logger.info(f"Using adaptive fusion with {len(hotspot_data)} hotspot scores")
+
             G_fused = self.graph_builder.fuse_graphs(
                 G_static,
                 G_evo,
                 alpha=fusion_config.get("alpha", 0.5),
                 edge_threshold=fusion_config.get("edge_threshold", 0.1),
+                hotspot_data=hotspot_data,
+                adaptive_fusion=adaptive_fusion,
             )
+
+            # Calculate centrality metrics
+            centrality_config = fusion_config.get("centrality", {})
+            if centrality_config.get("enabled", True):
+                top_n = centrality_config.get("top_n", 10)
+                centrality_metrics = self.graph_builder.calculate_centrality_metrics(
+                    G_fused, top_n=top_n
+                )
+
+                # Add to graph nodes if requested
+                if centrality_config.get("add_to_graph", True):
+                    G_fused = self.graph_builder.add_centrality_to_graph(
+                        G_fused, centrality_metrics
+                    )
+
+                # Store centrality in result
+                result.centrality_metrics = centrality_metrics
+                self.logger.info(f"Calculated {len(centrality_metrics)} centrality metrics")
 
             # Calculate graph metrics
             result.graph_metrics = self.graph_builder.get_graph_metrics(G_fused)
             self.logger.info(f"Graph metrics: {result.graph_metrics}")
+
+            # Export graph if requested
+            export_config = fusion_config.get("export", {})
+            if export_config.get("enabled", False):
+                output_dir = Path(export_config.get("output_dir", "output/graphs"))
+                output_dir.mkdir(parents=True, exist_ok=True)
+
+                class_name = class_deps.class_name
+                formats = export_config.get("formats", ["graphml", "json"])
+
+                for fmt in formats:
+                    try:
+                        output_file = output_dir / f"{class_name}_fused.{fmt}"
+                        self.graph_builder.export_graph(G_fused, str(output_file), format=fmt)
+                        self.logger.info(f"Exported graph to {output_file}")
+                    except Exception as e:
+                        self.logger.warning(f"Failed to export graph as {fmt}: {e}")
+
+                # Export centrality metrics if calculated
+                if hasattr(result, "centrality_metrics"):
+                    centrality_file = output_dir / f"{class_name}_centrality.json"
+                    try:
+                        self.graph_builder.export_centrality_metrics(
+                            result.centrality_metrics, str(centrality_file), format="json"
+                        )
+                        self.logger.info(f"Exported centrality metrics to {centrality_file}")
+                    except Exception as e:
+                        self.logger.warning(f"Failed to export centrality metrics: {e}")
 
             # Stage 4: Detect, filter, and rank clusters
             self.logger.info("\n[Stage 4/6] Detecting and ranking clusters...")
@@ -622,14 +681,14 @@ class GenECPipeline:
 
         for method in methods:
             body = method.body
-            for field in fields:
-                if re.search(rf"\b{re.escape(field)}\b", body):
-                    field_usage[method.signature].add(field)
+            for field_name in fields:
+                if re.search(rf"\b{re.escape(field_name)}\b", body):
+                    field_usage[method.signature].add(field_name)
 
         field_to_methods: dict[str, set[str]] = {f: set() for f in fields}
         for signature, used_fields in field_usage.items():
-            for field in used_fields:
-                field_to_methods[field].add(signature)
+            for field_name in used_fields:
+                field_to_methods[field_name].add(signature)
 
         clusters: list[Cluster] = []
         cluster_id = 0
