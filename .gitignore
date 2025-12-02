@@ -57,3 +57,5 @@ Thumbs.db
 *_rsa
 config/secrets.yaml
 *.secret
+genec-spoon-wrapper/target/
+genec-jdt-wrapper/target/

@@ -2,8 +2,14 @@ fusion:
   alpha: 1.0
   edge_threshold: 0.05
 evolution:
-  window_months: 36
-  min_commits: 1
+  # Git history analysis window
+  window_months: 36              # How far back to look in git history (months)
+  min_commits: 1                 # Minimum commits to consider a method
+
+  # Code-Maat evolutionary coupling filters (Stage 2 improvements)
+  min_coupling_threshold: 0.3    # Minimum coupling strength 0.0-1.0 (default: 0.3 = 30%)
+  max_changeset_size: 30         # Skip commits touching >N methods (filters refactorings)
+  min_revisions: 5               # Minimum revisions required (stricter than min_commits)
 clustering:
   algorithm: louvain
   min_cluster_size: 3
