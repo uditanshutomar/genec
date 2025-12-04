@@ -247,13 +247,31 @@ class JDTCodeGenerator:
             List of field names accessed by cluster methods
         """
         used_fields = set()
+        cluster_methods = set(cluster.get_methods())
 
-        for method_sig in cluster.get_methods():
-            # Get fields accessed by this method
+        # 1. Identify all fields accessed by cluster methods
+        for method_sig in cluster_methods:
             accessed = class_deps.field_accesses.get(method_sig, [])
             used_fields.update(accessed)
+            
+        if not used_fields:
+            return []
 
-        return list(used_fields)
+        # 2. Identify fields used by non-cluster methods (external usage)
+        external_usage = set()
+        for method_sig, accessed_fields in class_deps.field_accesses.items():
+            if method_sig not in cluster_methods:
+                external_usage.update(accessed_fields)
+
+        # 3. Filter to keep only exclusively used fields
+        exclusive_fields = [f for f in used_fields if f not in external_usage]
+        
+        # Log excluded fields for debugging
+        excluded = used_fields - set(exclusive_fields)
+        if excluded:
+            self.logger.debug(f"Excluded shared fields: {excluded}")
+
+        return exclusive_fields
 
     def _augment_methods(self, cluster: Cluster, class_deps: ClassDependencies) -> list[str]:
         """
