@@ -10,10 +10,9 @@ A hybrid framework for automated Extract Class refactoring in Java that combines
 - **Cluster Detection**: Uses Louvain algorithm to identify cohesive method groups
 - **LLM-Guided Refactoring**: Generates refactoring suggestions using Claude Sonnet 4
 - **Multi-Layer Verification**: Validates refactorings syntactically, semantically, and behaviorally
-- **Extraction Validation**: Static analysis prevents invalid extractions before code generation
-- **LLM Semantic Validation**: Intelligent override of conservative static rejections
-- **Pattern Transformation Guidance**: Suggests design patterns to enable blocked extractions
-- **Structural Scaffolding**: Generates accessor/facade plans for complex architectural changes
+- **Transactional Application**: Applies changes atomically with automatic rollback on failure
+- **Git Integration**: Creates feature branches and atomic commits for each refactoring
+- **Dry-Run & Preview**: Generates unified diffs and previews before applying changes
 
 ## Installation
 
@@ -41,13 +40,13 @@ verification:
   suggest_pattern_transformations: true  # LLM design pattern suggestions
   enable_semantic: true                  # Semantic AST validation
 
-structural_transforms:
-  enabled: true                          # Generate scaffolding plans
-  compile_check: true                    # Validate with build command
-  max_methods: 40                        # Size limit for structural plans
-  max_fields: 20                         # Size limit for structural plans
-  compile_command: ["mvn", "-q", "-DskipTests", "compile"]
-  compile_timeout_seconds: 300
+refactoring_application:
+  enabled: true
+  dry_run: false                         # Set to true to preview only
+  auto_apply: true                       # Automatically apply verified suggestions
+  enable_git: true                       # Create branches and commits
+  transactional: true                    # All-or-nothing application
+  backup: true                           # Create filesystem backups
 ```
 
 **Validation Tiers**:

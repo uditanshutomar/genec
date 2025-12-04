@@ -77,18 +77,24 @@ class SpoonParser:
 
     def _find_spoon_wrapper(self) -> str:
         """Find Spoon wrapper JAR in default locations."""
+        project_root = Path(__file__).parent.parent.parent
+        
         possible_locations = [
+            # Relative paths (legacy)
             "genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar",
             "lib/genec-spoon-wrapper.jar",
-            "../genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar",
+            
+            # Absolute paths relative to project root
+            str(project_root / "genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar"),
+            str(project_root / "lib/genec-spoon-wrapper.jar"),
         ]
 
         for location in possible_locations:
             if os.path.exists(location):
                 return location
 
-        # Default to expected Maven output location
-        return possible_locations[0]
+        # Default to expected Maven output location (absolute)
+        return str(project_root / "genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar")
 
     def analyze_class(self, class_file: str) -> SpoonAnalysisResult | None:
         """

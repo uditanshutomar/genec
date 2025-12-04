@@ -391,7 +391,32 @@ structural_transforms:
 - **Status**: Optional (disabled by default)
 - **Key Files**: [genec/verification/behavioral_verifier.py](../genec/verification/behavioral_verifier.py)
 
-## Data Flow
+### 7. Refactoring Application Layer ⭐ **New**
+
+#### Transactional Applicator
+- **Purpose**: Apply refactorings atomically with rollback support
+- **Mechanism**:
+  1. Create savepoint (backup)
+  2. Apply changes
+  3. Verify integrity
+  4. Commit or Rollback
+- **Key Files**: [genec/core/transactional_applicator.py](../genec/core/transactional_applicator.py)
+
+#### Git Integration
+- **Purpose**: Manage version control operations
+- **Workflow**:
+  1. Create feature branch (`genec/refactor-{ClassName}`)
+  2. Stage modified files
+  3. Create atomic commit with detailed message
+- **Key Files**: [genec/core/git_wrapper.py](../genec/core/git_wrapper.py)
+
+#### Rollback Manager
+- **Purpose**: Restore state on failure
+- **Strategies**:
+  - **Filesystem**: Restore from backup directory
+  - **Git**: `git reset --hard` or `git revert`
+- **Key Files**: [genec/core/rollback_manager.py](../genec/core/rollback_manager.py)
+
 
 ```
 1. Input: Java class file + Git repository
@@ -420,6 +445,13 @@ structural_transforms:
 9. Verify suggestions (syntactic, semantic, behavioral)
           ↓
 10. Output: Refactoring suggestions + transformation plans
+          ↓
+11. ⭐ APPLY REFACTORING (Stage 7)
+    a. Create Git branch
+    b. Create transaction savepoint
+    c. Write files (New Class + Modified Original)
+    d. Verify integrity
+    e. Commit transaction (Git commit) OR Rollback
 ```
 
 ## Configuration Architecture

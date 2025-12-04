@@ -19,6 +19,7 @@ from genec.metrics.cohesion_calculator import CohesionCalculator
 from genec.metrics.coupling_calculator import CouplingCalculator
 from genec.structural import StructuralTransformer, StructuralTransformResult
 from genec.structural.compile_validator import StructuralCompileValidator
+from genec.utils.dependency_manager import DependencyManager
 from genec.utils.logging_utils import get_logger, setup_logger
 
 logger = get_logger(__name__)
@@ -38,6 +39,7 @@ class PipelineResult:
     applied_refactorings: list[RefactoringApplication] = field(default_factory=list)
     original_metrics: dict[str, float] = field(default_factory=dict)
     graph_metrics: dict[str, float] = field(default_factory=dict)
+    graph_data: dict = field(default_factory=dict)
     execution_time: float = 0.0
     structural_actions: list[str] = field(default_factory=list)
 
@@ -45,17 +47,25 @@ class PipelineResult:
 class GenECPipeline:
     """Main GenEC pipeline for Extract Class refactoring."""
 
-    def __init__(self, config_file: str = "config/config.yaml"):
+    def __init__(self, config_file: str = "config/config.yaml", config_overrides: dict = None):
         """
         Initialize GenEC pipeline.
 
         Args:
             config_file: Path to configuration file
+            config_overrides: Dictionary of configuration overrides
         """
+        self.logger = get_logger(self.__class__.__name__)
+        self.logger.info("Initializing GenEC pipeline")
+
         # Load configuration
         self.config = self._load_config(config_file)
+        
+        # Apply overrides
+        if config_overrides:
+            self._apply_overrides(self.config, config_overrides)
 
-        # Setup logging
+        # Setup logging (re-setup with config if available)
         log_config = self.config.get("logging", {})
         self.logger = setup_logger(
             "GenEC", level=log_config.get("level", "INFO"), log_file=log_config.get("file")
@@ -63,8 +73,24 @@ class GenECPipeline:
 
         self.logger.info("Initializing GenEC pipeline")
 
+        # Ensure dependencies
+        project_root = Path(__file__).parent.parent.parent
+        self.dependency_manager = DependencyManager(project_root)
+        
+        # Check if auto-build is disabled via config
+        auto_build = self.config.get("auto_build_dependencies", True)
+        self.dependency_manager.ensure_dependencies(auto_build=auto_build)
+
         # Initialize components
         self._initialize_components()
+
+    def _apply_overrides(self, config: dict, overrides: dict):
+        """Recursively apply configuration overrides."""
+        for key, value in overrides.items():
+            if isinstance(value, dict) and key in config and isinstance(config[key], dict):
+                self._apply_overrides(config[key], value)
+            else:
+                config[key] = value
 
     def _load_config(self, config_file: str) -> dict:
         """Load configuration from YAML file."""
@@ -83,7 +109,7 @@ class GenECPipeline:
             "fusion": {"alpha": 0.5, "edge_threshold": 0.1},
             "evolution": {"window_months": 12, "min_commits": 2},
             "clustering": {
-                "algorithm": "louvain",
+                "algorithm": "leiden",
                 "min_cluster_size": 3,
                 "max_cluster_size": 15,
                 "min_cohesion": 0.5,
@@ -164,6 +190,8 @@ class GenECPipeline:
             max_cluster_size=cluster_config.get("max_cluster_size", 15),
             min_cohesion=cluster_config.get("min_cohesion", 0.5),
             resolution=cluster_config.get("resolution", 1.0),
+            algorithm=cluster_config.get("algorithm", "leiden"),
+            config=self.config,  # Pass full config for advanced features
         )
 
         # LLM interface
@@ -185,7 +213,15 @@ class GenECPipeline:
         if engine == "eclipse_jdt":
             try:
                 self.code_generator_class = JDTCodeGenerator
-                self.jdt_wrapper_jar = codegen_config.get("jdt_wrapper_jar")
+                
+                # Resolve JAR path relative to project root if it's relative
+                jar_path = codegen_config.get("jdt_wrapper_jar")
+                project_root = Path(__file__).parent.parent.parent
+                if not Path(jar_path).is_absolute():
+                    self.jdt_wrapper_jar = str(project_root / jar_path)
+                else:
+                    self.jdt_wrapper_jar = jar_path
+                    
                 self.jdt_timeout = codegen_config.get("timeout", 60)
                 self.logger.info("Using Eclipse JDT for code generation")
             except Exception as e:
@@ -380,6 +416,10 @@ class GenECPipeline:
             result.graph_metrics = self.graph_builder.get_graph_metrics(G_fused)
             self.logger.info(f"Graph metrics: {result.graph_metrics}")
 
+            # Generate graph data for JSON output
+            from networkx.readwrite import json_graph
+            result.graph_data = json_graph.node_link_data(G_fused, edges="links")
+
             # Export graph if requested
             export_config = fusion_config.get("export", {})
             if export_config.get("enabled", False):
@@ -411,7 +451,7 @@ class GenECPipeline:
             # Stage 4: Detect, filter, and rank clusters
             self.logger.info("\n[Stage 4/6] Detecting and ranking clusters...")
 
-            all_clusters = self.cluster_detector.detect_clusters(G_fused)
+            all_clusters = self.cluster_detector.detect_clusters(G_fused, class_deps)
             result.all_clusters = all_clusters
 
             # Pass class_deps to enable extraction validation
@@ -469,7 +509,12 @@ class GenECPipeline:
                 )
                 for cluster in clusters_to_process:
                     suggestion = self.llm_interface.generate_refactoring_suggestion(
-                        cluster, original_code, class_deps, evo_data=evo_data
+                        cluster=cluster,
+                        original_code=original_code,
+                        class_deps=class_deps,
+                        class_file=class_file,  # NEW: Enable hybrid mode
+                        repo_path=repo_path,  # NEW: Enable hybrid mode
+                        evo_data=evo_data,
                     )
 
                     if not suggestion:
@@ -518,7 +563,12 @@ class GenECPipeline:
                     seen.add(key)
 
                     suggestion = self.llm_interface.generate_refactoring_suggestion(
-                        cluster, original_code, class_deps, evo_data=evo_data
+                        cluster=cluster,
+                        original_code=original_code,
+                        class_deps=class_deps,
+                        class_file=class_file,  # NEW: Enable hybrid mode
+                        repo_path=repo_path,  # NEW: Enable hybrid mode
+                        evo_data=evo_data,
                     )
 
                     if not suggestion:
@@ -600,40 +650,63 @@ class GenECPipeline:
                 dry_run = self.refactoring_config.get("dry_run", True)
                 auto_apply = self.refactoring_config.get("auto_apply", False)
 
-                if not auto_apply and not dry_run:
+                # Initialize Preview Manager
+                from genec.core.preview_manager import PreviewManager
+
+                preview_manager = PreviewManager()
+
+                # Generate previews
+                original_files = {s.cluster_id: class_file for s in result.verified_suggestions}
+                previews = preview_manager.preview_multiple(
+                    result.verified_suggestions, original_files, repo_path
+                )
+
+                # Log preview summary
+                summary = preview_manager.format_summary(previews)
+                self.logger.info("\n" + summary)
+
+                if dry_run:
+                    # Detailed preview for dry run
+                    for preview in previews:
+                        self.logger.info("\n" + preview_manager.format_preview(preview))
+
+                    # Add dummy applications for result tracking
+                    for suggestion in result.verified_suggestions:
+                        result.applied_refactorings.append(
+                            RefactoringApplication(
+                                success=True,
+                                new_class_path=f"[DRY RUN] {suggestion.proposed_class_name}.java",
+                                original_class_path=class_file,
+                            )
+                        )
+
+                elif not auto_apply:
                     self.logger.warning(
                         "auto_apply=False: Refactorings will not be applied. "
                         "Set auto_apply=True to enable automatic application."
                     )
                 else:
-                    for i, suggestion in enumerate(result.verified_suggestions, 1):
-                        self.logger.info(
-                            f"Applying refactoring {i}/{len(result.verified_suggestions)}: "
-                            f"{suggestion.proposed_class_name}"
-                        )
+                    # Transactional Application
+                    from genec.core.transactional_applicator import TransactionalApplicator
 
-                        application = self.refactoring_applicator.apply_refactoring(
-                            suggestion=suggestion,
-                            original_class_file=class_file,
-                            repo_path=repo_path,
-                            dry_run=dry_run,
-                        )
+                    transactional_applicator = TransactionalApplicator(
+                        applicator=self.refactoring_applicator,
+                        enable_git=self.refactoring_applicator.enable_git,
+                    )
 
-                        result.applied_refactorings.append(application)
+                    success, applications = transactional_applicator.apply_all(
+                        suggestions=result.verified_suggestions,
+                        original_files=original_files,
+                        repo_path=repo_path,
+                        check_conflicts=True,
+                    )
 
-                        if application.success:
-                            if dry_run:
-                                self.logger.info(
-                                    f"[DRY RUN] Would create: {application.new_class_path}"
-                                )
-                            else:
-                                self.logger.info(
-                                    f"Successfully applied refactoring: {application.new_class_path}"
-                                )
-                        else:
-                            self.logger.error(
-                                f"Failed to apply refactoring: {application.error_message}"
-                            )
+                    result.applied_refactorings = applications
+
+                    if success:
+                        self.logger.info("Successfully applied all refactorings transactionally")
+                    else:
+                        self.logger.error("Transactional application failed (rolled back)")
 
             # Calculate execution time
             result.execution_time = time.time() - start_time

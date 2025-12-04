@@ -1,28 +1,22 @@
-"""
-Temporary hardcoded secrets (INSECURE).
+import os
+from pathlib import Path
 
-Place your Anthropic API key here only as a short-term measure. DO NOT commit
-this file to version control with a real key. Remove or rotate the key before
-pushing or sharing the repository.
+from dotenv import load_dotenv
 
-Usage:
-    from genec.utils.secrets import get_anthropic_api_key
-    key = get_anthropic_api_key()
+# Load .env file from project root if it exists
+project_root = Path(__file__).parent.parent.parent
+env_path = project_root / ".env"
+load_dotenv(env_path)
 
-Note: Prefer environment variables, OS keychain, or CI secret stores.
-"""
-
-ANTHROPIC_API_KEY = "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" 
-\
-""
-def get_anthropic_api_key():
-    """Return the hardcoded Anthropic API key or raise if it looks unset.
-
-    This helper simply centralizes the hardcoded value and provides a
-    guardrail so accidental empty/default values are noticed quickly.
+def get_anthropic_api_key() -> str | None:
     """
-    if not ANTHROPIC_API_KEY or "REPLACE" in ANTHROPIC_API_KEY:
-        raise RuntimeError(
-            "Anthropic API key not set in genec/utils/secrets.py; replace the placeholder"
-        )
-    return ANTHROPIC_API_KEY
+    Return the Anthropic API key from environment variables.
+    
+    Priority:
+    1. ANTHROPIC_API_KEY env var (set by CLI arg or system)
+    2. .env file
+    
+    Returns:
+        API key string or None if not found
+    """
+    return os.getenv("ANTHROPIC_API_KEY")

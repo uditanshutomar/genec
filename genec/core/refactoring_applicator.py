@@ -7,11 +7,11 @@ creating backups, and managing the refactoring application process.
 
 import os
 import shutil
-from pathlib import Path
-from typing import Optional, Tuple
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 
+from genec.core.git_wrapper import GitWrapper, generate_commit_message  # NEW
 from genec.core.llm_interface import RefactoringSuggestion
 from genec.utils.logging_utils import get_logger
 
@@ -21,11 +21,14 @@ logger = get_logger(__name__)
 @dataclass
 class RefactoringApplication:
     """Result of applying a refactoring."""
+
     success: bool
-    new_class_path: Optional[str] = None
-    original_class_path: Optional[str] = None
-    backup_path: Optional[str] = None
-    error_message: Optional[str] = None
+    new_class_path: str | None = None
+    original_class_path: str | None = None
+    backup_path: str | None = None
+    commit_hash: str | None = None  # NEW
+    branch_name: str | None = None  # NEW
+    error_message: str | None = None
 
 
 class RefactoringApplicator:
@@ -39,16 +42,22 @@ class RefactoringApplicator:
     - Rollback support if verification fails
     """
 
-    def __init__(self, create_backups: bool = True, backup_dir: Optional[str] = None):
+    def __init__(
+        self, create_backups: bool = True, backup_dir: str | None = None, enable_git: bool = True
+    ):
         """
         Initialize refactoring applicator.
 
         Args:
             create_backups: Whether to create backups before modifying files
             backup_dir: Directory for backups (default: .genec_backups)
+            enable_git: Enable Git integration for atomic commits (NEW)
         """
         self.create_backups = create_backups
-        self.backup_dir = backup_dir or ".genec_backups"
+        self.backup_dir = Path(backup_dir) if backup_dir else Path(".genec_backups")
+        self.backup_dir.mkdir(exist_ok=True)
+        self.enable_git = enable_git  # NEW
+        self.git_wrapper = None  # Will be initialized when needed
         self.logger = get_logger(self.__class__.__name__)
 
     def apply_refactoring(
@@ -56,8 +65,112 @@ class RefactoringApplicator:
         suggestion: RefactoringSuggestion,
         original_class_file: str,
         repo_path: str,
-        dry_run: bool = False
+        dry_run: bool = False,
+        create_branch: bool = True,  # NEW
     ) -> RefactoringApplication:
+        """
+        Apply a refactoring suggestion to the filesystem.
+
+        Args:
+            suggestion: The refactoring suggestion to apply
+            original_class_file: Path to the original class file
+            repo_path: Path to repository root
+            dry_run: If True, don't actually write files
+            create_branch: Create Git branch for refactoring (NEW)
+
+        Returns:
+            RefactoringApplication result
+        """
+        self.logger.info(f"Applying refactoring: {suggestion.proposed_class_name}")
+
+        # Initialize Git wrapper if enabled
+        if self.enable_git and self.git_wrapper is None:
+            self.git_wrapper = GitWrapper(repo_path)
+
+        original_path = Path(original_class_file)
+
+        # Compute paths
+        new_class_path = self._compute_new_class_path(
+            original_path, suggestion.proposed_class_name, repo_path
+        )
+
+        if dry_run:
+            self.logger.info(f"[DRY RUN] Would create: {new_class_path}")
+            self.logger.info(f"[DRY RUN] Would modify: {original_path}")
+            return RefactoringApplication(
+                success=True,
+                new_class_path=str(new_class_path),
+                original_class_path=str(original_path),
+            )
+
+        # Create backup
+        backup_path = None
+        if self.create_backups:
+            backup_path = self._create_backup(original_path)
+
+        try:
+            # Git: Create feature branch
+            branch_name = None
+            original_branch = None
+            if self.enable_git and self.git_wrapper and self.git_wrapper.is_available():
+                if create_branch:
+                    branch_name = f"genec/refactor-{suggestion.proposed_class_name}"
+                    status = self.git_wrapper.get_status()
+                    original_branch = status.current_branch
+
+                    if not self.git_wrapper.create_branch(branch_name):
+                        self.logger.warning("Failed to create Git branch, continuing without")
+
+            # Write new class file
+            new_class_path.parent.mkdir(parents=True, exist_ok=True)
+            self._write_file(new_class_path, suggestion.new_class_code)
+            self.logger.info(f"Created new class: {new_class_path}")
+
+            # Update original class file
+            self._write_file(original_path, suggestion.modified_original_code)
+            self.logger.info(f"Updated original class: {original_path}")
+
+            # Git: Create atomic commit
+            commit_hash = None
+            if self.enable_git and self.git_wrapper and self.git_wrapper.is_available():
+                # Generate commit message
+                commit_msg = generate_commit_message(
+                    suggestion=suggestion, original_class_name=original_path.stem
+                )
+
+                # Create commit
+                files_to_commit = [str(new_class_path), str(original_path)]
+                commit_hash = self.git_wrapper.create_commit(
+                    message=commit_msg, files=files_to_commit
+                )
+
+                if commit_hash:
+                    self.logger.info(f"Created commit {commit_hash}")
+
+                # Return to original branch
+                if create_branch and original_branch:
+                    self.git_wrapper.checkout_branch(original_branch)
+
+            self.logger.info("Refactoring applied successfully")
+
+            return RefactoringApplication(
+                success=True,
+                new_class_path=str(new_class_path),
+                original_class_path=str(original_path),
+                backup_path=str(backup_path) if backup_path else None,
+                commit_hash=commit_hash,
+                branch_name=branch_name,
+            )
+
+        except Exception as e:
+            self.logger.error(f"Failed to apply refactoring: {e}", exc_info=True)
+
+            # Rollback: Restore from backup
+            if backup_path and backup_path.exists():
+                shutil.copy(backup_path, original_path)
+                self.logger.info("Rolled back changes from backup")
+
+            return RefactoringApplication(success=False, error_message=str(e))
         """
         Apply a refactoring suggestion to the filesystem.
 
@@ -74,22 +187,18 @@ class RefactoringApplicator:
             # Validate inputs
             if not suggestion.new_class_code:
                 return RefactoringApplication(
-                    success=False,
-                    error_message="No new class code generated"
+                    success=False, error_message="No new class code generated"
                 )
 
             if not suggestion.modified_original_code:
                 return RefactoringApplication(
-                    success=False,
-                    error_message="No modified original code generated"
+                    success=False, error_message="No modified original code generated"
                 )
 
             # Compute file paths
             original_path = Path(original_class_file).resolve()
             new_class_path = self._compute_new_class_path(
-                original_path,
-                suggestion.proposed_class_name,
-                repo_path
+                original_path, suggestion.proposed_class_name, repo_path
             )
 
             # Create backup if enabled
@@ -105,7 +214,7 @@ class RefactoringApplicator:
                     success=True,
                     new_class_path=str(new_class_path),
                     original_class_path=str(original_path),
-                    backup_path=backup_path
+                    backup_path=backup_path,
                 )
 
             # Write new extracted class
@@ -120,20 +229,14 @@ class RefactoringApplicator:
                 success=True,
                 new_class_path=str(new_class_path),
                 original_class_path=str(original_path),
-                backup_path=backup_path
+                backup_path=backup_path,
             )
 
         except Exception as e:
             self.logger.error(f"Failed to apply refactoring: {e}", exc_info=True)
-            return RefactoringApplication(
-                success=False,
-                error_message=str(e)
-            )
+            return RefactoringApplication(success=False, error_message=str(e))
 
-    def rollback_refactoring(
-        self,
-        application: RefactoringApplication
-    ) -> bool:
+    def rollback_refactoring(self, application: RefactoringApplication) -> bool:
         """
         Rollback a refactoring by restoring from backup.
 
@@ -156,7 +259,9 @@ class RefactoringApplicator:
             # Restore original from backup
             if application.original_class_path:
                 shutil.copy2(application.backup_path, application.original_class_path)
-                self.logger.info(f"Restored original from backup: {application.original_class_path}")
+                self.logger.info(
+                    f"Restored original from backup: {application.original_class_path}"
+                )
 
             return True
 
@@ -165,10 +270,7 @@ class RefactoringApplicator:
             return False
 
     def _compute_new_class_path(
-        self,
-        original_path: Path,
-        new_class_name: str,
-        repo_path: str
+        self, original_path: Path, new_class_name: str, repo_path: str
     ) -> Path:
         """
         Compute the path for the new extracted class.
@@ -225,7 +327,7 @@ class RefactoringApplicator:
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Write content
-        with open(file_path, 'w', encoding='utf-8') as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             f.write(content)
 
     def cleanup_backups(self, keep_recent: int = 5):
@@ -244,9 +346,9 @@ class RefactoringApplicator:
             backups_by_file = {}
             for backup_file in backup_dir.glob("*.java"):
                 # Extract base name (remove timestamp)
-                parts = backup_file.stem.split('_')
+                parts = backup_file.stem.split("_")
                 if len(parts) >= 3:  # name_YYYYMMDD_HHMMSS
-                    base_name = '_'.join(parts[:-2])
+                    base_name = "_".join(parts[:-2])
                     if base_name not in backups_by_file:
                         backups_by_file[base_name] = []
                     backups_by_file[base_name].append(backup_file)

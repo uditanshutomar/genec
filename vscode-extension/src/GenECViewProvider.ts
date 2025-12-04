@@ -117,6 +117,11 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
             return;
         }
 
+        if (!suggestion.new_class_code || !suggestion.modified_original_code) {
+            vscode.window.showErrorMessage('Could not preview refactoring: Code not available. Please re-run analysis.');
+            return;
+        }
+
         try {
             // Create temp file for modified original
             const originalUri = vscode.Uri.file(this._targetFilePath);
@@ -466,24 +471,53 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                     const successfulApps = result.applied_refactorings.filter((app: any) => app.success);
 
                     if (successfulApps.length > 0) {
-                        const classNames = successfulApps.map((app: any) => path.basename(app.new_class)).join(', ');
+                        const classNames = successfulApps.map((app: any) => path.basename(app.new_class_path || app.new_class)).join(', ');
 
                         // Create links for the webview
                         const fileLinks = successfulApps.map((app: any) => {
-                            const fileName = path.basename(app.new_class);
-                            return `<a href="command:vscode.open?${encodeURIComponent(JSON.stringify(vscode.Uri.file(app.new_class)))}">${fileName}</a>`;
+                            const filePath = app.new_class_path || app.new_class;
+                            const fileName = path.basename(filePath);
+                            return `<a href="command:vscode.open?${encodeURIComponent(JSON.stringify(vscode.Uri.file(filePath)))}">${fileName}</a>`;
                         }).join(', ');
 
                         vscode.window.showInformationMessage(`Successfully extracted: ${classNames}`);
 
+                        const failedApps = result.applied_refactorings.filter((app: any) => !app.success);
+
+                        let summaryHtml = `<h3>Refactoring Summary</h3>`;
+
+                        if (successfulApps.length > 0) {
+                            summaryHtml += `<div class="result-item" style="border-left: 4px solid var(--vscode-notebookStatusSuccessIcon-foreground);">`;
+                            summaryHtml += `<strong>✅ Successfully Extracted ${successfulApps.length} Classes:</strong><br>`;
+                            summaryHtml += `<ul style="margin: 5px 0; padding-left: 20px;">`;
+                            summaryHtml += successfulApps.map((app: any) => {
+                                const fileName = path.basename(app.new_class_path || app.new_class); // Handle both key names just in case
+                                const uri = vscode.Uri.file(app.new_class_path || app.new_class);
+                                return `<li><a href="command:vscode.open?${encodeURIComponent(JSON.stringify(uri))}">${fileName}</a></li>`;
+                            }).join('');
+                            summaryHtml += `</ul></div>`;
+                        }
+
+                        if (failedApps.length > 0) {
+                            summaryHtml += `<div class="result-item" style="border-left: 4px solid var(--vscode-errorForeground);">`;
+                            summaryHtml += `<strong>❌ Failed Refactorings:</strong><br>`;
+                            summaryHtml += `<ul style="margin: 5px 0; padding-left: 20px;">`;
+                            summaryHtml += failedApps.map((app: any) => `<li>${app.error_message || 'Unknown error'}</li>`).join('');
+                            summaryHtml += `</ul></div>`;
+                        }
+
+                        summaryHtml += `<br>The original file has been updated.`;
+
                         this._view.webview.postMessage({
                             type: 'clear',
-                            value: `Iterative Refactoring Complete!<br><br>Extracted ${successfulApps.length} classes:<br>${fileLinks}<br><br>The original file has been updated.`
+                            value: summaryHtml,
+                            graph_data: result.graph_data
                         });
 
                         // Open the last created file
                         const lastApp = successfulApps[successfulApps.length - 1];
-                        const doc = await vscode.workspace.openTextDocument(lastApp.new_class);
+                        const lastFilePath = lastApp.new_class_path || lastApp.new_class;
+                        const doc = await vscode.workspace.openTextDocument(lastFilePath);
                         await vscode.window.showTextDocument(doc);
                         return;
                     }
@@ -579,8 +613,8 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
     }
 
     private _getHtmlForWebview(webview: vscode.Webview) {
-        // Get path to vis-network script
-        const visPathOnDisk = vscode.Uri.joinPath(this._extensionUri, 'node_modules', 'vis-network', 'standalone', 'umd', 'vis-network.min.js');
+        // Get path to vis-network script (bundled in resources folder)
+        const visPathOnDisk = vscode.Uri.joinPath(this._extensionUri, 'resources', 'vis-network.min.js');
         const visUri = webview.asWebviewUri(visPathOnDisk);
 
         return `<!DOCTYPE html>
@@ -721,6 +755,21 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                             break;
                         case 'stopped':
                             document.getElementById('status').textContent = 'Refactoring stopped.';
+                            document.getElementById('refactorBtn').disabled = false;
+                            document.getElementById('stopBtn').disabled = true;
+                            break;
+                        case 'clear':
+                            document.getElementById('results').innerHTML = message.value;
+                            if (message.graph_data) {
+                                renderGraph({ graph_data: message.graph_data });
+                            }
+                            break;
+                        case 'graph_data':
+                            renderGraph({ graph_data: message.value.graph_data });
+                            break;
+                        case 'error':
+                            document.getElementById('results').innerHTML = \`<div class="result-item" style="border-color: var(--vscode-errorForeground);"><strong style="color: var(--vscode-errorForeground);">Error:</strong> \${message.value}</div>\`;
+                            document.getElementById('status').textContent = 'Error occurred.';
                             document.getElementById('refactorBtn').disabled = false;
                             document.getElementById('stopBtn').disabled = true;
                             break;

@@ -13,8 +13,12 @@ exports.activate = activate;
 exports.deactivate = deactivate;
 const vscode = require("vscode");
 const cp = require("child_process");
+const GenECViewProvider_1 = require("./GenECViewProvider");
 function activate(context) {
     console.log('GenEC extension is now active!');
+    // Register Webview View Provider
+    const provider = new GenECViewProvider_1.GenECViewProvider(context.extensionUri, context);
+    context.subscriptions.push(vscode.window.registerWebviewViewProvider(GenECViewProvider_1.GenECViewProvider.viewType, provider));
     let disposable = vscode.commands.registerCommand('genec.refactorClass', () => __awaiter(this, void 0, void 0, function* () {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
@@ -49,6 +53,9 @@ function activate(context) {
         const outputChannel = vscode.window.createOutputChannel('GenEC');
         outputChannel.show();
         outputChannel.appendLine(`Starting GenEC on ${filePath}...`);
+        outputChannel.appendLine(`Repository: ${repoPath}`);
+        outputChannel.appendLine(`Python: ${pythonPath}`);
+        outputChannel.appendLine('');
         vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: "GenEC: Refactoring Class...",
@@ -59,20 +66,30 @@ function activate(context) {
                 if (apiKey) {
                     args.push('--api-key', apiKey);
                 }
-                const process = cp.spawn(pythonPath, args, {
-                    cwd: repoPath
+                // Log the command being executed
+                outputChannel.appendLine(`Executing: ${pythonPath} ${args.join(' ')}`);
+                outputChannel.appendLine('---');
+                outputChannel.appendLine('');
+                const childProcess = cp.spawn(pythonPath, args, {
+                    cwd: repoPath,
+                    env: Object.assign(Object.assign({}, process.env), { PYTHONUNBUFFERED: '1' })
+                });
+                // Add error handler for spawn failure
+                childProcess.on('error', (err) => {
+                    outputChannel.appendLine(`ERROR: Failed to spawn process: ${err.message}`);
+                    reject(err);
                 });
                 token.onCancellationRequested(() => {
-                    process.kill();
+                    childProcess.kill();
                     reject();
                 });
-                process.stdout.on('data', (data) => {
+                childProcess.stdout.on('data', (data) => {
                     outputChannel.append(data.toString());
                 });
-                process.stderr.on('data', (data) => {
+                childProcess.stderr.on('data', (data) => {
                     outputChannel.append(data.toString());
                 });
-                process.on('close', (code) => {
+                childProcess.on('close', (code) => {
                     if (code === 0) {
                         vscode.window.showInformationMessage('GenEC refactoring completed successfully!', 'Show Output')
                             .then(selection => {

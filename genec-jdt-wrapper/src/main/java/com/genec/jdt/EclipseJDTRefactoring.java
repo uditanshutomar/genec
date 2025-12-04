@@ -1099,7 +1099,11 @@ public class EclipseJDTRefactoring {
         for (String sig : methodSigs) {
             // Remove parameter names if present
             // Example: "method(String name, int age)" -> "method(String,int)"
-            String normalized_sig = sig.replaceAll("\\s*\\w+\\s*(?=[,)])", "");
+            // IMPORTANT: Only strip words that follow whitespace (those are parameter
+            // names)
+            // Do NOT strip types like "Object" that appear before comma without preceding
+            // space
+            String normalized_sig = sig.replaceAll("\\s+\\w+(?=[,)])", "");
             normalized.add(normalized_sig);
 
             // Also add the original in case it's already normalized

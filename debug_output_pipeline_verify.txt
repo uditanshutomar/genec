@@ -1,0 +1,425 @@
+2025-12-03 20:42:18,486 - GenEC - INFO - Initializing GenEC pipeline
+2025-12-03 20:42:18,900 - GenEC.LLMInterface - INFO - AST-based chunking enabled for token optimization
+2025-12-03 20:42:18,900 - GenEC.LLMInterface - INFO - Hybrid mode enabled: LLM for naming + JDT for code generation
+2025-12-03 20:42:18,938 - GenEC - INFO - Using Eclipse JDT for code generation
+2025-12-03 20:42:18,938 - GenEC - INFO - Structural transformation stage enabled (max_methods=40, max_fields=20)
+2025-12-03 20:42:18,938 - GenEC - INFO - Refactoring application enabled [LIVE]
+2025-12-03 20:42:18,938 - genec - INFO - Running GenEC on /Users/uditanshutomar/commons-io/src/main/java/org/apache/commons/io/IOUtils.java...
+2025-12-03 20:42:18,938 - GenEC - INFO - ================================================================================
+2025-12-03 20:42:18,938 - GenEC - INFO - Running GenEC pipeline on /Users/uditanshutomar/commons-io/src/main/java/org/apache/commons/io/IOUtils.java
+2025-12-03 20:42:18,938 - GenEC - INFO - ================================================================================
+2025-12-03 20:42:18,971 - GenEC - INFO - 
+[Stage 1/6] Analyzing static dependencies...
+2025-12-03 20:42:22,354 - GenEC - INFO - Original metrics: {'lcom5': 1.0, 'tcc': 0.05699690818658422, 'cbo': 37, 'num_methods': 173, 'num_fields': 11}
+2025-12-03 20:42:22,355 - GenEC - INFO - 
+[Stage 2/6] Mining evolutionary coupling from Git history...
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+{
+  "success": false,
+  "message": "Analysis failed: PartialSourcePosition only contains a CompilationUnit",
+  "error": "UnsupportedOperationException"
+}
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+{
+  "success": false,
+  "message": "Analysis failed: PartialSourcePosition only contains a CompilationUnit",
+  "error": "UnsupportedOperationException"
+}
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+{
+  "success": false,
+  "message": "Analysis failed: PartialSourcePosition only contains a CompilationUnit",
+  "error": "UnsupportedOperationException"
+}
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+Spoon analysis failed, falling back to JavaParser: Error calling Spoon wrapper: Spoon process failed with exit code 1
+stdout: 
+stderr: Error: Unable to access jarfile genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+
+2025-12-03 20:45:53,901 - GenEC - INFO - 
+[Stage 3/6] Building and fusing dependency graphs...
+2025-12-03 20:45:53,981 - GenEC - INFO - Calculated 4 centrality metrics
+2025-12-03 20:45:53,984 - GenEC - INFO - Graph metrics: {'num_nodes': 184, 'num_edges': 856, 'density': 0.05084343074364457, 'num_components': 32, 'avg_clustering': 0.7244838673141278, 'avg_degree': 9.304347826086957}
+2025-12-03 20:45:53,984 - GenEC - INFO - 
+[Stage 4/6] Detecting and ranking clusters...
+2025-12-03 20:45:54,048 - GenEC - INFO - Clusters: 36 detected, 11 filtered, 11 ranked
+2025-12-03 20:45:54,048 - GenEC - INFO - 
+[Stage 5/6] Generating refactoring suggestions (top 5)...
+2025-12-03 20:45:54,048 - GenEC.LLMInterface - INFO - Generating refactoring suggestion for cluster 11
+2025-12-03 20:45:54,048 - GenEC.LLMInterface - INFO - Using hybrid mode: LLM for naming, JDT for code
+2025-12-03 20:46:04,572 - GenEC.LLMInterface - INFO - LLM suggested name: DataStructureBounds
+2025-12-03 20:46:06,530 - GenEC.LLMInterface - INFO - JDT code generation successful
+2025-12-03 20:46:08,359 - GenEC.LLMInterface - INFO - Generating refactoring suggestion for cluster 10
+2025-12-03 20:46:08,360 - GenEC.LLMInterface - INFO - Using hybrid mode: LLM for naming, JDT for code
+2025-12-03 20:46:18,666 - GenEC.LLMInterface - INFO - LLM suggested name: BoundsValidator
+2025-12-03 20:46:20,027 - GenEC.LLMInterface - INFO - JDT code generation successful
+2025-12-03 20:46:21,342 - GenEC.LLMInterface - INFO - Generating refactoring suggestion for cluster 19
+2025-12-03 20:46:21,342 - GenEC.LLMInterface - INFO - Using hybrid mode: LLM for naming, JDT for code
+2025-12-03 20:46:30,996 - GenEC.LLMInterface - INFO - LLM suggested name: LineIteratorFactory
+2025-12-03 20:46:32,713 - GenEC.LLMInterface - INFO - JDT code generation successful
+2025-12-03 20:46:34,048 - GenEC.LLMInterface - INFO - Generating refactoring suggestion for cluster 15
+2025-12-03 20:46:34,048 - GenEC.LLMInterface - INFO - Using hybrid mode: LLM for naming, JDT for code
+2025-12-03 20:46:43,948 - GenEC.LLMInterface - INFO - LLM suggested name: StreamProcessor
+2025-12-03 20:46:45,533 - GenEC.LLMInterface - INFO - JDT code generation successful
+2025-12-03 20:46:46,869 - GenEC.LLMInterface - INFO - Generating refactoring suggestion for cluster 13
+2025-12-03 20:46:46,869 - GenEC.LLMInterface - INFO - Using hybrid mode: LLM for naming, JDT for code
+2025-12-03 20:46:56,151 - GenEC.LLMInterface - INFO - LLM suggested name: ResourceCloser
+2025-12-03 20:46:57,489 - GenEC.LLMInterface - INFO - JDT code generation successful
+2025-12-03 20:46:58,808 - GenEC - INFO - Generated 5 suggestions
+2025-12-03 20:46:58,808 - GenEC - INFO - 
+[Stage 6/6] Verifying refactoring suggestions...
+2025-12-03 20:46:58,808 - GenEC - INFO - Verifying 5 suggestions in parallel (max_workers=4)
+2025-12-03 20:46:58,810 - GenEC - INFO - Verifying suggestion: DataStructureBounds
+2025-12-03 20:46:58,810 - GenEC - INFO - Verifying suggestion: BoundsValidator
+2025-12-03 20:46:58,810 - GenEC - INFO - Verifying suggestion: LineIteratorFactory
+2025-12-03 20:46:58,810 - GenEC - INFO - Verifying suggestion: StreamProcessor
+2025-12-03 20:48:05,529 - GenEC - INFO - Verifying suggestion: ResourceCloser
+2025-12-03 20:48:05,531 - GenEC - INFO - Suggestion DataStructureBounds PASSED all verification layers
+2025-12-03 20:48:05,963 - GenEC - INFO - Suggestion LineIteratorFactory PASSED all verification layers
+2025-12-03 20:48:07,051 - GenEC - INFO - Suggestion BoundsValidator PASSED all verification layers
+2025-12-03 20:48:07,911 - GenEC - INFO - Suggestion StreamProcessor PASSED all verification layers
+2025-12-03 20:48:40,793 - GenEC - INFO - Suggestion ResourceCloser PASSED all verification layers
+2025-12-03 20:48:40,794 - GenEC - INFO - 
+[Stage 7/7] Applying verified refactorings...
+2025-12-03 20:48:40,821 - GenEC - INFO - 
+================================================================================
+REFACTORING PREVIEW SUMMARY (5 refactorings)
+================================================================================
+
+Total Impact:
+  Files created:  5
+  Files modified: 5
+  Lines added:    +711
+  Lines removed:  -32
+
+Refactorings:
+  1. ❌ DataStructureBounds (+124 -10)
+  2. ❌ LineIteratorFactory (+102 -6)
+  3. ❌ BoundsValidator (+111 -4)
+  4. ❌ StreamProcessor (+207 -12)
+  5. ❌ ResourceCloser (+167 -0)
+
+================================================================================
+⚠️  5 refactoring(s) cannot be applied
+================================================================================
+2025-12-03 20:48:41,144 - GenEC - INFO - Successfully applied all refactorings transactionally
+2025-12-03 20:48:41,144 - GenEC - INFO - 
+================================================================================
+2025-12-03 20:48:41,144 - GenEC - INFO - PIPELINE SUMMARY
+2025-12-03 20:48:41,144 - GenEC - INFO - ================================================================================
+2025-12-03 20:48:41,145 - GenEC - INFO - Class: IOUtils
+2025-12-03 20:48:41,145 - GenEC - INFO - Clusters detected: 36
+2025-12-03 20:48:41,145 - GenEC - INFO - Suggestions generated: 5
+2025-12-03 20:48:41,145 - GenEC - INFO - Verified suggestions: 5
+2025-12-03 20:48:41,145 - GenEC - INFO - Applied refactorings: 5/5
+2025-12-03 20:48:41,145 - GenEC - INFO - Execution time: 382.21 seconds
+2025-12-03 20:48:41,145 - GenEC - INFO - ================================================================================
+
+==================================================
+Refactoring Completed Successfully
+==================================================
+Original Metrics: {'lcom5': 1.0, 'tcc': 0.05699690818658422, 'cbo': 37, 'num_methods': 173, 'num_fields': 11}
+Suggestions Generated: 5
+Verified Suggestions: 5
+
+Verified Suggestions:
+1. DataStructureBounds
+2. LineIteratorFactory
+3. BoundsValidator
+4. StreamProcessor
+5. ResourceCloser
+2025-12-03 20:48:41,145 - genec - INFO - Cleaned up artifact: /Users/uditanshutomar/commons-io/src/main/java/org/apache/commons/io/generated.java

@@ -1,0 +1,78 @@
+2025-12-03 20:45:49,989 - GenEC - INFO - Initializing GenEC pipeline
+Failed to initialize Spoon parser: Spoon wrapper JAR not found: genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+Please build it with: cd genec-spoon-wrapper && mvn package
+Failed to initialize Spoon parser: Spoon wrapper JAR not found: genec-spoon-wrapper/target/genec-spoon-wrapper-1.0.0-jar-with-dependencies.jar
+Please build it with: cd genec-spoon-wrapper && mvn package
+2025-12-03 20:45:49,990 - GenEC.LLMInterface - INFO - AST-based chunking enabled for token optimization
+2025-12-03 20:45:49,990 - GenEC.LLMInterface - INFO - Hybrid mode enabled: LLM for naming + JDT for code generation
+2025-12-03 20:45:50,030 - GenEC - INFO - Using Eclipse JDT for code generation
+2025-12-03 20:45:50,030 - GenEC - INFO - Structural transformation stage enabled (max_methods=40, max_fields=20)
+2025-12-03 20:45:50,030 - GenEC - INFO - Refactoring application enabled [LIVE]
+2025-12-03 20:45:50,030 - genec - INFO - Running GenEC on /Users/uditanshutomar/commons-io/src/main/java/org/apache/commons/io/IOUtils.java...
+2025-12-03 20:45:50,030 - GenEC - INFO - ================================================================================
+2025-12-03 20:45:50,030 - GenEC - INFO - Running GenEC pipeline on /Users/uditanshutomar/commons-io/src/main/java/org/apache/commons/io/IOUtils.java
+2025-12-03 20:45:50,030 - GenEC - INFO - ================================================================================
+2025-12-03 20:45:50,070 - GenEC - INFO - 
+[Stage 1/6] Analyzing static dependencies...
+2025-12-03 20:45:50,142 - GenEC - INFO - Original metrics: {'lcom5': 1.0, 'tcc': 0.06123151014791882, 'cbo': 37, 'num_methods': 171, 'num_fields': 11}
+2025-12-03 20:45:50,142 - GenEC - INFO - 
+[Stage 2/6] Mining evolutionary coupling from Git history...
+2025-12-03 20:46:02,851 - GenEC - INFO - 
+[Stage 3/6] Building and fusing dependency graphs...
+2025-12-03 20:46:02,941 - GenEC - INFO - Calculated 4 centrality metrics
+2025-12-03 20:46:02,948 - GenEC - INFO - Graph metrics: {'num_nodes': 180, 'num_edges': 884, 'density': 0.05487274984481688, 'num_components': 23, 'avg_clustering': 0.8239470935396811, 'avg_degree': 9.822222222222223}
+2025-12-03 20:46:02,948 - GenEC - INFO - 
+[Stage 4/6] Detecting and ranking clusters...
+LLM validation failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeJbByR6oGyF2RrmGF'}
+Transformation analysis failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeKDtdEF3Ke2ZJ3VFR'}
+LLM validation failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeKchZ3tufsVrpVdwX'}
+Transformation analysis failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeKzmovjRfGNhcJFNW'}
+LLM validation failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeLQL8qwGkVSJNUPpj'}
+Transformation analysis failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeLr7z6dmkjPQXUkc2'}
+LLM validation failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeMLPKbkpzfNQxsfis'}
+Transformation analysis failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeMgUTgKP84qNzywJW'}
+LLM validation failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeNCUuKCtCAQrVDxou'}
+Transformation analysis failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeNcHFWKTBWcn4av2d'}
+LLM validation failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeNz6vGiS6bUvcGbUU'}
+Transformation analysis failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxePjkHZ83TPp1EPwzD'}
+LLM validation failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeQ9Jrk1FGZtCw6zhW'}
+Transformation analysis failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeQXNePp9Mz8ySeCQ4'}
+LLM validation failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeQvwJggfFMMxjRQMu'}
+Transformation analysis failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeRQTPh39fhJgd3qsG'}
+LLM validation failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeRtUczZmz2U1BpHJo'}
+Transformation analysis failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeSFod24BoV1CUVUkg'}
+2025-12-03 20:46:04,952 - GenEC - INFO - Clusters: 27 detected, 3 filtered, 3 ranked
+2025-12-03 20:46:04,952 - GenEC - INFO - 
+[Stage 5/6] Generating refactoring suggestions (top 5)...
+2025-12-03 20:46:04,952 - GenEC.LLMInterface - INFO - Generating refactoring suggestion for cluster 3
+2025-12-03 20:46:04,952 - GenEC.LLMInterface - INFO - Using hybrid mode: LLM for naming, JDT for code
+2025-12-03 20:46:05,097 - GenEC.LLMInterface - ERROR - Hybrid generation failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeSuFfSGcUS4zrpYMu'}
+2025-12-03 20:46:05,097 - GenEC.LLMInterface - INFO - Generating refactoring suggestion for cluster 8
+2025-12-03 20:46:05,097 - GenEC.LLMInterface - INFO - Using hybrid mode: LLM for naming, JDT for code
+2025-12-03 20:46:05,206 - GenEC.LLMInterface - ERROR - Hybrid generation failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeTPGkVzsn9XSorJ4N'}
+2025-12-03 20:46:05,206 - GenEC.LLMInterface - INFO - Generating refactoring suggestion for cluster 17
+2025-12-03 20:46:05,206 - GenEC.LLMInterface - INFO - Using hybrid mode: LLM for naming, JDT for code
+2025-12-03 20:46:05,308 - GenEC.LLMInterface - ERROR - Hybrid generation failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeToL3x9iutQmjy972'}
+2025-12-03 20:46:05,308 - GenEC - INFO - Generated 0 suggestions
+2025-12-03 20:46:05,308 - GenEC - WARNING - No suggestions from ranked clusters; attempting field-based fallback.
+2025-12-03 20:46:05,313 - GenEC.LLMInterface - INFO - Generating refactoring suggestion for cluster 0
+2025-12-03 20:46:05,313 - GenEC.LLMInterface - INFO - Using hybrid mode: LLM for naming, JDT for code
+2025-12-03 20:46:05,400 - GenEC.LLMInterface - ERROR - Hybrid generation failed: Anthropic request failed after 1 attempts. Last error: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CVkxeUD8mNeT2TJZfa2Kp'}
+2025-12-03 20:46:05,400 - GenEC - WARNING - No suggestions to verify; skipping verification stage.
+2025-12-03 20:46:05,400 - GenEC - INFO - 
+================================================================================
+2025-12-03 20:46:05,400 - GenEC - INFO - PIPELINE SUMMARY
+2025-12-03 20:46:05,400 - GenEC - INFO - ================================================================================
+2025-12-03 20:46:05,400 - GenEC - INFO - Class: IOUtils
+2025-12-03 20:46:05,400 - GenEC - INFO - Clusters detected: 27
+2025-12-03 20:46:05,400 - GenEC - INFO - Suggestions generated: 0
+2025-12-03 20:46:05,400 - GenEC - INFO - Verified suggestions: 0
+2025-12-03 20:46:05,400 - GenEC - INFO - Execution time: 15.37 seconds
+2025-12-03 20:46:05,400 - GenEC - INFO - ================================================================================
+
+==================================================
+Refactoring Completed Successfully
+==================================================
+Original Metrics: {'lcom5': 1.0, 'tcc': 0.06123151014791882, 'cbo': 37, 'num_methods': 171, 'num_fields': 11}
+Suggestions Generated: 0
+Verified Suggestions: 0

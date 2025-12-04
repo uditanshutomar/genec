@@ -1,0 +1,65 @@
+2025-12-03 20:20:52,237 - GenEC - INFO - Initializing GenEC pipeline
+2025-12-03 20:20:52,574 - GenEC.LLMInterface - INFO - AST-based chunking enabled for token optimization
+2025-12-03 20:20:52,575 - GenEC.LLMInterface - INFO - Hybrid mode enabled: LLM for naming + JDT for code generation
+2025-12-03 20:20:52,610 - GenEC - INFO - Using Eclipse JDT for code generation
+2025-12-03 20:20:52,610 - GenEC - INFO - Structural transformation stage enabled (max_methods=40, max_fields=20)
+2025-12-03 20:20:52,610 - GenEC - INFO - Refactoring application enabled [LIVE]
+2025-12-03 20:20:52,610 - genec - INFO - Running GenEC on /Users/uditanshutomar/commons-io/src/main/java/org/apache/commons/io/IOUtils.java...
+2025-12-03 20:20:52,610 - GenEC - INFO - ================================================================================
+2025-12-03 20:20:52,610 - GenEC - INFO - Running GenEC pipeline on /Users/uditanshutomar/commons-io/src/main/java/org/apache/commons/io/IOUtils.java
+2025-12-03 20:20:52,610 - GenEC - INFO - ================================================================================
+2025-12-03 20:20:52,629 - GenEC - INFO - 
+[Stage 1/6] Analyzing static dependencies...
+2025-12-03 20:20:56,111 - GenEC - INFO - Original metrics: {'lcom5': 0.9937015503875969, 'tcc': 0.07964780212394139, 'cbo': 37, 'num_methods': 173, 'num_fields': 12}
+2025-12-03 20:20:56,111 - GenEC - INFO - 
+[Stage 2/6] Mining evolutionary coupling from Git history...
+2025-12-03 20:20:56,147 - GenEC - INFO - 
+[Stage 3/6] Building and fusing dependency graphs...
+2025-12-03 20:20:56,252 - GenEC - INFO - Calculated 4 centrality metrics
+2025-12-03 20:20:56,256 - GenEC - INFO - Graph metrics: {'num_nodes': 185, 'num_edges': 1210, 'density': 0.07109283196239718, 'num_components': 25, 'avg_clustering': 0.6053118313282114, 'avg_degree': 13.08108108108108}
+2025-12-03 20:20:56,256 - GenEC - INFO - 
+[Stage 4/6] Detecting and ranking clusters...
+2025-12-03 20:20:56,297 - GenEC - INFO - Clusters: 30 detected, 18 filtered, 18 ranked
+2025-12-03 20:20:56,297 - GenEC - INFO - 
+[Stage 5/6] Generating refactoring suggestions (top 5)...
+2025-12-03 20:20:56,297 - GenEC.LLMInterface - INFO - Generating refactoring suggestion for cluster 18
+2025-12-03 20:20:56,297 - GenEC.LLMInterface - INFO - Using hybrid mode: LLM for naming, JDT for code
+2025-12-03 20:21:06,625 - GenEC.LLMInterface - INFO - LLM suggested name: LineIteratorFactory
+2025-12-03 20:21:07,987 - GenEC.LLMInterface - INFO - JDT code generation successful
+2025-12-03 20:21:09,271 - GenEC.LLMInterface - INFO - Generating refactoring suggestion for cluster 25
+2025-12-03 20:21:09,271 - GenEC.LLMInterface - INFO - Using hybrid mode: LLM for naming, JDT for code
+2025-12-03 20:21:19,182 - GenEC.LLMInterface - INFO - LLM suggested name: StreamBuffer
+2025-12-03 20:21:20,672 - GenEC.LLMInterface - INFO - JDT code generation successful
+2025-12-03 20:21:22,101 - GenEC.LLMInterface - INFO - Generating refactoring suggestion for cluster 13
+2025-12-03 20:21:22,101 - GenEC.LLMInterface - INFO - Using hybrid mode: LLM for naming, JDT for code
+2025-12-03 20:21:33,309 - GenEC.LLMInterface - INFO - LLM suggested name: ResourceCloser
+2025-12-03 20:21:34,723 - GenEC.LLMInterface - INFO - JDT code generation successful
+2025-12-03 20:21:36,032 - GenEC.LLMInterface - INFO - Generating refactoring suggestion for cluster 21
+2025-12-03 20:21:36,032 - GenEC.LLMInterface - INFO - Using hybrid mode: LLM for naming, JDT for code
+2025-12-03 20:21:46,052 - GenEC.LLMInterface - INFO - LLM suggested name: TextReader
+2025-12-03 20:21:47,853 - GenEC.LLMInterface - INFO - JDT code generation successful
+2025-12-03 20:21:49,287 - GenEC.LLMInterface - INFO - Generating refactoring suggestion for cluster 23
+2025-12-03 20:21:49,287 - GenEC.LLMInterface - INFO - Using hybrid mode: LLM for naming, JDT for code
+2025-12-03 20:21:58,927 - GenEC.LLMInterface - INFO - LLM suggested name: ByteArrayConverter
+2025-12-03 20:22:00,576 - GenEC.LLMInterface - INFO - JDT code generation successful
+2025-12-03 20:22:02,188 - GenEC - INFO - Generated 5 suggestions
+2025-12-03 20:22:02,188 - GenEC - INFO - 
+[Stage 6/6] Verifying refactoring suggestions...
+2025-12-03 20:22:02,188 - GenEC - INFO - Verifying 5 suggestions in parallel (max_workers=4)
+2025-12-03 20:22:02,190 - GenEC - INFO - Verifying suggestion: LineIteratorFactory
+2025-12-03 20:22:02,190 - GenEC - INFO - Verifying suggestion: StreamBuffer
+2025-12-03 20:22:02,190 - GenEC - INFO - Verifying suggestion: ResourceCloser
+2025-12-03 20:22:02,191 - GenEC - INFO - Verifying suggestion: TextReader
+✗ Behavioral differences detected in 1 tests
+Equivalence checking failed: Behavioral differences detected: org.apache.commons.io.IOUtilsTest (pass/fail mismatch)
+2025-12-03 20:22:28,743 - GenEC - INFO - Verifying suggestion: ByteArrayConverter
+2025-12-03 20:22:28,743 - GenEC - WARNING - Suggestion TextReader FAILED: FAILED_EQUIVALENCE - Behavioral differences detected: org.apache.commons.io.IOUtilsTest (pass/fail mismatch)
+✗ Behavioral differences detected in 1 tests
+Equivalence checking failed: Behavioral differences detected: org.apache.commons.io.IOUtilsTest (pass/fail mismatch)
+✗ Behavioral differences detected in 1 tests
+Equivalence checking failed: Behavioral differences detected: org.apache.commons.io.IOUtilsTest (pass/fail mismatch)
+✗ Behavioral differences detected in 1 tests
+Equivalence checking failed: Behavioral differences detected: org.apache.commons.io.IOUtilsTest (pass/fail mismatch)
+2025-12-03 20:22:53,520 - genec - INFO - Cleaned up artifact: /Users/uditanshutomar/commons-io/src/main/java/org/apache/commons/io/generated.java
+
+Operation cancelled by user.

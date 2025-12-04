@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import os
 import sys
 from pathlib import Path
@@ -9,7 +10,16 @@ from genec.utils.logging_utils import get_logger, setup_logger
 
 logger = get_logger(__name__)
 
+import signal
+from dotenv import load_dotenv
+
 def main():
+    # Load .env file
+    load_dotenv()
+
+    # Ignore SIGINT to debug mysterious KeyboardInterrupt
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
     parser = argparse.ArgumentParser(description="GenEC: Generative Extract Class Refactoring Tool")
     
     parser.add_argument(
@@ -47,23 +57,60 @@ def main():
         action="store_true",
         help="Enable verbose logging (DEBUG level)"
     )
+    parser.add_argument(
+        "--apply-all",
+        action="store_true",
+        help="Automatically apply all verified refactorings"
+    )
+    parser.add_argument(
+        "--min-cluster-size",
+        type=int,
+        help="Minimum cluster size"
+    )
+    parser.add_argument(
+        "--max-cluster-size",
+        type=int,
+        help="Maximum cluster size"
+    )
+    parser.add_argument(
+        "--min-cohesion",
+        type=float,
+        help="Minimum cohesion threshold"
+    )
+    parser.add_argument(
+        "--no-build",
+        action="store_true",
+        help="Disable automatic building of dependencies"
+    )
     
     args = parser.parse_args()
 
     # Setup logging
     log_level = 'DEBUG' if args.verbose else 'INFO'
-    setup_logger('genec', level=log_level)
+    
+    # If JSON output is requested, ensure logs go to stderr so they don't corrupt stdout
+    if args.json:
+        # Configure root logger to write to stderr
+        logging.basicConfig(stream=sys.stderr, level=getattr(logging, log_level))
+        # Also setup our custom logger
+        setup_logger('genec', level=log_level)
+        # Ensure our custom logger's handlers are also stderr
+        logger = logging.getLogger('genec')
+        for handler in logger.handlers:
+            if isinstance(handler, logging.StreamHandler):
+                handler.stream = sys.stderr
+    else:
+        setup_logger('genec', level=log_level)
+        logger = logging.getLogger('genec')
     
     # Setup API key
     if args.api_key:
         os.environ["ANTHROPIC_API_KEY"] = args.api_key
-    elif "ANTHROPIC_API_KEY" not in os.environ:
-        # Try to load from secrets util if available
-        try:
-            from genec.utils.secrets import get_anthropic_api_key
-            os.environ["ANTHROPIC_API_KEY"] = get_anthropic_api_key()
-        except Exception:
-            logger.warning("No API key provided. LLM features will be disabled.")
+    
+    # Verify API key is available (either from args, env, or .env)
+    from genec.utils.secrets import get_anthropic_api_key
+    if not get_anthropic_api_key():
+        logger.warning("No API key found (checked args, env, and .env). LLM features will be disabled.")
 
     # Validate paths
     target_path = Path(args.target).resolve()
@@ -77,10 +124,36 @@ def main():
     if not repo_path.exists():
         logger.error(f"Repository path not found: {repo_path}")
         sys.exit(1)
+
+    # Construct config overrides
+    config_overrides = {}
+    
+    if args.apply_all:
+        config_overrides["refactoring_application"] = {
+            "enabled": True,
+            "auto_apply": True,
+            "dry_run": False
+        }
+        
+    if args.min_cluster_size is not None or args.max_cluster_size is not None or args.min_cohesion is not None:
+        clustering_overrides = {}
+        if args.min_cluster_size is not None:
+            clustering_overrides["min_cluster_size"] = args.min_cluster_size
+        if args.max_cluster_size is not None:
+            clustering_overrides["max_cluster_size"] = args.max_cluster_size
+        if args.min_cohesion is not None:
+            clustering_overrides["min_cohesion"] = args.min_cohesion
+        config_overrides["clustering"] = clustering_overrides
+        
+    if args.no_build:
+        config_overrides["auto_build_dependencies"] = False
         
     # Initialize pipeline
     try:
-        pipeline = GenECPipeline(str(config_path) if config_path.exists() else None)
+        pipeline = GenECPipeline(
+            config_file=str(config_path) if config_path.exists() else None,
+            config_overrides=config_overrides
+        )
         
         if not args.json:
             logger.info(f"Running GenEC on {target_path}...")
@@ -98,9 +171,21 @@ def main():
                 "suggestions": [
                     {
                         "name": s.proposed_class_name,
-                        "verified": s in results.verified_suggestions
+                        "verified": s in results.verified_suggestions,
+                        "new_class_code": s.new_class_code or "",
+                        "modified_original_code": s.modified_original_code or ""
                     } for s in results.suggestions
-                ]
+                ],
+                "applied_refactorings": [
+                    {
+                        "success": r.success,
+                        "new_class_path": r.new_class_path,
+                        "original_class_path": r.original_class_path,
+                        "error_message": r.error_message,
+                        "commit_hash": r.commit_hash
+                    } for r in results.applied_refactorings
+                ],
+                "graph_data": results.graph_data
             }
             print(json.dumps(output, indent=2))
         else:

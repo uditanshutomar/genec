@@ -30,11 +30,98 @@ evolution:
   min_revisions: 5               # Minimum revisions required (stricter than min_commits)
 
 clustering:
-  algorithm: louvain
+  # Algorithm selection ('louvain' or 'leiden')
+  # Leiden is recommended: guaranteed connected communities, faster, better quality
+  algorithm: leiden
+
+  # Size constraints
   min_cluster_size: 3
   max_cluster_size: 15
+
+  # Quality constraints
   min_cohesion: 0.5
+
+  # Resolution parameter (higher = more smaller clusters)
   resolution: 1.0
+
+  # Multi-resolution clustering (find optimal granularity)
+  multi_resolution:
+    enabled: false
+    resolution_range: [0.5, 0.75, 1.0, 1.25, 1.5]
+    quality_metric: silhouette  # 'modularity' or 'silhouette'
+
+  # Stability analysis (consensus clustering for consistent results)
+  stability_analysis:
+    enabled: false
+    iterations: 10
+    threshold: 0.7  # Minimum co-occurrence frequency
+
+  # Advanced quality metrics
+  quality_metrics:
+    silhouette: true
+    conductance: true
+    coverage: true
+
+  # Connectivity validation
+  validate_connectivity: true
+  split_disconnected: true
+
+  # Pattern-based fallback clustering (when no edges exist)
+  clustering_patterns:
+    - prefix: is
+      description: Boolean check methods
+    - prefix: has
+      description: Boolean property methods
+    - prefix: get
+      description: Getter methods
+    - prefix: set
+      description: Setter methods
+    - prefix: contains
+      description: Container check methods
+    - prefix: add
+      description: Add/append methods
+    - prefix: remove
+      description: Remove/delete methods
+    - prefix: find
+      description: Search/find methods
+    - prefix: create
+      description: Factory/creation methods
+    - prefix: build
+      description: Builder methods
+    - prefix: parse
+      description: Parsing methods
+    - prefix: format
+      description: Formatting methods
+    - prefix: validate
+      description: Validation methods
+    - prefix: convert
+      description: Conversion methods
+    - prefix: to
+      description: Conversion to methods
+    - prefix: from
+      description: Conversion from methods
+
+  # Semantic clustering (long-term enhancement)
+  semantic:
+    enabled: false
+    features:  # null = use all default features
+      - complexity
+      - cognitive_complexity
+      - loc
+      - sloc
+      - parameters
+      - field_usage
+      - method_calls
+
+  # Hybrid clustering (graph + semantic)
+  hybrid:
+    enabled: false
+    alpha: 0.7  # Graph weight (0.0-1.0, higher = more graph, less semantic)
+    semantic_threshold: 0.5  # Minimum semantic similarity to create edge
+
+  # Feature normalization
+  feature_normalization: zscore  # 'zscore', 'minmax', or 'robust'
+
 
 llm:
   provider: anthropic
@@ -48,9 +135,29 @@ verification:
   enable_syntactic: true
   enable_semantic: true
   enable_behavioral: true
+
+  # Stage 6: Advanced Verification
+  enable_static_analysis: true    # PMD, SpotBugs, SonarQube
+  enable_multiversion: true       # Check compatibility with Java 8/11/17/21
+  enable_performance: true        # Check for performance regressions
+
+  # Tool Configuration
   java_compiler: javac
   maven_command: mvn
   gradle_command: gradle
+  max_workers: 4                  # Parallel verification threads
+
+refactoring_application:
+  enabled: true
+  auto_apply: false               # Require manual confirmation (via dry run)
+  dry_run: true                   # Generate previews first
+  create_backups: true            # Create timestamped backups
+  backup_dir: .genec_backups
+
+  # Stage 7: Advanced Application
+  enable_git: true                # Use Git for atomic commits and branching
+  transactional: true             # All-or-nothing application
+  check_conflicts: true           # Check for file modifications before applying
 
 logging:
   level: INFO

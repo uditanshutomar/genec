@@ -176,7 +176,8 @@ class GradleAdapter(BuildToolAdapter):
         # Build test pattern for Gradle
         test_patterns = self._build_test_patterns(test_selection)
 
-        command = ["./gradlew", "test", "-q"]
+        gradle_cmd = "./gradlew" if (self.repo_path / "gradlew").exists() else "gradle"
+        command = [gradle_cmd, "test", "-q"]
 
         for pattern in test_patterns:
             command.append("--tests")
@@ -195,7 +196,8 @@ class GradleAdapter(BuildToolAdapter):
 
     def run_all_tests(self, timeout_seconds: int = 1800) -> subprocess.CompletedProcess:
         """Run all Gradle tests."""
-        command = ["./gradlew", "test", "-q"]
+        gradle_cmd = "./gradlew" if (self.repo_path / "gradlew").exists() else "gradle"
+        command = [gradle_cmd, "test", "-q"]
 
         self.logger.info("Running all Gradle tests")
 

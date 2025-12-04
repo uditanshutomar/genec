@@ -194,7 +194,8 @@ class BehavioralVerifier:
             if build_system == 'maven':
                 cmd = [self.maven_command, 'test', '-q']
             elif build_system == 'gradle':
-                cmd = [self.gradle_command, 'test', '-q']
+                gradle_cmd = "./gradlew" if (repo_path / "gradlew").exists() else self.gradle_command
+                cmd = [gradle_cmd, 'test', '-q']
             else:
                 return False, f"Unknown build system: {build_system}"
 

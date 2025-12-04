@@ -59,3 +59,8 @@ config/secrets.yaml
 *.secret
 genec-spoon-wrapper/target/
 genec-jdt-wrapper/target/
+
+# GenEC Runtime
+commons-lang/
+.genec_backups/
+.genec_metadata/

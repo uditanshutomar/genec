@@ -455,9 +455,17 @@ class JavaParser:
         return source_bytes[node.start_byte:node.end_byte].decode('utf-8')
 
     def _find_jdt_wrapper(self) -> Optional[str]:
+        project_root = Path(__file__).parent.parent.parent
+        
         candidates = [
+            # Relative paths (legacy)
             "genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar",
             "genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0.jar",
+            
+            # Absolute paths relative to project root
+            str(project_root / "genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar"),
+            str(project_root / "genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0.jar"),
+            str(project_root / "lib/genec-jdt-wrapper.jar"),
         ]
         for path in candidates:
             if os.path.exists(path):
