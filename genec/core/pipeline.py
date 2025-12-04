@@ -60,7 +60,7 @@ class GenECPipeline:
 
         # Load configuration
         self.config = self._load_config(config_file)
-        
+
         # Apply overrides
         if config_overrides:
             self._apply_overrides(self.config, config_overrides)
@@ -76,7 +76,7 @@ class GenECPipeline:
         # Ensure dependencies
         project_root = Path(__file__).parent.parent.parent
         self.dependency_manager = DependencyManager(project_root)
-        
+
         # Check if auto-build is disabled via config
         auto_build = self.config.get("auto_build_dependencies", True)
         self.dependency_manager.ensure_dependencies(auto_build=auto_build)
@@ -213,7 +213,7 @@ class GenECPipeline:
         if engine == "eclipse_jdt":
             try:
                 self.code_generator_class = JDTCodeGenerator
-                
+
                 # Resolve JAR path relative to project root if it's relative
                 jar_path = codegen_config.get("jdt_wrapper_jar")
                 project_root = Path(__file__).parent.parent.parent
@@ -221,7 +221,7 @@ class GenECPipeline:
                     self.jdt_wrapper_jar = str(project_root / jar_path)
                 else:
                     self.jdt_wrapper_jar = jar_path
-                    
+
                 self.jdt_timeout = codegen_config.get("timeout", 60)
                 self.logger.info("Using Eclipse JDT for code generation")
             except Exception as e:
@@ -418,6 +418,7 @@ class GenECPipeline:
 
             # Generate graph data for JSON output
             from networkx.readwrite import json_graph
+
             result.graph_data = json_graph.node_link_data(G_fused, edges="links")
 
             # Export graph if requested
@@ -502,45 +503,18 @@ class GenECPipeline:
             if not self.llm_interface.is_available():
                 self.logger.warning("LLM interface unavailable; skipping suggestion generation.")
             else:
-                clusters_to_process = (
-                    ranked_clusters
-                    if max_suggestions is None
-                    else ranked_clusters[:max_suggestions]
+                # Use parallel batch generation
+                # This handles both LLM generation and JDT code generation (via hybrid mode) in parallel
+                suggestions = self.llm_interface.generate_batch_suggestions(
+                    clusters=ranked_clusters,
+                    original_code=original_code,
+                    class_deps=class_deps,
+                    class_file=class_file,
+                    repo_path=repo_path,
+                    evo_data=evo_data,
+                    max_suggestions=max_suggestions,
+                    max_workers=4,  # Default to 4 workers
                 )
-                for cluster in clusters_to_process:
-                    suggestion = self.llm_interface.generate_refactoring_suggestion(
-                        cluster=cluster,
-                        original_code=original_code,
-                        class_deps=class_deps,
-                        class_file=class_file,  # NEW: Enable hybrid mode
-                        repo_path=repo_path,  # NEW: Enable hybrid mode
-                        evo_data=evo_data,
-                    )
-
-                    if not suggestion:
-                        continue
-
-                    # Use JDT code generator
-                    generator = JDTCodeGenerator(
-                        jdt_wrapper_jar=self.jdt_wrapper_jar, timeout=self.jdt_timeout
-                    )
-                    try:
-                        generated = generator.generate(
-                            cluster=cluster,
-                            new_class_name=suggestion.proposed_class_name,
-                            class_file=class_file,
-                            repo_path=repo_path,
-                            class_deps=class_deps,
-                        )
-                    except CodeGenerationError as e:
-                        self.logger.warning(
-                            f"Skipping cluster {cluster.id} ({suggestion.proposed_class_name}): {e}"
-                        )
-                        continue
-
-                    suggestion.new_class_code = generated.new_class_code
-                    suggestion.modified_original_code = generated.modified_original_code
-                    suggestions.append(suggestion)
 
             result.suggestions = suggestions
 

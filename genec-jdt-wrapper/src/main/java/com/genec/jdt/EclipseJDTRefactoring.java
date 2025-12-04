@@ -227,15 +227,17 @@ public class EclipseJDTRefactoring {
 
         // Qualify calls to original static helpers that remain in the source class
         // IMPORTANT: Only qualify calls to methods that were NOT extracted
-        final Set<String> extractedMethodNames = new HashSet<>();
+        final Map<String, Integer> extractedMethodCounts = new HashMap<>();
         for (MethodDeclaration method : extractedMethods) {
-            extractedMethodNames.add(method.getName().getIdentifier());
+            String name = method.getName().getIdentifier();
+            extractedMethodCounts.put(name, extractedMethodCounts.getOrDefault(name, 0) + 1);
         }
-        final Set<String> originalMethodNames = new HashSet<>();
+        final Map<String, Integer> originalMethodCounts = new HashMap<>();
         for (Object decl : originalTypeDecl.bodyDeclarations()) {
             if (decl instanceof MethodDeclaration) {
                 MethodDeclaration originalMethod = (MethodDeclaration) decl;
-                originalMethodNames.add(originalMethod.getName().getIdentifier());
+                String name = originalMethod.getName().getIdentifier();
+                originalMethodCounts.put(name, originalMethodCounts.getOrDefault(name, 0) + 1);
             }
         }
         final String originalClassName = originalTypeDecl.getName().getIdentifier();
@@ -248,11 +250,21 @@ public class EclipseJDTRefactoring {
                     // Only process unqualified method calls
                     if (node.getExpression() == null) {
                         String invokedName = node.getName().getIdentifier();
-                        // If this call is to a method that exists in original class but was NOT
-                        // extracted,
-                        // qualify it with the original class name
-                        if (originalMethodNames.contains(invokedName) && !extractedMethodNames.contains(invokedName)) {
-                            node.setExpression(newAst.newSimpleName(originalClassName));
+
+                        // Check if the method exists in the original class
+                        if (originalMethodCounts.containsKey(invokedName)) {
+                            int originalCount = originalMethodCounts.get(invokedName);
+                            int extractedCount = extractedMethodCounts.getOrDefault(invokedName, 0);
+
+                            // If we haven't extracted ALL overloads of this method, we must qualify the
+                            // call
+                            // to ensure we can reach the non-extracted ones (or the delegates).
+                            // If extractedCount == originalCount, it means all overloads are moved to the
+                            // new class,
+                            // so we can use unqualified calls (they are local).
+                            if (extractedCount < originalCount) {
+                                node.setExpression(newAst.newSimpleName(originalClassName));
+                            }
                         }
                     }
                     return true;
@@ -1072,13 +1084,18 @@ public class EclipseJDTRefactoring {
             if (param.isVarargs()) {
                 // For varargs, append the type + "..."
                 String typeStr = param.getType().toString();
+                // Remove generic type parameters <T>
+                typeStr = typeStr.replaceAll("<.*?>", "");
                 // Remove any existing [] from the type since varargs uses ...
                 if (typeStr.endsWith("[]")) {
                     typeStr = typeStr.substring(0, typeStr.length() - 2);
                 }
                 sig.append(typeStr).append("...");
             } else {
-                sig.append(param.getType().toString());
+                String typeStr = param.getType().toString();
+                // Remove generic type parameters <T>
+                typeStr = typeStr.replaceAll("<.*?>", "");
+                sig.append(typeStr);
             }
         }
 

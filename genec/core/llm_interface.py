@@ -260,7 +260,7 @@ class LLMInterface:
 
         try:
             response = self._call_claude(prompt)
-            
+
             if not response:
                 return None
 
@@ -646,16 +646,24 @@ Your 2-3 sentence explanation here.
         clusters: list[Cluster],
         original_code: str,
         class_deps: ClassDependencies,
-        max_suggestions: int = 5,
+        class_file: str | None = None,
+        repo_path: str | None = None,
+        evo_data: EvolutionaryData | None = None,
+        max_suggestions: int | None = None,
+        max_workers: int = 4,
     ) -> list[RefactoringSuggestion]:
         """
-        Generate refactoring suggestions for multiple clusters.
+        Generate refactoring suggestions for multiple clusters in parallel.
 
         Args:
             clusters: List of clusters to process
             original_code: Original class code
             class_deps: Class dependencies
+            class_file: Path to class file (for JDT hybrid mode)
+            repo_path: Repository root (for JDT hybrid mode)
+            evo_data: Evolutionary data
             max_suggestions: Maximum number of suggestions to generate
+            max_workers: Maximum number of concurrent threads
 
         Returns:
             List of successfully generated suggestions
@@ -665,18 +673,50 @@ Your 2-3 sentence explanation here.
             return []
 
         suggestions = []
+        clusters_to_process = clusters if max_suggestions is None else clusters[:max_suggestions]
+        total = len(clusters_to_process)
 
-        for i, cluster in enumerate(clusters[:max_suggestions], 1):
-            self.logger.info(f"Processing cluster {i}/{min(len(clusters), max_suggestions)}")
+        self.logger.info(
+            f"Generating suggestions for {total} clusters in parallel (max_workers={max_workers})..."
+        )
 
-            suggestion = self.generate_refactoring_suggestion(cluster, original_code, class_deps)
+        import concurrent.futures
 
-            if suggestion:
-                suggestions.append(suggestion)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all tasks
+            future_to_cluster = {
+                executor.submit(
+                    self.generate_refactoring_suggestion,
+                    cluster,
+                    original_code,
+                    class_deps,
+                    class_file,
+                    repo_path,
+                    evo_data,
+                ): cluster
+                for cluster in clusters_to_process
+            }
 
-            # Rate limiting - small delay between requests
-            if i < min(len(clusters), max_suggestions):
-                time.sleep(1)
+            # Process results as they complete
+            completed_count = 0
+            for future in concurrent.futures.as_completed(future_to_cluster):
+                cluster = future_to_cluster[future]
+                completed_count += 1
+                try:
+                    suggestion = future.result()
+                    if suggestion:
+                        suggestions.append(suggestion)
+                        self.logger.info(
+                            f"[{completed_count}/{total}] Successfully generated suggestion for cluster {cluster.id}"
+                        )
+                    else:
+                        self.logger.warning(
+                            f"[{completed_count}/{total}] Failed to generate suggestion for cluster {cluster.id}"
+                        )
+                except Exception as e:
+                    self.logger.error(
+                        f"[{completed_count}/{total}] Error processing cluster {cluster.id}: {e}"
+                    )
 
         self.logger.info(f"Generated {len(suggestions)} suggestions")
 

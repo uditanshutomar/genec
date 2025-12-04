@@ -1,6 +1,8 @@
 """Evolutionary coupling miner using Git history."""
 
+import concurrent.futures
 import hashlib
+import multiprocessing
 import os
 import pickle
 import re
@@ -37,6 +39,24 @@ class EvolutionaryData:
         default_factory=dict
     )  # (sig1, sig2) -> strength
     total_commits: int = 0
+
+
+def process_commit_worker(
+    repo_path: str, commit_sha: str, file_path: str, max_changeset_size: int
+) -> set[str]:
+    """Worker function to process a single commit in a separate process."""
+    try:
+        # Initialize a lightweight miner for this worker
+        miner = EvolutionaryMiner(max_changeset_size=max_changeset_size)
+
+        # Re-open repo in this process
+        repo = Repo(repo_path)
+        commit = repo.commit(commit_sha)
+
+        return miner._extract_changed_methods(repo, commit, file_path)
+    except Exception:
+        # Return empty set on failure to avoid crashing the pool
+        return set()
 
 
 class EvolutionaryMiner:
@@ -83,6 +103,7 @@ class EvolutionaryMiner:
         window_months: int = 12,
         min_commits: int = 2,
         show_metrics: bool = True,
+        max_workers: int | None = None,
     ) -> EvolutionaryData:
         """
         Mine method co-changes from Git history.
@@ -93,6 +114,7 @@ class EvolutionaryMiner:
             window_months: How many months back to look
             min_commits: Minimum commits for a method to be considered
             show_metrics: If True, automatically print parser metrics (default: True)
+            max_workers: Number of parallel workers (default: CPU count)
 
         Returns:
             EvolutionaryData object with coupling information
@@ -132,20 +154,45 @@ class EvolutionaryMiner:
         # Track method changes per commit
         evo_data = EvolutionaryData(class_file=normalized_class_file, total_commits=len(commits))
 
-        for commit in commits:
-            changed_methods = self._extract_changed_methods(repo, commit, normalized_class_file)
+        # Process commits in parallel
+        if max_workers is None:
+            max_workers = multiprocessing.cpu_count()
 
-            # Update method commit counts
-            for method in changed_methods:
-                evo_data.method_names.add(method)
-                evo_data.method_commits[method] = evo_data.method_commits.get(method, 0) + 1
+        self.logger.info(f"Processing commits with {max_workers} workers...")
 
-            # Update co-change matrix
-            for m1 in changed_methods:
-                for m2 in changed_methods:
-                    if m1 < m2:  # Only store once (ordered pair)
-                        key = (m1, m2)
-                        evo_data.cochange_matrix[key] = evo_data.cochange_matrix.get(key, 0) + 1
+        with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+            # Prepare arguments for each commit
+            future_to_commit = {
+                executor.submit(
+                    process_commit_worker,
+                    repo_path,
+                    commit.hexsha,
+                    normalized_class_file,
+                    self.max_changeset_size,
+                ): commit
+                for commit in commits
+            }
+
+            for future in concurrent.futures.as_completed(future_to_commit):
+                try:
+                    changed_methods = future.result()
+
+                    # Update method commit counts
+                    for method in changed_methods:
+                        evo_data.method_names.add(method)
+                        evo_data.method_commits[method] = evo_data.method_commits.get(method, 0) + 1
+
+                    # Update co-change matrix
+                    for m1 in changed_methods:
+                        for m2 in changed_methods:
+                            if m1 < m2:  # Only store once (ordered pair)
+                                key = (m1, m2)
+                                evo_data.cochange_matrix[key] = (
+                                    evo_data.cochange_matrix.get(key, 0) + 1
+                                )
+
+                except Exception as e:
+                    self.logger.warning(f"Worker failed: {e}")
 
         # Filter methods by minimum commits (use min_revisions if not explicitly set)
         min_threshold = max(min_commits, self.min_revisions)
@@ -662,7 +709,7 @@ class EvolutionaryMiner:
     def _get_cache_key(self, class_file: str, window_months: int, repo_signature: str) -> str:
         """Generate cache key for a class file."""
         key_str = f"{class_file}:{window_months}:{repo_signature}"
-        return hashlib.md5(key_str.encode()).hexdigest()
+        return hashlib.md5(key_str.encode()).hexdigest()  # nosec
 
     def _is_cache_valid(self, cache_key: str, ttl_days: int = 7) -> bool:
         """Check if cached data is still valid."""
@@ -685,7 +732,7 @@ class EvolutionaryMiner:
         cache_file = self.cache_dir / f"{cache_key}.pkl"
         try:
             with open(cache_file, "rb") as f:
-                return pickle.load(f)
+                return pickle.load(f)  # nosec
         except Exception as e:
             self.logger.warning(f"Failed to load cache: {e}")
             return None
