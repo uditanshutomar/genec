@@ -6,7 +6,12 @@ from pathlib import Path
 
 import yaml
 
-from genec.core.cluster_detector import Cluster, ClusterDetector
+from genec.core.cluster_detector import (
+    Cluster,
+    ClusterDetector,
+    QualityTier,
+    calculate_quality_tier,
+)
 from genec.core.dependency_analyzer import ClassDependencies
 from genec.core.evolutionary_miner import EvolutionaryMiner
 from genec.core.graph_builder import GraphBuilder
@@ -107,7 +112,10 @@ class GenECPipeline:
         """Get default configuration."""
         return {
             "fusion": {"alpha": 0.5, "edge_threshold": 0.1},
-            "evolution": {"window_months": 12, "min_commits": 2},
+            "evolution": {
+                "window_months": 120,
+                "min_commits": 2,
+            },  # 10 years to capture full history
             "clustering": {
                 "algorithm": "leiden",
                 "min_cluster_size": 3,
@@ -455,6 +463,17 @@ class GenECPipeline:
             all_clusters = self.cluster_detector.detect_clusters(G_fused, class_deps)
             result.all_clusters = all_clusters
 
+            # Calculate quality tiers for all clusters
+            for cluster in all_clusters:
+                calculate_quality_tier(cluster, evo_data)
+
+            # Separate clusters by quality tier
+            should_clusters = [c for c in all_clusters if c.quality_tier == QualityTier.SHOULD]
+            could_clusters = [c for c in all_clusters if c.quality_tier == QualityTier.COULD]
+            potential_clusters = [
+                c for c in all_clusters if c.quality_tier == QualityTier.POTENTIAL
+            ]
+
             # Pass class_deps to enable extraction validation
             filtered_clusters = self.cluster_detector.filter_clusters(all_clusters, class_deps)
             result.filtered_clusters = filtered_clusters
@@ -467,9 +486,17 @@ class GenECPipeline:
                 f"{len(filtered_clusters)} filtered, "
                 f"{len(ranked_clusters)} ranked"
             )
+            self.logger.info(
+                f"Quality tiers: SHOULD={len(should_clusters)}, "
+                f"COULD={len(could_clusters)}, "
+                f"POTENTIAL={len(potential_clusters)}"
+            )
 
             if not ranked_clusters:
-                self.logger.warning("No viable clusters found")
+                self.logger.warning("No viable clusters found after filtering")
+                self.logger.info(
+                    "Will still generate suggestions for all quality tiers (SHOULD/COULD/POTENTIAL)"
+                )
 
                 if self.structural_config.get("enabled"):
                     structural_results = self._run_structural_stage(
@@ -490,7 +517,7 @@ class GenECPipeline:
                             "Generated %s structural transformation plan(s)",
                             len(structural_results),
                         )
-                return result
+                # Don't return early - continue to tier-based suggestion generation
 
             # Stage 5: Generate suggestions (LLM for naming + deterministic code)
             num_to_process = "all" if max_suggestions is None else f"top {max_suggestions}"
@@ -503,10 +530,14 @@ class GenECPipeline:
             if not self.llm_interface.is_available():
                 self.logger.warning("LLM interface unavailable; skipping suggestion generation.")
             else:
+                # Generate suggestions for all quality tiers
+                # Process SHOULD tier (high quality - always generate)
+                all_tier_clusters = should_clusters + could_clusters + potential_clusters
+
                 # Use parallel batch generation
                 # This handles both LLM generation and JDT code generation (via hybrid mode) in parallel
                 suggestions = self.llm_interface.generate_batch_suggestions(
-                    clusters=ranked_clusters,
+                    clusters=all_tier_clusters,
                     original_code=original_code,
                     class_deps=class_deps,
                     class_file=class_file,
@@ -516,9 +547,32 @@ class GenECPipeline:
                     max_workers=4,  # Default to 4 workers
                 )
 
+                # Tag suggestions with quality tier metadata from their clusters
+                for suggestion in suggestions:
+                    if suggestion.cluster:
+                        suggestion.quality_tier = (
+                            suggestion.cluster.quality_tier.value
+                            if suggestion.cluster.quality_tier
+                            else None
+                        )
+                        suggestion.quality_score = suggestion.cluster.quality_score
+                        suggestion.quality_reasons = suggestion.cluster.quality_reasons
+
             result.suggestions = suggestions
 
-            self.logger.info(f"Generated {len(suggestions)} suggestions")
+            # Separate suggestions by tier for reporting
+            should_suggestions = [s for s in suggestions if s.quality_tier == "should"]
+            could_suggestions = [s for s in suggestions if s.quality_tier == "could"]
+            potential_suggestions = [s for s in suggestions if s.quality_tier == "potential"]
+
+            self.logger.info(f"Generated {len(suggestions)} total suggestions")
+            self.logger.info(
+                f"  ✅ SHOULD: {len(should_suggestions)} (high quality, strong recommendation)"
+            )
+            self.logger.info(f"  ⚠️  COULD: {len(could_suggestions)} (medium quality, conditional)")
+            self.logger.info(
+                f"  💡 POTENTIAL: {len(potential_suggestions)} (low quality, informational)"
+            )
 
             # Stage 6: Verify suggestions
             if not suggestions:
@@ -749,12 +803,12 @@ class GenECPipeline:
         clusters: list[Cluster] = []
         cluster_id = 0
 
-        for field, associated_methods in field_to_methods.items():
+        for field_name, associated_methods in field_to_methods.items():
             if not associated_methods:
                 continue
 
             member_methods = set(associated_methods)
-            member_fields = {field}
+            member_fields = {field_name}
 
             changed = True
             while changed:

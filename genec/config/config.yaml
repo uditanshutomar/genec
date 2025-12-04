@@ -21,7 +21,7 @@ fusion:
 
 evolution:
   # Git history analysis window
-  window_months: 12              # How far back to look in git history (months)
+  window_months: 120             # How far back to look in git history (months) - 10 years
   min_commits: 2                 # Minimum commits to consider a method
 
   # Code-Maat evolutionary coupling filters (Stage 2 improvements)
