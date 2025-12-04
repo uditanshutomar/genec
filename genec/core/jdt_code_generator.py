@@ -19,12 +19,11 @@ Architecture:
 """
 
 import json
-import subprocess
 import os
 import re
-from pathlib import Path
-from typing import Optional, Dict, List, Set
+import subprocess
 from dataclasses import dataclass
+from pathlib import Path
 
 from genec.core.cluster_detector import Cluster
 from genec.core.dependency_analyzer import ClassDependencies
@@ -38,6 +37,7 @@ class CodeGenerationError(Exception):
 @dataclass
 class GeneratedCode:
     """Container for generated code artifacts."""
+
     new_class_code: str
     modified_original_code: str
 
@@ -53,11 +53,7 @@ class JDTCodeGenerator:
     Uses Eclipse JDT's battle-tested refactoring engine (15+ years of development).
     """
 
-    def __init__(
-        self,
-        jdt_wrapper_jar: Optional[str] = None,
-        timeout: int = 60
-    ):
+    def __init__(self, jdt_wrapper_jar: str | None = None, timeout: int = 60):
         """
         Initialize JDT code generator.
 
@@ -85,14 +81,16 @@ class JDTCodeGenerator:
     def _find_jdt_wrapper(self) -> str:
         """Find JDT wrapper JAR in default locations."""
         project_root = Path(__file__).parent.parent.parent
-        
+
         possible_locations = [
             # Relative paths (legacy)
             "genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar",
             "lib/genec-jdt-wrapper.jar",
-            
             # Absolute paths relative to project root
-            str(project_root / "genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar"),
+            str(
+                project_root
+                / "genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar"
+            ),
             str(project_root / "lib/genec-jdt-wrapper.jar"),
         ]
 
@@ -101,7 +99,10 @@ class JDTCodeGenerator:
                 return location
 
         # Default to expected Maven output location (absolute)
-        return str(project_root / "genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar")
+        return str(
+            project_root
+            / "genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar"
+        )
 
     def generate(
         self,
@@ -109,7 +110,7 @@ class JDTCodeGenerator:
         new_class_name: str,
         class_file: str,
         repo_path: str,
-        class_deps: ClassDependencies
+        class_deps: ClassDependencies,
     ) -> GeneratedCode:
         """
         Generate refactored code using Eclipse JDT.
@@ -147,7 +148,7 @@ class JDTCodeGenerator:
         if set(methods) != original_method_set:
             self.logger.info(
                 "Added helper methods to extraction cluster: %s",
-                sorted(set(methods) - original_method_set)
+                sorted(set(methods) - original_method_set),
             )
 
         # Infer fields if not explicitly in cluster
@@ -158,11 +159,11 @@ class JDTCodeGenerator:
 
         # Build refactoring specification
         spec = {
-            'projectPath': repo_path,
-            'classFile': class_file,
-            'newClassName': new_class_name,
-            'methods': methods,
-            'fields': fields
+            "projectPath": repo_path,
+            "classFile": class_file,
+            "newClassName": new_class_name,
+            "methods": methods,
+            "fields": fields,
         }
 
         self.logger.debug(f"Refactoring spec: {json.dumps(spec, indent=2)}")
@@ -171,7 +172,7 @@ class JDTCodeGenerator:
         result = self._call_jdt_wrapper(spec)
 
         # Parse result
-        if not result.get('success', False):
+        if not result.get("success", False):
             raise CodeGenerationError(
                 f"Eclipse JDT refactoring failed: {result.get('message', 'Unknown error')}"
             )
@@ -179,8 +180,8 @@ class JDTCodeGenerator:
         self.logger.info(f"Eclipse JDT refactoring successful: {result.get('message')}")
 
         return GeneratedCode(
-            new_class_code=result.get('newClassCode', ''),
-            modified_original_code=result.get('modifiedOriginalCode', '')
+            new_class_code=result.get("newClassCode", ""),
+            modified_original_code=result.get("modifiedOriginalCode", ""),
         )
 
     def _call_jdt_wrapper(self, spec: dict) -> dict:
@@ -201,10 +202,10 @@ class JDTCodeGenerator:
         try:
             # Execute JDT wrapper
             result = subprocess.run(
-                ['java', '-jar', self.jdt_wrapper_jar, '--spec', spec_json],
+                ["java", "-jar", self.jdt_wrapper_jar, "--spec", spec_json],
                 capture_output=True,
                 text=True,
-                timeout=self.timeout
+                timeout=self.timeout,
             )
 
             # Parse stdout (JSON result)
@@ -223,9 +224,7 @@ class JDTCodeGenerator:
                     )
 
         except subprocess.TimeoutExpired:
-            raise CodeGenerationError(
-                f"Eclipse JDT process timed out after {self.timeout} seconds"
-            )
+            raise CodeGenerationError(f"Eclipse JDT process timed out after {self.timeout} seconds")
         except FileNotFoundError:
             raise CodeGenerationError(
                 "Java runtime not found. Please ensure Java 11+ is installed."
@@ -256,25 +255,33 @@ class JDTCodeGenerator:
 
         return list(used_fields)
 
-    def _augment_methods(self, cluster: Cluster, class_deps: ClassDependencies) -> List[str]:
+    def _augment_methods(self, cluster: Cluster, class_deps: ClassDependencies) -> list[str]:
         """
         Ensure the extraction includes private helper methods required by the cluster.
         """
-        methods: Set[str] = set(cluster.get_methods())
+        methods: set[str] = set(cluster.get_methods())
         if not methods:
             return []
 
         # Map method names to signatures and modifiers for quick lookup
-        name_to_sigs: Dict[str, List[str]] = {}
-        modifiers_by_sig: Dict[str, List[str]] = {}
-        method_by_sig: Dict[str, ClassDependencies] = {}
+        name_to_sigs: dict[str, list[str]] = {}
+        modifiers_by_sig: dict[str, list[str]] = {}
+        method_by_sig: dict[str, ClassDependencies] = {}
         for method in class_deps.methods:
             name_to_sigs.setdefault(method.name, []).append(method.signature)
             modifiers_by_sig[method.signature] = method.modifiers or []
             method_by_sig[method.signature] = method
 
         candidate_names = set(name_to_sigs.keys())
-        initial_method_names = {sig.split('(')[0] for sig in methods}
+        initial_method_names = {sig.split("(")[0] for sig in methods}
+
+        # 1. Add ALL overloads of initially selected methods
+        # This ensures API consistency (e.g., if remove(int) is selected, remove(long) is too)
+        for name in initial_method_names:
+            for sig in name_to_sigs.get(name, []):
+                if sig not in methods:
+                    methods.add(sig)
+                    self.logger.debug(f"Added overload: {sig}")
 
         added = True
         while added:
@@ -283,37 +290,48 @@ class JDTCodeGenerator:
                 called_names = set(class_deps.method_calls.get(signature, []))
                 method_info = method_by_sig.get(signature)
                 if method_info and method_info.body:
-                    called_names.update(self._find_called_method_names(method_info.body, candidate_names))
+                    called_names.update(
+                        self._find_called_method_names(method_info.body, candidate_names)
+                    )
 
                 for called_name in called_names:
                     for candidate_sig in name_to_sigs.get(called_name, []):
                         if candidate_sig in methods:
                             continue
                         modifiers = [m.lower() for m in modifiers_by_sig.get(candidate_sig, [])]
+                        
+                        should_add = False
+                        
                         # Add private helper methods
-                        should_add = 'private' in modifiers
+                        if "private" in modifiers:
+                            should_add = True
+                            
+                        # Add package-private helper methods (no visibility modifier)
+                        # Treat them like private helpers as they are often implementation details
+                        elif not any(m in modifiers for m in ["public", "protected"]):
+                            should_add = True
+                            
                         # Add static helper methods (they're often utilities used by the cluster)
-                        if not should_add and 'static' in modifiers:
+                        elif "static" in modifiers:
                             should_add = True
-                        # Add methods with same name as initially selected methods (overloads)
-                        if not should_add and called_name in initial_method_names:
-                            should_add = True
+                            
                         if should_add:
                             methods.add(candidate_sig)
                             added = True
+                            self.logger.debug(f"Added dependency: {candidate_sig}")
 
         # Update cluster metadata so downstream components know about new methods
         for sig in methods:
-            if sig not in cluster.member_types or cluster.member_types[sig] != 'method':
-                cluster.member_types[sig] = 'method'
+            if sig not in cluster.member_types or cluster.member_types[sig] != "method":
+                cluster.member_types[sig] = "method"
                 if sig not in cluster.member_names:
                     cluster.member_names.append(sig)
 
         return list(methods)
 
-    def _find_called_method_names(self, body: str, candidates: Set[str]) -> Set[str]:
-        names: Set[str] = set()
-        for match in re.finditer(r'([A-Za-z_][A-Za-z0-9_]*)\s*\(', body):
+    def _find_called_method_names(self, body: str, candidates: set[str]) -> set[str]:
+        names: set[str] = set()
+        for match in re.finditer(r"([A-Za-z_][A-Za-z0-9_]*)\s*\(", body):
             name = match.group(1)
             if name in candidates and name not in self._KEYWORD_BLACKLIST:
                 names.add(name)
@@ -331,16 +349,27 @@ class JDTCodeGenerator:
 
         try:
             # Check if Java is available
-            result = subprocess.run(
-                ['java', '-version'],
-                capture_output=True,
-                timeout=5
-            )
+            result = subprocess.run(["java", "-version"], capture_output=True, timeout=5)
             return result.returncode == 0
         except:
             return False
+
     _KEYWORD_BLACKLIST = {
-        'if', 'for', 'while', 'switch', 'return', 'new', 'super', 'this',
-        'catch', 'throw', 'else', 'case', 'do', 'try', 'default', 'assert',
-        'synchronized'
+        "if",
+        "for",
+        "while",
+        "switch",
+        "return",
+        "new",
+        "super",
+        "this",
+        "catch",
+        "throw",
+        "else",
+        "case",
+        "do",
+        "try",
+        "default",
+        "assert",
+        "synchronized",
     }
