@@ -1090,8 +1090,9 @@ public class EclipseJDTRefactoring {
      * Normalize method signatures from GenEC format to internal format.
      * GenEC may send signatures like "methodName(Type1,Type2)" or "methodName(Type1
      * param1, Type2 param2)"
-     * Also handles array notation differences: byte vs byte[], String... vs
-     * String[]
+     * Also handles:
+     * - Array notation differences: byte vs byte[], String... vs String[]
+     * - Generic type erasure: T[], E, K, V -> Object[], Object
      */
     private Set<String> normalizeMethodSignatures(List<String> methodSigs) {
         Set<String> normalized = new HashSet<>();
@@ -1134,6 +1135,31 @@ public class EclipseJDTRefactoring {
             String arrayToVarargs = normalized_sig.replace("[]", "...");
             if (!arrayToVarargs.equals(normalized_sig)) {
                 normalized.add(arrayToVarargs);
+            }
+
+            // TYPE ERASURE: Handle generic type parameters
+            // Convert single-letter type params (T, E, K, V, R, S, U) to Object
+            // Match patterns like "T[]" -> "Object[]", "T," -> "Object,", "T)" -> "Object)"
+            // Also handle multi-char generics like "T1", "T2"
+            String typeErased = normalized_sig;
+            // Replace T[], E[], etc. with Object[]
+            typeErased = typeErased.replaceAll("\\b([TEKVRSU]\\d?)\\[\\]", "Object[]");
+            // Replace T..., E..., etc. with Object...
+            typeErased = typeErased.replaceAll("\\b([TEKVRSU]\\d?)\\.\\.\\.", "Object...");
+            // Replace standalone T, E, etc. before comma or closing paren
+            typeErased = typeErased.replaceAll("\\b([TEKVRSU]\\d?)(?=[,)])", "Object");
+
+            if (!typeErased.equals(normalized_sig)) {
+                normalized.add(typeErased);
+                // Also add variants of the type-erased version
+                String typeErasedVarargs = typeErased.replace("...", "[]");
+                if (!typeErasedVarargs.equals(typeErased)) {
+                    normalized.add(typeErasedVarargs);
+                }
+                String typeErasedArray = typeErased.replace("[]", "...");
+                if (!typeErasedArray.equals(typeErased)) {
+                    normalized.add(typeErasedArray);
+                }
             }
         }
 
