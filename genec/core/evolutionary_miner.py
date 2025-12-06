@@ -128,6 +128,22 @@ class EvolutionaryMiner:
 
         try:
             repo = Repo(repo_path)
+            
+            # Check for git lock file to prevent conflicts with other git operations
+            git_lock_file = Path(repo_path) / ".git" / "index.lock"
+            if git_lock_file.exists():
+                self.logger.warning(
+                    f"Git lock file detected: {git_lock_file}. "
+                    "Another git operation may be in progress. "
+                    "Waiting briefly or consider removing stale lock."
+                )
+                # Wait briefly in case it's a transient lock
+                import time
+                time.sleep(1)
+                if git_lock_file.exists():
+                    self.logger.error("Git lock file still present. Skipping mining to avoid conflicts.")
+                    return EvolutionaryData(class_file=normalized_class_file)
+                    
         except Exception as e:
             self.logger.error(f"Failed to open repository {repo_path}: {e}")
             return EvolutionaryData(class_file=normalized_class_file)

@@ -265,18 +265,36 @@ class RefactoringApplicator:
 
     def _write_file(self, file_path: Path, content: str):
         """
-        Write content to a file.
+        Write content to a file atomically.
+
+        Uses write-to-temp-then-rename pattern to prevent partial writes.
 
         Args:
             file_path: Path to file
             content: Content to write
         """
+        import tempfile
+        
         # Create parent directories if they don't exist
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Write content
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(content)
+        # Atomic write: write to temp file in same directory, then rename
+        # Using same directory ensures atomic rename on same filesystem
+        fd, temp_path = tempfile.mkstemp(
+            suffix='.tmp', 
+            prefix=f'.{file_path.name}_',
+            dir=file_path.parent
+        )
+        try:
+            with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                f.write(content)
+            # Atomic rename (works on POSIX and Windows)
+            os.replace(temp_path, file_path)
+        except Exception:
+            # Clean up temp file on error
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            raise
 
     def cleanup_backups(self, keep_recent: int = 5):
         """

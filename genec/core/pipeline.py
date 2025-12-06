@@ -103,9 +103,13 @@ class GenECPipeline:
             with open(config_file) as f:
                 return yaml.safe_load(f)
         except Exception as e:
-            # Use default configuration
-            print(f"Warning: Could not load config file {config_file}: {e}")
-            print("Using default configuration")
+            # Use default configuration with logger warning
+            import logging
+            logger = logging.getLogger("genec")
+            logger.warning(
+                f"Could not load config file '{config_file}': {e}. "
+                f"Using default configuration (evolution window: 120 months, min cluster size: 3)."
+            )
             return self._get_default_config()
 
     def _get_default_config(self) -> dict:
