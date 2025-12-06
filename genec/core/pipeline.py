@@ -86,6 +86,9 @@ class GenECPipeline:
         auto_build = self.config.get("auto_build_dependencies", True)
         self.dependency_manager.ensure_dependencies(auto_build=auto_build)
 
+        # Validate Java version (JDT requires Java 11+)
+        self._validate_java_version()
+
         # Initialize components
         self._initialize_components()
 
@@ -96,6 +99,58 @@ class GenECPipeline:
                 self._apply_overrides(config[key], value)
             else:
                 config[key] = value
+
+    def _validate_java_version(self, min_version: int = 11):
+        """
+        Validate that Java is available and meets minimum version requirement.
+        
+        Args:
+            min_version: Minimum required Java version (default: 11 for JDT)
+        """
+        import subprocess
+        import re
+        
+        try:
+            result = subprocess.run(
+                ['java', '-version'],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            # Java version is printed to stderr
+            version_output = result.stderr or result.stdout
+            
+            # Parse version from output like: openjdk version "11.0.12" or java version "1.8.0_301"
+            version_match = re.search(r'version "(\d+)(?:\.(\d+))?', version_output)
+            if version_match:
+                major_version = int(version_match.group(1))
+                # Handle old 1.x versioning (1.8 = Java 8)
+                if major_version == 1 and version_match.group(2):
+                    major_version = int(version_match.group(2))
+                
+                if major_version < min_version:
+                    self.logger.warning(
+                        f"Java {major_version} detected, but Java {min_version}+ is recommended. "
+                        f"JDT code generation may not work correctly. "
+                        f"Please upgrade Java or set JAVA_HOME to a newer version."
+                    )
+                else:
+                    self.logger.debug(f"Java {major_version} detected (>= {min_version} required)")
+            else:
+                self.logger.warning(
+                    f"Could not parse Java version from: {version_output[:100]}. "
+                    f"Please ensure Java {min_version}+ is installed."
+                )
+                
+        except FileNotFoundError:
+            self.logger.warning(
+                "Java not found in PATH. JDT code generation will be disabled. "
+                "Please install Java 11+ or set JAVA_HOME."
+            )
+        except subprocess.TimeoutExpired:
+            self.logger.warning("Java version check timed out.")
+        except Exception as e:
+            self.logger.debug(f"Java version check failed: {e}")
 
     def _load_config(self, config_file: str) -> dict:
         """Load configuration from YAML file."""

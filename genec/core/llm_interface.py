@@ -155,6 +155,12 @@ class LLMInterface:
                 "Anthropic API key not provided; LLM-based suggestions will be skipped."
             )
         self._available = self.llm.enabled
+        
+        # LLM response cache: avoids re-processing same clusters on retry
+        # Key: hash of (cluster methods, class_name) -> RefactoringSuggestion
+        self._response_cache: dict[str, RefactoringSuggestion] = {}
+        self._cache_hits = 0
+        self._cache_misses = 0
 
     def generate_refactoring_suggestion(
         self,
@@ -187,18 +193,40 @@ class LLMInterface:
             self.logger.info("LLM client unavailable; skipping suggestion generation.")
             return None
 
+        # Generate cache key from cluster methods and class name
+        import hashlib
+        cache_key_data = f"{class_deps.class_name}:{sorted(cluster.methods)}"
+        cache_key = hashlib.md5(cache_key_data.encode()).hexdigest()
+        
+        # Check cache first - avoid re-processing same clusters on retry
+        if cache_key in self._response_cache:
+            self._cache_hits += 1
+            self.logger.info(f"Cache hit for cluster {cluster.id} (hits: {self._cache_hits})")
+            return self._response_cache[cache_key]
+        
+        self._cache_misses += 1
+        
+        # Generate suggestion using appropriate method
+        suggestion = None
+
         # Use hybrid mode if available
         if self.use_hybrid_mode and self.jdt_generator and class_file and repo_path:
-            return self._generate_hybrid(
+            suggestion = self._generate_hybrid(
                 cluster, original_code, class_deps, class_file, repo_path, evo_data
             )
-
         # Use refinement loop if enabled
-        if self.enable_refinement:
-            return self._generate_with_refinement(cluster, original_code, class_deps, evo_data)
-
-        # Standard generation (Priority 1)
-        return self._generate_standard(cluster, original_code, class_deps, evo_data, max_retries)
+        elif self.enable_refinement:
+            suggestion = self._generate_with_refinement(cluster, original_code, class_deps, evo_data)
+        else:
+            # Standard generation (Priority 1)
+            suggestion = self._generate_standard(cluster, original_code, class_deps, evo_data, max_retries)
+        
+        # Cache successful suggestions
+        if suggestion is not None:
+            self._response_cache[cache_key] = suggestion
+            self.logger.debug(f"Cached suggestion for cluster {cluster.id}")
+        
+        return suggestion
 
     def _generate_standard(
         self,

@@ -265,7 +265,26 @@ class EvolutionaryMiner:
                         )
                         break
         except GitCommandError as e:
-            self.logger.error(f"Git command error: {e}")
+            error_str = str(e).lower()
+            # Check if this is a transient/retryable error
+            if any(keyword in error_str for keyword in ['lock', 'timeout', 'busy', 'temporary']):
+                self.logger.warning(f"Transient git error, retrying: {e}")
+                import time
+                for retry in range(3):
+                    try:
+                        time.sleep(2 ** retry)  # Exponential backoff: 1s, 2s, 4s
+                        # Retry the git operation
+                        for commit in repo.iter_commits(paths=file_path, since=start_date.isoformat()):
+                            if commit.committed_datetime.replace(tzinfo=None) <= end_date:
+                                if commit not in commits:  # Avoid duplicates
+                                    commits.append(commit)
+                        self.logger.info(f"Git retry {retry + 1} succeeded")
+                        break
+                    except GitCommandError as retry_error:
+                        if retry == 2:  # Last retry
+                            self.logger.error(f"Git retry failed after 3 attempts: {retry_error}")
+            else:
+                self.logger.error(f"Git command error: {e}")
 
         return commits
 

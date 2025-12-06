@@ -63,6 +63,10 @@ def main():
     parser.add_argument("--max-cluster-size", type=int, help="Maximum cluster size")
     parser.add_argument("--min-cohesion", type=float, help="Minimum cohesion threshold")
     parser.add_argument(
+        "--dry-run", action="store_true", 
+        help="Show what WOULD be applied without making changes"
+    )
+    parser.add_argument(
         "--no-build", action="store_true", help="Disable automatic building of dependencies"
     )
 
@@ -198,6 +202,34 @@ def main():
             }
             print(json.dumps(output, indent=2))
         else:
+            # Dry-run mode: show detailed summary of what WOULD be applied
+            if args.dry_run and results.verified_suggestions:
+                print("\n" + "=" * 60)
+                print("DRY-RUN SUMMARY - No changes will be made")
+                print("=" * 60)
+                print(f"\nFile: {target_path.name}")
+                print(f"Total verified suggestions: {len(results.verified_suggestions)}")
+                print("\nChanges that WOULD be applied:\n")
+                
+                for i, s in enumerate(results.verified_suggestions, 1):
+                    methods = s.methods if hasattr(s, 'methods') else []
+                    method_count = len(methods) if methods else 'unknown'
+                    
+                    print(f"  {i}. Extract class: {s.proposed_class_name}")
+                    print(f"     Methods to move: {method_count}")
+                    if methods:
+                        for m in methods[:5]:  # Show first 5 methods
+                            print(f"       - {m}")
+                        if len(methods) > 5:
+                            print(f"       ... and {len(methods) - 5} more")
+                    if hasattr(s, 'reasoning') and s.reasoning:
+                        print(f"     Reason: {s.reasoning[:100]}...")
+                    print()
+                
+                print("-" * 60)
+                print("To apply these changes, run without --dry-run flag")
+                print("=" * 60)
+            
             print("\n" + "=" * 50)
             print(f"Refactoring Completed Successfully (Runtime: {runtime_str})")
             print("=" * 50)
