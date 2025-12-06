@@ -102,7 +102,26 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
             maxClusterSize: config.get<number>('clustering.maxClusterSize'),
             minCohesion: config.get<number>('clustering.minCohesion')
         };
-        this._view.webview.postMessage({ type: 'settings', value: settings });
+        this._safePostMessage({ type: 'settings', value: settings });
+    }
+
+    /**
+     * Safe wrapper for postMessage that handles disposed webview gracefully.
+     * Prevents crashes when user closes sidebar during long-running operations.
+     */
+    private _safePostMessage(message: any): boolean {
+        try {
+            if (this._view && this._view.webview) {
+                this._safePostMessage(message);
+                return true;
+            }
+            console.log('GenEC: Webview not available, skipping message:', message.type);
+            return false;
+        } catch (error: any) {
+            // Webview may be disposed - this is not an error, just log it
+            console.log('GenEC: Failed to post message (webview may be disposed):', error.message);
+            return false;
+        }
     }
 
     private async _saveSettings(settings: any) {
@@ -115,7 +134,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
         await config.update('clustering.maxClusterSize', settings.maxClusterSize, vscode.ConfigurationTarget.Global);
         await config.update('clustering.minCohesion', settings.minCohesion, vscode.ConfigurationTarget.Global);
 
-        this._view.webview.postMessage({ type: 'settings', value: settings, status: 'Settings saved!' });
+        this._safePostMessage({ type: 'settings', value: settings, status: 'Settings saved!' });
     }
 
     private async _previewRefactoring(index: number) {
@@ -235,7 +254,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
         const pythonPath = config.get<string>('pythonPath') || 'python3';
         const repoPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath || '';
 
-        this._view?.webview.postMessage({ type: 'status', value: 'Undoing last refactoring...' });
+        this._safePostMessage({ type: 'status', value: 'Undoing last refactoring...' });
 
         try {
             const args = ['-m', 'genec.cli', '--target', this._targetFilePath, '--repo', repoPath, '--rollback', '--json'];
@@ -257,16 +276,16 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
             const result = this.parseJsonOutput(output);
             if (result.status === 'success') {
                 vscode.window.showInformationMessage('Undo successful! Restored original file.');
-                this._view?.webview.postMessage({ type: 'status', value: 'Undo successful.' });
-                this._view?.webview.postMessage({ type: 'clear', value: 'Undo successful. Original file restored.' });
+                this._safePostMessage({ type: 'status', value: 'Undo successful.' });
+                this._safePostMessage({ type: 'clear', value: 'Undo successful. Original file restored.' });
             } else {
                 vscode.window.showErrorMessage(`Undo failed: ${result.message || 'Unknown error'}`);
-                this._view?.webview.postMessage({ type: 'error', value: `Undo failed: ${result.message}` });
+                this._safePostMessage({ type: 'error', value: `Undo failed: ${result.message}` });
             }
 
         } catch (e: any) {
             vscode.window.showErrorMessage(`Undo failed: ${e.message}`);
-            this._view?.webview.postMessage({ type: 'error', value: e.message });
+            this._safePostMessage({ type: 'error', value: e.message });
         }
     }
 
@@ -298,8 +317,8 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
 
             this._currentProcess = undefined;
             if (this._view) {
-                this._view.webview.postMessage({ type: 'status', value: 'Refactoring stopped by user.' });
-                this._view.webview.postMessage({ type: 'stopped' });
+                this._safePostMessage({ type: 'status', value: 'Refactoring stopped by user.' });
+                this._safePostMessage({ type: 'stopped' });
             }
         }
     }
@@ -362,7 +381,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
             this._currentSuggestions = [];
 
             if (this._view) {
-                this._view.webview.postMessage({
+                this._safePostMessage({
                     type: 'clear',
                     value: `Applied ${suggestion.name}. The file has changed. Please re-run to find more refactorings.`
                 });
@@ -404,8 +423,8 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
         this._targetFilePath = document.fileName;
         const className = path.basename(this._targetFilePath);
         if (this._view) {
-            this._view.webview.postMessage({ type: 'status', value: 'Initializing GenEC...' });
-            this._view.webview.postMessage({ type: 'clear', value: 'Initializing...' }); // Clear previous results
+            this._safePostMessage({ type: 'status', value: 'Initializing GenEC...' });
+            this._safePostMessage({ type: 'clear', value: 'Initializing...' }); // Clear previous results
         }
 
         // Get configuration
@@ -431,7 +450,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
         }
 
 
-        this._view.webview.postMessage({
+        this._safePostMessage({
             type: 'start',
             target: className,
             value: `Running refactoring on ${className}...`
@@ -482,7 +501,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                 timeoutId = setTimeout(() => {
                     if (this._currentProcess) {
                         this._outputChannel.appendLine('[TIMEOUT] Process exceeded 10 minute limit, terminating...');
-                        this._view?.webview.postMessage({ type: 'status', value: 'Timeout: killing process...' });
+                        this._safePostMessage({ type: 'status', value: 'Timeout: killing process...' });
 
                         // Graceful shutdown: SIGTERM first, then SIGKILL after 5s
                         this._currentProcess.kill('SIGTERM');
@@ -510,7 +529,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                     // Parse progress from stderr
                     const stageMatch = dataStr.match(/\[Stage \d+\/\d+\] .+/);
                     if (stageMatch && this._view) {
-                        this._view.webview.postMessage({
+                        this._safePostMessage({
                             type: 'status',
                             value: stageMatch[0].trim()
                         });
@@ -550,7 +569,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
 
                 // Always send graph data if available
                 if (result.graph_data) {
-                    this._view.webview.postMessage({ type: 'graph_data', value: result });
+                    this._safePostMessage({ type: 'graph_data', value: result });
                 }
 
                 // Check if any refactorings were applied
@@ -693,7 +712,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                         }
                     }
 
-                    this._view.webview.postMessage({
+                    this._safePostMessage({
                         type: 'clear',
                         value: message,
                         graph_data: result.graph_data  // Include graph data for rendering
@@ -701,10 +720,10 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                 }
 
                 // Send results to frontend
-                this._view.webview.postMessage({ type: 'results', value: result });
+                this._safePostMessage({ type: 'results', value: result });
             } catch (e) {
                 console.error('Failed to parse JSON:', output);
-                this._view.webview.postMessage({
+                this._safePostMessage({
                     type: 'error',
                     value: 'Failed to parse GenEC output. Output length: ' + output.length + '. First 100 chars: ' + output.substring(0, 100)
                 });
@@ -713,7 +732,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
         } catch (e: any) {
             if (e.message !== 'Process terminated') {
                 const msg = e.message.trim();
-                this._view.webview.postMessage({ type: 'error', value: msg });
+                this._safePostMessage({ type: 'error', value: msg });
             }
         }
     }
@@ -730,7 +749,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                 }
             }
 
-            this._view.webview.postMessage({
+            this._safePostMessage({
                 type: 'clear',
                 value: message,
                 graph_data: result.graph_data

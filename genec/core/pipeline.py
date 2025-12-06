@@ -290,6 +290,32 @@ class GenECPipeline:
         self.cohesion_calculator = CohesionCalculator()
         self.coupling_calculator = CouplingCalculator()
 
+    def _emit_progress(self, stage: int, total: int, message: str, details: dict = None):
+        """
+        Emit structured JSON progress event to stderr for VS Code extension.
+        
+        Args:
+            stage: Current stage number (0-indexed)
+            total: Total number of stages
+            message: Human-readable progress message
+            details: Optional additional data (cluster count, method names, etc.)
+        """
+        import json
+        import sys
+        
+        progress_event = {
+            "type": "progress",
+            "stage": stage,
+            "total": total,
+            "percent": int((stage / total) * 100) if total > 0 else 0,
+            "message": message,
+        }
+        if details:
+            progress_event["details"] = details
+        
+        # Write to stderr as single line JSON (extension can parse this)
+        print(json.dumps(progress_event), file=sys.stderr, flush=True)
+
     def run_full_pipeline(
         self, class_file: str, repo_path: str, max_suggestions: int = None
     ) -> PipelineResult:
@@ -311,6 +337,9 @@ class GenECPipeline:
         self.logger.info("=" * 80)
         self.logger.info(f"Running GenEC pipeline on {class_file}")
         self.logger.info("=" * 80)
+        
+        # Emit structured progress for VS Code extension (goes to stderr)
+        self._emit_progress(stage=0, total=6, message="Initializing pipeline")
 
         # Initialize verification engine with repo_path
         if self.verification_engine is None:

@@ -122,8 +122,8 @@ class BehavioralVerifier:
                 return False, error_msg
 
             finally:
-                # Step 7: ALWAYS restore original state
-                self._restore_files(backup_data, new_class_file)
+                # Step 7: ALWAYS restore original state (with mtime conflict detection)
+                self._restore_files(backup_data, new_class_file, backup_mtime)
 
                 # Remove marker file
                 if marker_file.exists():
@@ -189,15 +189,42 @@ class BehavioralVerifier:
         except Exception as e:
             return False, f"Error applying refactoring: {str(e)}", None
 
-    def _restore_files(self, backup_data: dict[Path, str], new_class_file: Path | None):
+    def _restore_files(
+        self, 
+        backup_data: dict[Path, str], 
+        new_class_file: Path | None,
+        backup_mtime: dict[Path, float] | None = None
+    ):
         """
         Restore backed-up files and delete new class file.
 
         This is called in finally block to guarantee cleanup.
+        Checks mtime to detect if user modified file during verification.
+        
+        Args:
+            backup_data: Dict mapping path to original content
+            new_class_file: Path to newly created class file to delete
+            backup_mtime: Dict mapping path to original mtime (for conflict detection)
         """
         # Restore original files from backup
         for path, content in backup_data.items():
             try:
+                # Check for mtime conflict (user edited during verification)
+                if backup_mtime and path in backup_mtime:
+                    if path.exists():
+                        current_mtime = path.stat().st_mtime
+                        original_mtime = backup_mtime[path]
+                        
+                        # If mtime changed beyond what we expect from our own write,
+                        # the user may have edited the file
+                        if current_mtime > original_mtime + 1:  # 1s tolerance
+                            self.logger.error(
+                                f"CONFLICT DETECTED: {path.name} was modified during verification. "
+                                f"Skipping restore to preserve user changes. "
+                                f"Original mtime: {original_mtime}, Current: {current_mtime}"
+                            )
+                            continue
+                
                 path.write_text(content, encoding="utf-8")
                 self.logger.debug(f"Restored: {path}")
             except Exception as e:
