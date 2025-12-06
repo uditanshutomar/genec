@@ -63,7 +63,7 @@ class ProgressServer:
         self._loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._loop)
         
-        async def handler(websocket, path):
+        async def handler(websocket):
             self._clients.add(websocket)
             self.logger.debug(f"Client connected: {websocket.remote_address}")
             try:
