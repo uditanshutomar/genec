@@ -45,6 +45,10 @@ def main():
         default="config/config.yaml",
         help="Path to configuration file (default: config/config.yaml)",
     )
+    parser.add_argument(
+        "--multi-file", action="store_true",
+        help="Enable multi-file mode: analyze dependency order across files"
+    )
     parser.add_argument("--api-key", help="Anthropic API key (overrides ANTHROPIC_API_KEY env var)")
     parser.add_argument(
         "--max-suggestions",
@@ -65,6 +69,10 @@ def main():
     parser.add_argument(
         "--dry-run", action="store_true", 
         help="Show what WOULD be applied without making changes"
+    )
+    parser.add_argument(
+        "--websocket", type=int, metavar="PORT",
+        help="Enable WebSocket progress server on specified port (e.g., 9876)"
     )
     parser.add_argument(
         "--no-build", action="store_true", help="Disable automatic building of dependencies"
@@ -152,6 +160,17 @@ def main():
         if not args.json:
             logger.info(f"Running GenEC on {target_path}...")
 
+        # Start WebSocket progress server if requested
+        progress_server = None
+        if args.websocket:
+            try:
+                from genec.utils.progress_server import get_progress_server
+                progress_server = get_progress_server(args.websocket)
+                progress_server.start()
+                logger.info(f"WebSocket progress server started on port {args.websocket}")
+            except Exception as e:
+                logger.warning(f"Failed to start WebSocket server: {e}")
+
         import time
         start_time = time.time()
         
@@ -160,6 +179,13 @@ def main():
             repo_path=str(repo_path),
             max_suggestions=args.max_suggestions,
         )
+        
+        # Stop WebSocket server
+        if progress_server:
+            progress_server.emit_complete({
+                "suggestions": len(results.verified_suggestions) if results.verified_suggestions else 0
+            })
+            progress_server.stop()
         
         # Calculate and log total runtime
         total_runtime = time.time() - start_time

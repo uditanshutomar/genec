@@ -18,17 +18,27 @@ _verification_lock = threading.Lock()
 class BehavioralVerifier:
     """Verifies refactorings preserve behavior by running test suites."""
 
-    def __init__(self, maven_command: str = "mvn", gradle_command: str = "gradle"):
+    def __init__(
+        self, 
+        maven_command: str = "mvn", 
+        gradle_command: str = "gradle",
+        incremental_tests: bool = True,  # NEW: Only run affected tests
+    ):
         """
         Initialize behavioral verifier.
 
         Args:
             maven_command: Maven command
             gradle_command: Gradle command
+            incremental_tests: If True, only run tests that reference the refactored class
         """
         self.maven_command = maven_command
         self.gradle_command = gradle_command
+        self.incremental_tests = incremental_tests
         self.logger = get_logger(self.__class__.__name__)
+        
+        # Test finder for incremental verification
+        self._test_finder = None  # Lazy initialized with repo path
 
     def verify(
         self,
@@ -105,9 +115,10 @@ class BehavioralVerifier:
                 if not apply_success:
                     return False, f"Failed to apply refactoring: {apply_error}"
 
-                # Step 6: Run tests on modified repo
+                # Step 6: Run tests on modified repo (incremental: only affected tests)
                 self.logger.info("Running tests after refactoring")
-                success, error = self._run_tests(repo, build_system)
+                class_name = original_path.stem  # Extract class name from file path
+                success, error = self._run_tests(repo, build_system, class_name=class_name)
 
                 if success:
                     self.logger.info("Behavioral verification PASSED")
@@ -308,7 +319,11 @@ class BehavioralVerifier:
         return True
 
     def _run_tests(
-        self, repo_path: Path, build_system: str, timeout: int = 180  # 3 minutes
+        self, 
+        repo_path: Path, 
+        build_system: str, 
+        timeout: int = 180,  # 3 minutes
+        class_name: str | None = None,  # For incremental verification
     ) -> tuple[bool, str | None]:
         """
         Run test suite.
@@ -317,18 +332,47 @@ class BehavioralVerifier:
             repo_path: Path to repository
             build_system: 'maven' or 'gradle'
             timeout: Test timeout in seconds
+            class_name: If provided and incremental_tests enabled, only run affected tests
 
         Returns:
             Tuple of (success: bool, error_message: Optional[str])
         """
         try:
+            # Incremental verification: only run tests that reference the class
+            affected_test_classes = []
+            if self.incremental_tests and class_name:
+                from genec.verification.test_finder import TestFinder
+                
+                if self._test_finder is None:
+                    self._test_finder = TestFinder(repo_path)
+                
+                affected_tests = self._test_finder.find_affected_tests(class_name)
+                if affected_tests:
+                    affected_test_classes = self._test_finder.get_test_class_names(affected_tests)
+                    self.logger.info(
+                        f"Incremental mode: running {len(affected_test_classes)} affected tests "
+                        f"(instead of full suite)"
+                    )
+                else:
+                    self.logger.info("No affected tests found, running full suite")
+            
+            # Build command based on build system and incremental mode
             if build_system == "maven":
-                cmd = [self.maven_command, "test", "-q"]
+                if affected_test_classes:
+                    # Run only affected tests
+                    test_pattern = ",".join(affected_test_classes)
+                    cmd = [self.maven_command, "test", "-q", f"-Dtest={test_pattern}", "-DfailIfNoTests=false"]
+                else:
+                    cmd = [self.maven_command, "test", "-q"]
             elif build_system == "gradle":
                 gradle_cmd = (
                     "./gradlew" if (repo_path / "gradlew").exists() else self.gradle_command
                 )
-                cmd = [gradle_cmd, "test", "-q"]
+                if affected_test_classes:
+                    # Run only affected tests
+                    cmd = [gradle_cmd, "test", "-q"] + [f"--tests {tc}" for tc in affected_test_classes]
+                else:
+                    cmd = [gradle_cmd, "test", "-q"]
             else:
                 return False, f"Unknown build system: {build_system}"
 

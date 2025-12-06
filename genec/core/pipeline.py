@@ -370,6 +370,13 @@ class GenECPipeline:
         
         # Write to stderr as single line JSON (extension can parse this)
         print(json.dumps(progress_event), file=sys.stderr, flush=True)
+        
+        # Also emit via WebSocket if server is running
+        try:
+            from genec.utils.progress_server import emit_progress as ws_emit
+            ws_emit(stage, total, message, details)
+        except Exception:
+            pass  # WebSocket not running or not available
 
     def run_full_pipeline(
         self, class_file: str, repo_path: str, max_suggestions: int = None
