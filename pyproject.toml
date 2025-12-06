@@ -19,6 +19,24 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 
+[project.optional-dependencies]
+websocket = [
+    "websockets>=12.0",
+]
+visualization = [
+    "plotly>=5.18.0",
+]
+jupyter = [
+    "jupyter>=1.0.0",
+    "ipywidgets>=8.0.0",
+]
+all = [
+    "websockets>=12.0",
+    "plotly>=5.18.0",
+    "jupyter>=1.0.0",
+    "ipywidgets>=8.0.0",
+]
+
 [project.scripts]
 genec = "genec.cli:main"
 

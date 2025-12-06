@@ -16,3 +16,6 @@ scipy>=1.11.0
 
 # Git integration for Stage 7
 GitPython>=3.1.40
+
+# WebSocket for real-time progress (optional but recommended)
+websockets>=12.0
