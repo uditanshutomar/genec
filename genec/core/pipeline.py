@@ -359,7 +359,7 @@ class GenECPipeline:
             evo_data = self.evolutionary_miner.mine_method_cochanges(
                 relative_path_str,
                 repo_path,
-                window_months=evo_config.get("window_months", 12),
+                window_months=evo_config.get("window_months", 120),  # Default to 10 years
                 min_commits=evo_config.get("min_commits", 2),
             )
 
@@ -536,6 +536,7 @@ class GenECPipeline:
 
                 # Use parallel batch generation
                 # This handles both LLM generation and JDT code generation (via hybrid mode) in parallel
+                # Generate ALL suggestions across all tiers (ignore max_suggestions for tiered mode)
                 suggestions = self.llm_interface.generate_batch_suggestions(
                     clusters=all_tier_clusters,
                     original_code=original_code,
@@ -543,7 +544,7 @@ class GenECPipeline:
                     class_file=class_file,
                     repo_path=repo_path,
                     evo_data=evo_data,
-                    max_suggestions=max_suggestions,
+                    max_suggestions=None,  # Generate all suggestions for all tiers
                     max_workers=4,  # Default to 4 workers
                 )
 
@@ -641,6 +642,27 @@ class GenECPipeline:
 
                 def verify_single_suggestion(suggestion):
                     self.logger.info(f"Verifying suggestion: {suggestion.proposed_class_name}")
+                    
+                    # Skip heavy behavioral verification for non-SHOULD tiers
+                    # Only SHOULD tier gets auto-applied, so others just need syntax check
+                    if suggestion.quality_tier != "should":
+                        self.logger.info(
+                            f"Skipping heavy verification for {suggestion.quality_tier.upper()} tier: "
+                            f"{suggestion.proposed_class_name} (syntax-only)"
+                        )
+                        # Create lightweight verification engine for non-SHOULD
+                        from genec.core.verification_engine import VerificationEngine, VerificationResult
+                        lightweight_engine = VerificationEngine(
+                            enable_equivalence=False,
+                            enable_syntactic=True,
+                            enable_semantic=True,
+                            enable_behavioral=False,  # Skip expensive behavioral tests
+                            repo_path=repo_path,
+                        )
+                        return lightweight_engine.verify_refactoring(
+                            suggestion, original_code, class_file, repo_path, class_deps
+                        )
+                    
                     return self.verification_engine.verify_refactoring(
                         suggestion, original_code, class_file, repo_path, class_deps
                     )
@@ -722,12 +744,42 @@ class GenECPipeline:
                         enable_git=self.refactoring_applicator.enable_git,
                     )
 
-                    success, applications = transactional_applicator.apply_all(
-                        suggestions=result.verified_suggestions,
-                        original_files=original_files,
-                        repo_path=repo_path,
-                        check_conflicts=True,
-                    )
+                    # Auto-apply only SHOULD tier suggestions (high quality, strong evidence)
+                    should_verified = [
+                        s for s in result.verified_suggestions if s.quality_tier == "should"
+                    ]
+
+                    if should_verified:
+                        self.logger.info(
+                            f"Auto-applying {len(should_verified)} SHOULD-tier suggestions (high quality)"
+                        )
+                        success, applications = transactional_applicator.apply_all(
+                            suggestions=should_verified,
+                            original_files=original_files,
+                            repo_path=repo_path,
+                            check_conflicts=True,
+                        )
+                    else:
+                        self.logger.info("No SHOULD-tier suggestions to auto-apply")
+                        success = True
+                        applications = []
+
+                    # Log COULD and POTENTIAL suggestions for user review
+                    could_verified = [
+                        s for s in result.verified_suggestions if s.quality_tier == "could"
+                    ]
+                    potential_verified = [
+                        s for s in result.verified_suggestions if s.quality_tier == "potential"
+                    ]
+
+                    if could_verified:
+                        self.logger.info(
+                            f"⚠️  {len(could_verified)} COULD-tier suggestions available for review (medium quality)"
+                        )
+                    if potential_verified:
+                        self.logger.info(
+                            f"💡 {len(potential_verified)} POTENTIAL-tier suggestions available for review (low quality)"
+                        )
 
                     result.applied_refactorings = applications
 

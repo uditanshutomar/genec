@@ -1,25 +1,25 @@
 """Behavioral verification through test execution."""
 
-import os
-import subprocess
+import re
 import shutil
+import subprocess
 import tempfile
+import threading
 from pathlib import Path
-from typing import Tuple, Optional, Dict
 
 from genec.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
 
+# Module-level lock for serializing behavioral verification
+# This ensures only one verification modifies the repo at a time
+_verification_lock = threading.Lock()
+
 
 class BehavioralVerifier:
     """Verifies refactorings preserve behavior by running test suites."""
 
-    def __init__(
-        self,
-        maven_command: str = 'mvn',
-        gradle_command: str = 'gradle'
-    ):
+    def __init__(self, maven_command: str = "mvn", gradle_command: str = "gradle"):
         """
         Initialize behavioral verifier.
 
@@ -37,12 +37,22 @@ class BehavioralVerifier:
         new_class_code: str,
         modified_original_code: str,
         repo_path: str,
-        package_name: str = ""
-    ) -> Tuple[bool, Optional[str]]:
+        package_name: str = "",
+    ) -> tuple[bool, str | None]:
         """
         Verify behavioral correctness by running tests.
 
-        Creates a copy of the project, applies refactoring, and runs tests.
+        Uses IN-PLACE modification with backup/restore for performance.
+        This avoids copying the entire repository (which can be 50MB+).
+
+        Strategy:
+        1. Acquire lock (serialize across threads)
+        2. Check for and recover from any previous interrupted verification
+        3. Backup only the files we modify (2 files max)
+        4. Apply refactoring in-place
+        5. Run tests
+        6. Restore original files (guaranteed via try/finally)
+        7. Release lock
 
         Args:
             original_class_file: Path to original class file
@@ -54,60 +64,153 @@ class BehavioralVerifier:
         Returns:
             Tuple of (success: bool, error_message: Optional[str])
         """
-        self.logger.info("Running behavioral verification")
+        self.logger.info("Running behavioral verification (in-place mode)")
 
-        # Create temporary copy of repository
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_repo = Path(temp_dir) / 'repo_copy'
+        # Serialize verification to avoid conflicts
+        with _verification_lock:
+            repo = Path(repo_path)
+            backup_data: dict[Path, str] = {}
+            new_class_file: Path | None = None
+            marker_file = repo / ".genec_verification_in_progress"
 
             try:
-                # Copy repository
-                self.logger.info(f"Copying repository to {temp_repo}")
-                shutil.copytree(repo_path, temp_repo, symlinks=True)
+                # Step 1: Check for interrupted previous verification and recover
+                self._check_and_recover(repo)
 
-                # Determine build system
-                build_system = self._detect_build_system(temp_repo)
+                # Step 2: Detect build system
+                build_system = self._detect_build_system(repo)
                 if not build_system:
                     self.logger.info("No build system detected; skipping behavioral verification.")
                     return True, "Skipped (no build system detected)"
 
-                # Run tests before refactoring (baseline)
-                self.logger.info("Running baseline tests")
-                baseline_success, baseline_error = self._run_tests(temp_repo, build_system)
+                # Step 3: Create marker file for crash recovery
+                marker_file.write_text(original_class_file, encoding="utf-8")
 
-                if not baseline_success:
-                    return False, f"Baseline tests failed: {baseline_error}"
+                # Step 4: Backup the original file
+                original_path = repo / original_class_file
+                if original_path.exists():
+                    backup_data[original_path] = original_path.read_text(encoding="utf-8")
+                    self.logger.debug(f"Backed up: {original_path}")
 
-                # Apply refactoring
-                self.logger.info("Applying refactoring")
-                apply_success, apply_error = self._apply_refactoring(
-                    temp_repo,
-                    original_class_file,
+                # Step 5: Apply refactoring IN-PLACE
+                self.logger.info("Applying refactoring in-place")
+                apply_success, apply_error, new_class_file = self._apply_refactoring_inplace(
+                    repo,
+                    original_path,
                     new_class_code,
                     modified_original_code,
-                    package_name
                 )
 
                 if not apply_success:
                     return False, f"Failed to apply refactoring: {apply_error}"
 
-                # Run tests after refactoring
+                # Step 6: Run tests on modified repo
                 self.logger.info("Running tests after refactoring")
-                refactored_success, refactored_error = self._run_tests(temp_repo, build_system)
+                success, error = self._run_tests(repo, build_system)
 
-                if refactored_success:
+                if success:
                     self.logger.info("Behavioral verification PASSED")
                     return True, None
                 else:
-                    self.logger.warning(f"Behavioral verification FAILED: {refactored_error}")
-                    return False, f"Tests failed after refactoring: {refactored_error}"
+                    self.logger.warning(f"Behavioral verification FAILED: {error}")
+                    return False, f"Tests failed after refactoring: {error}"
 
             except Exception as e:
                 error_msg = f"Behavioral verification error: {str(e)}"
                 self.logger.error(error_msg)
                 return False, error_msg
 
-    def _detect_build_system(self, repo_path: Path) -> Optional[str]:
+            finally:
+                # Step 7: ALWAYS restore original state
+                self._restore_files(backup_data, new_class_file)
+                
+                # Remove marker file
+                if marker_file.exists():
+                    marker_file.unlink()
+
+    def _check_and_recover(self, repo: Path):
+        """
+        Check for interrupted verification and restore if needed.
+        
+        This handles the case where GenEC was killed mid-verification.
+        """
+        marker_file = repo / ".genec_verification_in_progress"
+        backup_dir = repo / ".genec_verification_backup"
+        
+        if marker_file.exists():
+            self.logger.warning("Detected interrupted verification, attempting recovery...")
+            original_class_file = marker_file.read_text(encoding="utf-8").strip()
+            
+            # Restore from backup if it exists
+            if backup_dir.exists():
+                for backup_file in backup_dir.iterdir():
+                    if backup_file.is_file():
+                        target = repo / backup_file.name
+                        shutil.copy2(backup_file, target)
+                        self.logger.info(f"Recovered: {target}")
+                shutil.rmtree(backup_dir)
+            
+            marker_file.unlink()
+            self.logger.info("Recovery complete")
+
+    def _apply_refactoring_inplace(
+        self,
+        repo: Path,
+        original_path: Path,
+        new_class_code: str,
+        modified_original_code: str,
+    ) -> tuple[bool, str | None, Path | None]:
+        """
+        Apply refactoring directly to the repository.
+
+        Returns:
+            Tuple of (success, error_message, new_class_file_path)
+        """
+        try:
+            # Extract new class name
+            new_class_match = re.search(r"(?:public\s+)?class\s+(\w+)", new_class_code)
+            if not new_class_match:
+                return False, "Could not extract new class name", None
+
+            new_class_name = new_class_match.group(1)
+
+            # Write modified original class
+            original_path.write_text(modified_original_code, encoding="utf-8")
+            self.logger.debug(f"Modified: {original_path}")
+
+            # Write new class in same directory
+            new_class_file = original_path.parent / f"{new_class_name}.java"
+            new_class_file.write_text(new_class_code, encoding="utf-8")
+            self.logger.debug(f"Created: {new_class_file}")
+
+            return True, None, new_class_file
+
+        except Exception as e:
+            return False, f"Error applying refactoring: {str(e)}", None
+
+    def _restore_files(self, backup_data: dict[Path, str], new_class_file: Path | None):
+        """
+        Restore backed-up files and delete new class file.
+        
+        This is called in finally block to guarantee cleanup.
+        """
+        # Restore original files from backup
+        for path, content in backup_data.items():
+            try:
+                path.write_text(content, encoding="utf-8")
+                self.logger.debug(f"Restored: {path}")
+            except Exception as e:
+                self.logger.error(f"Failed to restore {path}: {e}")
+
+        # Delete the temporarily created new class file
+        if new_class_file and new_class_file.exists():
+            try:
+                new_class_file.unlink()
+                self.logger.debug(f"Deleted temporary: {new_class_file}")
+            except Exception as e:
+                self.logger.error(f"Failed to delete {new_class_file}: {e}")
+
+    def _detect_build_system(self, repo_path: Path) -> str | None:
         """
         Detect build system (Maven or Gradle).
 
@@ -117,10 +220,10 @@ class BehavioralVerifier:
         Returns:
             'maven', 'gradle', or None
         """
-        if (repo_path / 'pom.xml').exists():
-            return 'maven'
-        elif (repo_path / 'build.gradle').exists() or (repo_path / 'build.gradle.kts').exists():
-            return 'gradle'
+        if (repo_path / "pom.xml").exists():
+            return "maven"
+        elif (repo_path / "build.gradle").exists() or (repo_path / "build.gradle.kts").exists():
+            return "gradle"
         return None
 
     def _only_contains_warnings(self, output: str) -> bool:
@@ -163,7 +266,10 @@ class BehavioralVerifier:
         # Check for actual test result summaries with failures
         # Format: "Tests run: 1234, Failures: 5, Errors: 2, Skipped: 3"
         import re
-        test_results = re.search(r'Tests run:\s*(\d+),\s*Failures:\s*(\d+),\s*Errors:\s*(\d+)', output, re.IGNORECASE)
+
+        test_results = re.search(
+            r"Tests run:\s*(\d+),\s*Failures:\s*(\d+),\s*Errors:\s*(\d+)", output, re.IGNORECASE
+        )
         if test_results:
             failures = int(test_results.group(2))
             errors = int(test_results.group(3))
@@ -174,11 +280,8 @@ class BehavioralVerifier:
         return True
 
     def _run_tests(
-        self,
-        repo_path: Path,
-        build_system: str,
-        timeout: int = 900
-    ) -> Tuple[bool, Optional[str]]:
+        self, repo_path: Path, build_system: str, timeout: int = 900
+    ) -> tuple[bool, str | None]:
         """
         Run test suite.
 
@@ -191,21 +294,19 @@ class BehavioralVerifier:
             Tuple of (success: bool, error_message: Optional[str])
         """
         try:
-            if build_system == 'maven':
-                cmd = [self.maven_command, 'test', '-q']
-            elif build_system == 'gradle':
-                gradle_cmd = "./gradlew" if (repo_path / "gradlew").exists() else self.gradle_command
-                cmd = [gradle_cmd, 'test', '-q']
+            if build_system == "maven":
+                cmd = [self.maven_command, "test", "-q"]
+            elif build_system == "gradle":
+                gradle_cmd = (
+                    "./gradlew" if (repo_path / "gradlew").exists() else self.gradle_command
+                )
+                cmd = [gradle_cmd, "test", "-q"]
             else:
                 return False, f"Unknown build system: {build_system}"
 
             # Run tests
             result = subprocess.run(
-                cmd,
-                cwd=repo_path,
-                capture_output=True,
-                text=True,
-                timeout=timeout
+                cmd, cwd=repo_path, capture_output=True, text=True, timeout=timeout
             )
 
             # Check for actual test failures, not just warnings
@@ -230,54 +331,7 @@ class BehavioralVerifier:
         except Exception as e:
             return False, f"Test execution error: {str(e)}"
 
-    def _apply_refactoring(
-        self,
-        repo_path: Path,
-        original_class_file: str,
-        new_class_code: str,
-        modified_original_code: str,
-        package_name: str
-    ) -> Tuple[bool, Optional[str]]:
-        """
-        Apply refactoring to repository copy.
-
-        Args:
-            repo_path: Path to repository copy
-            original_class_file: Original class file path (relative to repo)
-            new_class_code: New class code
-            modified_original_code: Modified original code
-            package_name: Package name
-
-        Returns:
-            Tuple of (success: bool, error_message: Optional[str])
-        """
-        try:
-            # Extract class names
-            import re
-
-            new_class_match = re.search(r'(?:public\s+)?class\s+(\w+)', new_class_code)
-            if not new_class_match:
-                return False, "Could not extract new class name"
-
-            new_class_name = new_class_match.group(1)
-
-            # Write modified original class
-            original_file_path = repo_path / original_class_file
-            original_file_path.write_text(modified_original_code, encoding='utf-8')
-
-            # Write new class
-            new_class_file = original_file_path.parent / f"{new_class_name}.java"
-            new_class_file.write_text(new_class_code, encoding='utf-8')
-
-            self.logger.info(f"Created new class: {new_class_file}")
-            self.logger.info(f"Modified original class: {original_file_path}")
-
-            return True, None
-
-        except Exception as e:
-            return False, f"Error applying refactoring: {str(e)}"
-
-    def check_build_tools_available(self) -> Dict[str, bool]:
+    def check_build_tools_available(self) -> dict[str, bool]:
         """
         Check which build tools are available.
 
@@ -289,23 +343,19 @@ class BehavioralVerifier:
         # Check Maven
         try:
             result = subprocess.run(
-                [self.maven_command, '-version'],
-                capture_output=True,
-                timeout=5
+                [self.maven_command, "-version"], capture_output=True, timeout=5
             )
-            tools['maven'] = (result.returncode == 0)
+            tools["maven"] = result.returncode == 0
         except:
-            tools['maven'] = False
+            tools["maven"] = False
 
         # Check Gradle
         try:
             result = subprocess.run(
-                [self.gradle_command, '--version'],
-                capture_output=True,
-                timeout=5
+                [self.gradle_command, "--version"], capture_output=True, timeout=5
             )
-            tools['gradle'] = (result.returncode == 0)
+            tools["gradle"] = result.returncode == 0
         except:
-            tools['gradle'] = False
+            tools["gradle"] = False
 
         return tools

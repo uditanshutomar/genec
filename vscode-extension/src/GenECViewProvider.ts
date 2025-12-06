@@ -71,6 +71,14 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                     this._previewRefactoring(data.index);
                     break;
                 }
+                case 'openFile': {
+                    // Handle file open requests from webview
+                    if (data.path) {
+                        const uri = vscode.Uri.file(data.path);
+                        vscode.commands.executeCommand('vscode.open', uri);
+                    }
+                    break;
+                }
                 case 'getSettings': {
                     this._sendSettings();
                     break;
@@ -484,42 +492,81 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
 
                         const failedApps = result.applied_refactorings.filter((app: any) => !app.success);
 
+                        // Build complete summary showing ALL suggestions by tier
                         let summaryHtml = `<h3>Refactoring Summary</h3>`;
 
+                        // Section 1: Successfully Applied (SHOULD tier)
                         if (successfulApps.length > 0) {
-                            summaryHtml += `<div class="result-item" style="border-left: 4px solid var(--vscode-notebookStatusSuccessIcon-foreground);">`;
-                            summaryHtml += `<strong>✅ Successfully Extracted ${successfulApps.length} Classes:</strong><br>`;
+                            summaryHtml += `<div class="tier-section" style="border-left: 4px solid #4CAF50; padding-left: 12px; margin-bottom: 15px;">`;
+                            summaryHtml += `<strong style="color: #4CAF50;">✅ Extracted Classes (SHOULD tier - Auto-applied):</strong><br>`;
+                            summaryHtml += `<p style="font-size: 11px; color: var(--vscode-descriptionForeground); margin: 5px 0;">High quality, strong evidence (score ≥70)</p>`;
                             summaryHtml += `<ul style="margin: 5px 0; padding-left: 20px;">`;
                             summaryHtml += successfulApps.map((app: any) => {
-                                const fileName = path.basename(app.new_class_path || app.new_class); // Handle both key names just in case
-                                const uri = vscode.Uri.file(app.new_class_path || app.new_class);
-                                return `<li><a href="command:vscode.open?${encodeURIComponent(JSON.stringify(uri))}">${fileName}</a></li>`;
+                                const filePath = app.new_class_path || app.new_class;
+                                const fileName = path.basename(filePath);
+                                // Use onclick with postMessage instead of command: href (works in webview)
+                                return `<li><a href="#" class="file-link" data-path="${filePath.replace(/"/g, '&quot;')}" style="color: var(--vscode-textLink-foreground); cursor: pointer;">${fileName}</a></li>`;
                             }).join('');
                             summaryHtml += `</ul></div>`;
                         }
 
+                        // Get suggestions that were NOT applied (COULD and POTENTIAL tiers)
+                        const allSuggestions = result.suggestions || [];
+                        const appliedNames = new Set(successfulApps.map((app: any) => {
+                            const filePath = app.new_class_path || app.new_class;
+                            return path.basename(filePath).replace('.java', '');
+                        }));
+                        const notApplied = allSuggestions.filter((s: any) => !appliedNames.has(s.name));
+                        const couldSuggestions = notApplied.filter((s: any) => s.quality_tier === 'could');
+                        const potentialSuggestions = notApplied.filter((s: any) => s.quality_tier === 'potential');
+
+                        // Section 2: COULD tier (for review)
+                        if (couldSuggestions.length > 0) {
+                            summaryHtml += `<div class="tier-section" style="border-left: 4px solid #FF9800; padding-left: 12px; margin-bottom: 15px;">`;
+                            summaryHtml += `<strong style="color: #FF9800;">⚠️ Available for Review (COULD tier):</strong><br>`;
+                            summaryHtml += `<p style="font-size: 11px; color: var(--vscode-descriptionForeground); margin: 5px 0;">Medium quality, conditional recommendation (score ≥40)</p>`;
+                            summaryHtml += `<ul style="margin: 5px 0; padding-left: 20px;">`;
+                            summaryHtml += couldSuggestions.map((s: any) => {
+                                const scoreText = s.quality_score !== undefined ? ` (${Math.round(s.quality_score)}/100)` : '';
+                                return `<li><strong>${s.name}</strong>${scoreText}${s.verified ? ' ✓ Verified' : ''}</li>`;
+                            }).join('');
+                            summaryHtml += `</ul></div>`;
+                        }
+
+                        // Section 3: POTENTIAL tier (informational)
+                        if (potentialSuggestions.length > 0) {
+                            summaryHtml += `<div class="tier-section" style="border-left: 4px solid #9E9E9E; padding-left: 12px; margin-bottom: 15px;">`;
+                            summaryHtml += `<strong style="color: #9E9E9E;">💡 Informational (POTENTIAL tier):</strong><br>`;
+                            summaryHtml += `<p style="font-size: 11px; color: var(--vscode-descriptionForeground); margin: 5px 0;">Lower quality, structural detection only (score <40)</p>`;
+                            summaryHtml += `<ul style="margin: 5px 0; padding-left: 20px;">`;
+                            summaryHtml += potentialSuggestions.map((s: any) => {
+                                const scoreText = s.quality_score !== undefined ? ` (${Math.round(s.quality_score)}/100)` : '';
+                                return `<li>${s.name}${scoreText}</li>`;
+                            }).join('');
+                            summaryHtml += `</ul></div>`;
+                        }
+
+                        // Section 4: Failed refactorings
                         if (failedApps.length > 0) {
-                            summaryHtml += `<div class="result-item" style="border-left: 4px solid var(--vscode-errorForeground);">`;
-                            summaryHtml += `<strong>❌ Failed Refactorings:</strong><br>`;
+                            summaryHtml += `<div class="tier-section" style="border-left: 4px solid var(--vscode-errorForeground); padding-left: 12px; margin-bottom: 15px;">`;
+                            summaryHtml += `<strong style="color: var(--vscode-errorForeground);">❌ Failed Refactorings:</strong><br>`;
                             summaryHtml += `<ul style="margin: 5px 0; padding-left: 20px;">`;
                             summaryHtml += failedApps.map((app: any) => `<li>${app.error_message || 'Unknown error'}</li>`).join('');
                             summaryHtml += `</ul></div>`;
                         }
 
-                        summaryHtml += `<br>The original file has been updated.`;
+                        summaryHtml += `<p style="font-size: 12px; margin-top: 10px;">The original file has been updated. COULD/POTENTIAL suggestions can be applied manually below.</p>`;
 
-                        this._view.webview.postMessage({
-                            type: 'clear',
-                            value: summaryHtml,
-                            graph_data: result.graph_data
-                        });
+                        // Store summary in result to be sent to frontend
+                        result.summary = summaryHtml;
 
                         // Open the last created file
                         const lastApp = successfulApps[successfulApps.length - 1];
                         const lastFilePath = lastApp.new_class_path || lastApp.new_class;
                         const doc = await vscode.workspace.openTextDocument(lastFilePath);
                         await vscode.window.showTextDocument(doc);
-                        return;
+
+                        // Continue to show suggestions (COULD/POTENTIAL tiers)
                     }
                 }
 
@@ -854,56 +901,177 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
 
                     resultsDiv.innerHTML = '';
 
+                    // Display summary if available (e.g. auto-applied refactorings)
+                    if (data.summary) {
+                        resultsDiv.innerHTML = data.summary;
+                        resultsDiv.innerHTML += '<hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--vscode-widget-border);">';
+                        
+                        // Add click handlers for file links in the summary
+                        resultsDiv.querySelectorAll('.file-link').forEach(link => {
+                            link.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                const filePath = link.getAttribute('data-path');
+                                if (filePath) {
+                                    vscode.postMessage({ type: 'openFile', path: filePath });
+                                }
+                            });
+                        });
+                    }
+
                     // Show suggestions if available
                     if (data.suggestions && data.suggestions.length > 0) {
-                        data.suggestions.forEach((suggestion, index) => {
-                            const div = document.createElement('div');
-                            div.className = 'result-item';
+                        // Filter out suggestions that were already applied
+                        let suggestions = data.suggestions;
+                        if (data.applied_refactorings && data.applied_refactorings.length > 0) {
+                            const appliedNames = new Set(data.applied_refactorings
+                                .filter((app: any) => app.success)
+                                .map((app: any) => {
+                                    const filePath = app.new_class_path || app.new_class;
+                                    // Handle both full path and basename just in case, usually suggestion.name is simple class name
+                                    return filePath.split(/[/\\]/).pop().replace('.java', '');
+                                }));
+                            
+                            suggestions = suggestions.filter(s => !appliedNames.has(s.name));
+                        }
 
-                            const nameDiv = document.createElement('div');
-                            nameDiv.className = 'class-name';
-                            nameDiv.textContent = suggestion.name;
-                            if (suggestion.verified) {
-                                const verifiedSpan = document.createElement('span');
-                                verifiedSpan.className = 'verified';
-                                verifiedSpan.textContent = ' (Verified)';
-                                nameDiv.appendChild(verifiedSpan);
-                            }
-                            div.appendChild(nameDiv);
+                        // Group suggestions by tier
+                        const shouldSuggestions = suggestions.filter(s => s.quality_tier === 'should');
+                        const couldSuggestions = suggestions.filter(s => s.quality_tier === 'could');
+                        const potentialSuggestions = suggestions.filter(s => s.quality_tier === 'potential');
+                        
+                        // Helper function to create tier section
+                        const createTierSection = (title, emoji, suggestions, tierClass) => {
+                            if (suggestions.length === 0) return;
+                            
+                            const sectionHeader = document.createElement('h3');
+                            sectionHeader.style.marginTop = '20px';
+                            sectionHeader.style.marginBottom = '10px';
+                            // Removed emoji from display as requested
+                            sectionHeader.innerHTML = title + ' (' + suggestions.length + ')';
+                            resultsDiv.appendChild(sectionHeader);
+                            
+                            suggestions.forEach((suggestion, index) => {
+                                const div = document.createElement('div');
+                                div.className = 'result-item ' + tierClass;
+                                div.style.borderLeft = tierClass === 'tier-should' ? '4px solid #4CAF50' : 
+                                                       tierClass === 'tier-could' ? '4px solid #FF9800' : 
+                                                       '4px solid #9E9E9E';
+                                div.style.paddingLeft = '12px';
 
-                            if (suggestion.rationale) {
-                                const rationaleDiv = document.createElement('div');
-                                rationaleDiv.className = 'rationale';
-                                rationaleDiv.textContent = suggestion.rationale;
-                                div.appendChild(rationaleDiv);
-                            }
+                                // Name and tier badge
+                                const nameDiv = document.createElement('div');
+                                nameDiv.className = 'class-name';
+                                nameDiv.style.display = 'flex';
+                                nameDiv.style.alignItems = 'center';
+                                nameDiv.style.gap = '10px';
+                                
+                                const nameSpan = document.createElement('span');
+                                nameSpan.textContent = suggestion.name;
+                                nameDiv.appendChild(nameSpan);
+                                
+                                // Quality score badge
+                                if (suggestion.quality_score !== undefined) {
+                                    const scoreBadge = document.createElement('span');
+                                    scoreBadge.style.padding = '2px 8px';
+                                    scoreBadge.style.borderRadius = '12px';
+                                    scoreBadge.style.fontSize = '11px';
+                                    scoreBadge.style.fontWeight = 'bold';
+                                    scoreBadge.style.background = tierClass === 'tier-should' ? '#4CAF50' : 
+                                                                   tierClass === 'tier-could' ? '#FF9800' : 
+                                                                   '#9E9E9E';
+                                    scoreBadge.style.color = 'white';
+                                    scoreBadge.textContent = Math.round(suggestion.quality_score) + '/100';
+                                    nameDiv.appendChild(scoreBadge);
+                                }
+                                
+                                if (suggestion.verified) {
+                                    const verifiedSpan = document.createElement('span');
+                                    verifiedSpan.className = 'verified';
+                                    verifiedSpan.textContent = ' (Verified)';
+                                    nameDiv.appendChild(verifiedSpan);
+                                }
+                                div.appendChild(nameDiv);
 
-                            const applyBtn = document.createElement('button');
-                            applyBtn.className = 'apply-btn';
-                            applyBtn.textContent = 'Apply Refactoring';
-                            applyBtn.onclick = () => {
-                                vscode.postMessage({
-                                    type: 'apply',
-                                    index: index
-                                });
-                            };
-                            div.appendChild(applyBtn);
+                                // Quality reasons
+                                if (suggestion.quality_reasons && suggestion.quality_reasons.length > 0) {
+                                    const reasonsDiv = document.createElement('div');
+                                    reasonsDiv.style.fontSize = '12px';
+                                    reasonsDiv.style.color = 'var(--vscode-descriptionForeground)';
+                                    reasonsDiv.style.marginTop = '5px';
+                                    reasonsDiv.style.marginBottom = '8px';
+                                    reasonsDiv.innerHTML = '<b>Quality:</b> ' + suggestion.quality_reasons.slice(0, 3).join(', ');
+                                    div.appendChild(reasonsDiv);
+                                }
 
-                            const previewBtn = document.createElement('button');
-                            previewBtn.className = 'apply-btn';
-                            previewBtn.style.marginTop = '5px';
-                            previewBtn.style.background = 'var(--vscode-button-secondaryHoverBackground)';
-                            previewBtn.textContent = 'Preview Diff';
-                            previewBtn.onclick = () => {
-                                vscode.postMessage({
-                                    type: 'preview',
-                                    index: index
-                                });
-                            };
-                            div.appendChild(previewBtn);
+                                if (suggestion.rationale) {
+                                    const rationaleDiv = document.createElement('div');
+                                    rationaleDiv.className = 'rationale';
+                                    rationaleDiv.textContent = suggestion.rationale;
+                                    div.appendChild(rationaleDiv);
+                                }
 
-                            resultsDiv.appendChild(div);
-                        });
+                                const applyBtn = document.createElement('button');
+                                applyBtn.className = 'apply-btn';
+                                applyBtn.textContent = 'Apply Refactoring';
+                                applyBtn.onclick = () => {
+                                    vscode.postMessage({
+                                        type: 'apply',
+                                        index: data.suggestions.indexOf(suggestion)
+                                    });
+                                };
+                                div.appendChild(applyBtn);
+
+                                const previewBtn = document.createElement('button');
+                                previewBtn.className = 'apply-btn';
+                                previewBtn.style.marginTop = '5px';
+                                previewBtn.style.background = 'var(--vscode-button-secondaryHoverBackground)';
+                                previewBtn.textContent = 'Preview Diff';
+                                previewBtn.onclick = () => {
+                                    vscode.postMessage({
+                                        type: 'preview',
+                                        index: data.suggestions.indexOf(suggestion)
+                                    });
+                                };
+                                div.appendChild(previewBtn);
+
+                                resultsDiv.appendChild(div);
+                            });
+                        };
+                        
+                        // Display suggestions by tier with descriptions
+                        if (shouldSuggestions.length > 0) {
+                            const shouldDesc = document.createElement('p');
+                            shouldDesc.style.fontSize = '12px';
+                            shouldDesc.style.color = 'var(--vscode-descriptionForeground)';
+                            shouldDesc.style.marginTop = '5px';
+                            shouldDesc.style.marginBottom = '15px';
+                            shouldDesc.innerHTML = '<b>Auto-applied:</b> High quality, strong evidence (score ≥70)';
+                            resultsDiv.appendChild(shouldDesc);
+                        }
+                        createTierSection('SHOULD Refactor (Auto-Applied)', '', shouldSuggestions, 'tier-should');
+                        
+                        if (couldSuggestions.length > 0) {
+                            const couldDesc = document.createElement('p');
+                            couldDesc.style.fontSize = '12px';
+                            couldDesc.style.color = 'var(--vscode-descriptionForeground)';
+                            couldDesc.style.marginTop = '5px';
+                            couldDesc.style.marginBottom = '15px';
+                            couldDesc.innerHTML = '<b>For review:</b> Medium quality, conditional recommendation (score ≥40)';
+                            resultsDiv.appendChild(couldDesc);
+                        }
+                        createTierSection('COULD Refactor', '', couldSuggestions, 'tier-could');
+                        
+                        if (potentialSuggestions.length > 0) {
+                            const potentialDesc = document.createElement('p');
+                            potentialDesc.style.fontSize = '12px';
+                            potentialDesc.style.color = 'var(--vscode-descriptionForeground)';
+                            potentialDesc.style.marginTop = '5px';
+                            potentialDesc.style.marginBottom = '15px';
+                            potentialDesc.innerHTML = '<b>Informational:</b> Low quality, structural-only detection (score <40)';
+                            resultsDiv.appendChild(potentialDesc);
+                        }
+                        createTierSection('POTENTIAL Refactoring', '', potentialSuggestions, 'tier-potential');
+                        
                     } else {
                         // Fallback: Show detected clusters if no suggestions
                         if (data.clusters && data.clusters.length > 0) {

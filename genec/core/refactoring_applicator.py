@@ -121,6 +121,18 @@ class RefactoringApplicator:
                     if not self.git_wrapper.create_branch(branch_name):
                         self.logger.warning("Failed to create Git branch, continuing without")
 
+            # Check if new class file already exists - skip if so to avoid duplicates
+            if new_class_path.exists():
+                self.logger.warning(
+                    f"Skipping {suggestion.proposed_class_name}: file already exists at {new_class_path}"
+                )
+                return RefactoringApplication(
+                    success=False,
+                    new_class_path=str(new_class_path),
+                    original_class_path=str(original_path),
+                    error_message=f"File already exists: {new_class_path}",
+                )
+
             # Write new class file
             new_class_path.parent.mkdir(parents=True, exist_ok=True)
             self._write_file(new_class_path, suggestion.new_class_code)
@@ -170,70 +182,6 @@ class RefactoringApplicator:
                 shutil.copy(backup_path, original_path)
                 self.logger.info("Rolled back changes from backup")
 
-            return RefactoringApplication(success=False, error_message=str(e))
-        """
-        Apply a refactoring suggestion to the filesystem.
-
-        Args:
-            suggestion: The refactoring suggestion to apply
-            original_class_file: Path to the original class file
-            repo_path: Path to repository root
-            dry_run: If True, don't actually write files (for testing)
-
-        Returns:
-            RefactoringApplication with status and file paths
-        """
-        try:
-            # Validate inputs
-            if not suggestion.new_class_code:
-                return RefactoringApplication(
-                    success=False, error_message="No new class code generated"
-                )
-
-            if not suggestion.modified_original_code:
-                return RefactoringApplication(
-                    success=False, error_message="No modified original code generated"
-                )
-
-            # Compute file paths
-            original_path = Path(original_class_file).resolve()
-            new_class_path = self._compute_new_class_path(
-                original_path, suggestion.proposed_class_name, repo_path
-            )
-
-            # Create backup if enabled
-            backup_path = None
-            if self.create_backups and not dry_run:
-                backup_path = self._create_backup(original_path)
-                self.logger.info(f"Created backup: {backup_path}")
-
-            if dry_run:
-                self.logger.info(f"[DRY RUN] Would write new class: {new_class_path}")
-                self.logger.info(f"[DRY RUN] Would update original: {original_path}")
-                return RefactoringApplication(
-                    success=True,
-                    new_class_path=str(new_class_path),
-                    original_class_path=str(original_path),
-                    backup_path=backup_path,
-                )
-
-            # Write new extracted class
-            self._write_file(new_class_path, suggestion.new_class_code)
-            self.logger.info(f"Created new class: {new_class_path}")
-
-            # Update original class
-            self._write_file(original_path, suggestion.modified_original_code)
-            self.logger.info(f"Updated original class: {original_path}")
-
-            return RefactoringApplication(
-                success=True,
-                new_class_path=str(new_class_path),
-                original_class_path=str(original_path),
-                backup_path=backup_path,
-            )
-
-        except Exception as e:
-            self.logger.error(f"Failed to apply refactoring: {e}", exc_info=True)
             return RefactoringApplication(success=False, error_message=str(e))
 
     def rollback_refactoring(self, application: RefactoringApplication) -> bool:

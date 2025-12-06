@@ -2,7 +2,7 @@
     "name": "genec-vscode",
     "displayName": "GenEC Refactoring",
     "description": "AI-powered Extract Class refactoring for Java with 7-layer verification",
-    "version": "0.0.45",
+    "version": "0.0.50",
     "engines": {
         "vscode": "^1.80.0"
     },
