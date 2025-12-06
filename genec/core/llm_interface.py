@@ -3,7 +3,7 @@
 import re
 import time
 import xml.etree.ElementTree as ET
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 from genec.core.cluster_context_builder import ClusterContextBuilder
@@ -76,6 +76,11 @@ class RefactoringSuggestion:
     cluster: Cluster | None = None
     confidence_score: float | None = None  # NEW: 0-1 confidence rating
     reasoning: str | None = None  # NEW: Chain-of-thought reasoning
+    
+    # Quality tier metadata
+    quality_tier: str | None = None  # "should", "could", or "potential"
+    quality_score: float = 0.0
+    quality_reasons: list[str] = field(default_factory=list)
 
 
 class LLMInterface:
@@ -87,7 +92,7 @@ class LLMInterface:
         model: str = "claude-sonnet-4-20250514",
         max_tokens: int = 4000,
         temperature: float = 0.3,
-        timeout: int = 120,
+        timeout: int = 180,  # 3 minutes for slow connections
         use_chunking: bool = True,
         use_hybrid_mode: bool = True,  # NEW: Use JDT for code generation
         enable_confidence_scoring: bool = True,  # NEW: Ask LLM for confidence

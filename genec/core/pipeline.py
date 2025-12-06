@@ -642,7 +642,7 @@ class GenECPipeline:
 
                 def verify_single_suggestion(suggestion):
                     self.logger.info(f"Verifying suggestion: {suggestion.proposed_class_name}")
-                    
+
                     # Skip heavy behavioral verification for non-SHOULD tiers
                     # Only SHOULD tier gets auto-applied, so others just need syntax check
                     if suggestion.quality_tier != "should":
@@ -651,7 +651,10 @@ class GenECPipeline:
                             f"{suggestion.proposed_class_name} (syntax-only)"
                         )
                         # Create lightweight verification engine for non-SHOULD
-                        from genec.core.verification_engine import VerificationEngine, VerificationResult
+                        from genec.core.verification_engine import (
+                            VerificationEngine,
+                        )
+
                         lightweight_engine = VerificationEngine(
                             enable_equivalence=False,
                             enable_syntactic=True,
@@ -662,7 +665,7 @@ class GenECPipeline:
                         return lightweight_engine.verify_refactoring(
                             suggestion, original_code, class_file, repo_path, class_deps
                         )
-                    
+
                     return self.verification_engine.verify_refactoring(
                         suggestion, original_code, class_file, repo_path, class_deps
                     )

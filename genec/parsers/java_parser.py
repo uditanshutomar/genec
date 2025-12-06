@@ -2,10 +2,10 @@
 
 import os
 import re
-import javalang
-from typing import List, Dict, Optional, Set, Tuple
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
+
+import javalang
 
 try:
     from tree_sitter_languages import get_parser as ts_get_parser
@@ -20,11 +20,12 @@ logger = get_logger(__name__)
 @dataclass
 class ParsedMethod:
     """Represents a parsed Java method."""
+
     name: str
     signature: str
     return_type: str
-    modifiers: List[str]
-    parameters: List[Dict[str, str]]
+    modifiers: list[str]
+    parameters: list[dict[str, str]]
     start_line: int
     end_line: int
     body: str
@@ -41,9 +42,10 @@ class ParsedMethod:
 @dataclass
 class ParsedField:
     """Represents a parsed Java field."""
+
     name: str
     type: str
-    modifiers: List[str]
+    modifiers: list[str]
     line_number: int
 
 
@@ -51,9 +53,23 @@ class JavaParser:
     """Parser for Java source code using javalang."""
 
     _KEYWORD_BLACKLIST = {
-        'if', 'for', 'while', 'switch', 'return', 'new', 'super', 'this',
-        'catch', 'throw', 'else', 'case', 'do', 'try', 'default', 'assert',
-        'synchronized'
+        "if",
+        "for",
+        "while",
+        "switch",
+        "return",
+        "new",
+        "super",
+        "this",
+        "catch",
+        "throw",
+        "else",
+        "case",
+        "do",
+        "try",
+        "default",
+        "assert",
+        "synchronized",
     }
 
     def __init__(self):
@@ -67,7 +83,7 @@ class JavaParser:
                 self.logger.warning(f"Failed to initialize tree-sitter parser: {exc}")
         self.inspector_jar_path = self._find_jdt_wrapper()
 
-    def parse_file(self, file_path: str) -> Optional[javalang.tree.CompilationUnit]:
+    def parse_file(self, file_path: str) -> javalang.tree.CompilationUnit | None:
         """
         Parse a Java file and return the AST.
 
@@ -78,14 +94,14 @@ class JavaParser:
             Parsed compilation unit or None if parsing fails
         """
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding="utf-8") as f:
                 source_code = f.read()
             return javalang.parse.parse(source_code)
         except Exception as e:
             self.logger.error(f"Failed to parse {file_path}: {e}")
             return None
 
-    def parse_file_content(self, source_code: str) -> Optional[javalang.tree.CompilationUnit]:
+    def parse_file_content(self, source_code: str) -> javalang.tree.CompilationUnit | None:
         """
         Parse Java source provided as a string.
 
@@ -98,30 +114,31 @@ class JavaParser:
         try:
             return javalang.parse.parse(source_code)
         except Exception as e:
-            self.logger.error(f"Failed to parse source content: {e}")
+            self.logger.debug(f"Failed to parse source content: {e}")
             return None
 
-    def _extract_class_info_javalang(self, tree: javalang.tree.CompilationUnit,
-                                     source_code: str) -> Optional[Dict]:
+    def _extract_class_info_javalang(
+        self, tree: javalang.tree.CompilationUnit, source_code: str
+    ) -> dict | None:
         """Extract class information using javalang AST."""
         if not tree:
             return None
 
-        source_lines = source_code.split('\n')
+        source_lines = source_code.split("\n")
 
         # Find the main class declaration
         for path, node in tree.filter(javalang.tree.ClassDeclaration):
             package_name = tree.package.name if tree.package else ""
 
             class_info = {
-                'class_name': node.name,
-                'package_name': package_name,
-                'modifiers': node.modifiers or [],
-                'extends': node.extends.name if node.extends else None,
-                'implements': [impl.name for impl in (node.implements or [])],
-                'methods': [],
-                'fields': [],
-                'constructors': []
+                "class_name": node.name,
+                "package_name": package_name,
+                "modifiers": node.modifiers or [],
+                "extends": node.extends.name if node.extends else None,
+                "implements": [impl.name for impl in (node.implements or [])],
+                "methods": [],
+                "fields": [],
+                "constructors": [],
             }
 
             # Extract fields
@@ -131,93 +148,106 @@ class JavaParser:
                         name=declarator.name,
                         type=self._get_type_name(field_decl.type),
                         modifiers=field_decl.modifiers or [],
-                        line_number=field_decl.position.line if field_decl.position else 0
+                        line_number=field_decl.position.line if field_decl.position else 0,
                     )
-                    class_info['fields'].append(field_info)
+                    class_info["fields"].append(field_info)
 
             # Extract methods and constructors
             for method in node.methods:
                 start_line = method.position.line if method.position else 0
                 end_line = self._find_method_end_line(source_lines, start_line)
 
-                method_body = '\n'.join(source_lines[start_line-1:end_line])
+                method_body = "\n".join(source_lines[start_line - 1 : end_line])
 
                 parameters = []
                 if method.parameters:
                     for param in method.parameters:
-                        parameters.append({
-                            'name': param.name,
-                            'type': self._get_type_name(param.type)
-                        })
+                        param_type = self._get_type_name(param.type)
+                        if getattr(param, "varargs", False):
+                            param_type += "[]"
+                        parameters.append({"name": param.name, "type": param_type})
 
                 parsed_method = ParsedMethod(
                     name=method.name,
                     signature=self._build_signature(method.name, parameters),
-                    return_type=self._get_type_name(method.return_type) if method.return_type else 'void',
+                    return_type=(
+                        self._get_type_name(method.return_type) if method.return_type else "void"
+                    ),
                     modifiers=method.modifiers or [],
                     parameters=parameters,
                     start_line=start_line,
                     end_line=end_line,
                     body=method_body,
-                    is_constructor=False
+                    is_constructor=False,
                 )
 
-                class_info['methods'].append(parsed_method)
+                class_info["methods"].append(parsed_method)
 
             # Extract constructors
             for constructor in node.constructors:
                 start_line = constructor.position.line if constructor.position else 0
                 end_line = self._find_method_end_line(source_lines, start_line)
 
-                method_body = '\n'.join(source_lines[start_line-1:end_line])
+                method_body = "\n".join(source_lines[start_line - 1 : end_line])
 
                 parameters = []
                 if constructor.parameters:
                     for param in constructor.parameters:
-                        parameters.append({
-                            'name': param.name,
-                            'type': self._get_type_name(param.type)
-                        })
+                        param_type = self._get_type_name(param.type)
+                        if getattr(param, "varargs", False):
+                            param_type += "[]"
+                        parameters.append({"name": param.name, "type": param_type})
 
                 parsed_constructor = ParsedMethod(
                     name=constructor.name,
-                    signature=self._build_signature(constructor.name, parameters),
-                    return_type='',
+                    signature=self._build_signature("<init>", parameters),
+                    return_type="",
                     modifiers=constructor.modifiers or [],
                     parameters=parameters,
                     start_line=start_line,
                     end_line=end_line,
                     body=method_body,
-                    is_constructor=True
+                    is_constructor=True,
                 )
 
-                class_info['constructors'].append(parsed_constructor)
+                class_info["constructors"].append(parsed_constructor)
 
             return class_info
 
         return None
 
-    def extract_class_info(self, tree: Optional[javalang.tree.CompilationUnit],
-                           source_code: str,
-                           file_path: Optional[str] = None) -> Optional[Dict]:
+    def extract_class_info(
+        self,
+        tree: javalang.tree.CompilationUnit | None,
+        source_code: str,
+        file_path: str | None = None,
+    ) -> dict | None:
         """
-        Extract class information. Falls back to tree-sitter when javalang fails.
+        Extract class information. Prioritizes tree-sitter, then javalang, then JDT.
 
         Args:
-            tree: Parsed AST (may be None if javalang parsing failed)
+            tree: Parsed AST (optional, will be parsed lazily if needed)
             source_code: Original source code
+            file_path: Path to file (optional, for JDT fallback)
 
         Returns:
             Dictionary with class information or None if parsing fails
         """
-        info = self._extract_class_info_javalang(tree, source_code)
-        if info:
-            return info
-
+        # 1. Try Tree-sitter (Primary)
         info = self._fallback_to_tree_sitter(source_code)
         if info:
             return info
 
+        # 2. Try javalang (Secondary)
+        # Lazily parse if tree not provided
+        if not tree:
+            tree = self.parse_file_content(source_code)
+            
+        info = self._extract_class_info_javalang(tree, source_code)
+        if info:
+            return info
+
+        # 3. Try JDT Inspector (Last Resort)
         if file_path:
             info = self._fallback_to_jdt_inspector(file_path)
             if info:
@@ -225,7 +255,7 @@ class JavaParser:
 
         return None
 
-    def _fallback_to_tree_sitter(self, source_code: str) -> Optional[Dict]:
+    def _fallback_to_tree_sitter(self, source_code: str) -> dict | None:
         if not self.ts_parser:
             return None
         try:
@@ -234,7 +264,7 @@ class JavaParser:
             self.logger.error(f"Tree-sitter extraction failed: {exc}")
             return None
 
-    def _fallback_to_jdt_inspector(self, file_path: str) -> Optional[Dict]:
+    def _fallback_to_jdt_inspector(self, file_path: str) -> dict | None:
         jar_path = self._get_inspector_jar()
         if not jar_path:
             return None
@@ -244,10 +274,10 @@ class JavaParser:
 
         try:
             result = subprocess.run(
-                ['java', '-cp', jar_path, 'com.genec.jdt.ClassInspector', '--file', file_path],
+                ["java", "-cp", jar_path, "com.genec.jdt.ClassInspector", "--file", file_path],
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
         except Exception as exc:
             self.logger.error(f"JDT ClassInspector failed: {exc}")
@@ -261,12 +291,12 @@ class JavaParser:
 
         return self._convert_inspector_payload(payload)
 
-    def _extract_class_info_tree_sitter(self, source_code: str) -> Optional[Dict]:
+    def _extract_class_info_tree_sitter(self, source_code: str) -> dict | None:
         """Extract class information using tree-sitter."""
         if not self.ts_parser:
             return None
 
-        source_bytes = source_code.encode('utf-8')
+        source_bytes = source_code.encode("utf-8")
         tree = self.ts_parser.parse(source_bytes)
         root = tree.root_node
 
@@ -290,7 +320,7 @@ class JavaParser:
         extends_name = self._node_text(extends_node, source_bytes) if extends_node else None
 
         implements_node = class_node.child_by_field_name("interfaces")
-        implements_list: List[str] = []
+        implements_list: list[str] = []
         if implements_node:
             for child in self._collect_descendants(implements_node, "type_identifier"):
                 text = self._node_text(child, source_bytes)
@@ -298,14 +328,14 @@ class JavaParser:
                     implements_list.append(text)
 
         class_info = {
-            'class_name': class_name,
-            'package_name': package_name,
-            'modifiers': self._collect_modifiers(class_node, source_bytes),
-            'extends': extends_name,
-            'implements': implements_list,
-            'methods': [],
-            'fields': [],
-            'constructors': []
+            "class_name": class_name,
+            "package_name": package_name,
+            "modifiers": self._collect_modifiers(class_node, source_bytes),
+            "extends": extends_name,
+            "implements": implements_list,
+            "methods": [],
+            "fields": [],
+            "constructors": [],
         }
 
         field_nodes = self._collect_descendants(class_node, "field_declaration")
@@ -324,62 +354,55 @@ class JavaParser:
                     name=field_name.strip(),
                     type=field_type.strip(),
                     modifiers=modifiers,
-                    line_number=line_number
+                    line_number=line_number,
                 )
-                class_info['fields'].append(parsed_field)
+                class_info["fields"].append(parsed_field)
 
         method_nodes = self._collect_descendants(class_node, "method_declaration")
         for method_node in method_nodes:
             parsed_method = self._build_parsed_method_from_ts(
-                method_node,
-                source_code,
-                source_bytes,
-                is_constructor=False
+                method_node, source_code, source_bytes, is_constructor=False
             )
             if parsed_method:
-                class_info['methods'].append(parsed_method)
+                class_info["methods"].append(parsed_method)
 
         constructor_nodes = self._collect_descendants(class_node, "constructor_declaration")
         for ctor_node in constructor_nodes:
             parsed_ctor = self._build_parsed_method_from_ts(
-                ctor_node,
-                source_code,
-                source_bytes,
-                is_constructor=True
+                ctor_node, source_code, source_bytes, is_constructor=True
             )
             if parsed_ctor:
-                class_info['constructors'].append(parsed_ctor)
+                class_info["constructors"].append(parsed_ctor)
 
         return class_info
 
     def _build_parsed_method_from_ts(
-        self,
-        node,
-        source_code: str,
-        source_bytes: bytes,
-        is_constructor: bool
-    ) -> Optional[ParsedMethod]:
+        self, node, source_code: str, source_bytes: bytes, is_constructor: bool
+    ) -> ParsedMethod | None:
         name_node = node.child_by_field_name("name")
         if name_node is None:
             return None
         method_name = self._node_text(name_node, source_bytes).strip()
 
         parameters = self._collect_parameters_from_ts(node, source_bytes)
-        signature = self._build_signature(method_name, parameters)
+        signature_name = "<init>" if is_constructor else method_name
+        signature = self._build_signature(signature_name, parameters)
 
-        return_type = ''
+        return_type = ""
         if not is_constructor:
             return_node = node.child_by_field_name("type")
             if return_node is None:
                 # Some grammars use 'return_type' field
                 return_node = node.child_by_field_name("return_type")
-            return_type = self._node_text(return_node, source_bytes).strip() if return_node else 'void'
+            return_type = (
+                self._node_text(return_node, source_bytes).strip() if return_node else "void"
+            )
 
         modifiers = self._collect_modifiers(node, source_bytes)
 
         start_line = node.start_point[0] + 1
         end_line = node.end_point[0] + 1
-        body_text = source_code[node.start_byte:node.end_byte]
+        body_text = source_code[node.start_byte : node.end_byte]
 
         return ParsedMethod(
             name=method_name,
@@ -390,47 +413,73 @@ class JavaParser:
             start_line=start_line,
             end_line=end_line,
             body=body_text,
-            is_constructor=is_constructor
+            is_constructor=is_constructor,
         )
 
-    def _collect_parameters_from_ts(self, node, source_bytes: bytes) -> List[Dict[str, str]]:
-        parameters: List[Dict[str, str]] = []
+    def _collect_parameters_from_ts(self, node, source_bytes: bytes) -> list[dict[str, str]]:
+        parameters: list[dict[str, str]] = []
         params_node = node.child_by_field_name("parameters")
         if not params_node:
             params_node = node.child_by_field_name("formal_parameters")
         if not params_node:
             return parameters
 
-        for param in self._collect_descendants(params_node, "formal_parameter"):
+        for param in params_node.named_children:
+            if param.type not in ("formal_parameter", "spread_parameter"):
+                continue
+
+
+            # self.logger.info(f"Param node text: {self._node_text(param, source_bytes)}")
             type_node = param.child_by_field_name("type")
             name_node = param.child_by_field_name("name")
+            
+            # Check for varargs (spread_parameter implies varargs)
+            is_varargs = param.type == "spread_parameter" or "..." in self._node_text(param, source_bytes)
+            
             if not name_node:
-                continue
+                # In spread_parameter, the name might be the child after '...'
+                # structure: ... type declarator
+                # or type ... declarator
+                # Let's try to find a variable_declarator or identifier
+                for child in param.named_children:
+                     if child.type == "identifier" and child != type_node:
+                         name_node = child
+                         break
+            
+            if not name_node:
+                 continue
+                
             param_type = self._node_text(type_node, source_bytes).strip() if type_node else ""
             if param_type:
-                param_type = re.sub(r'\s*\[\s*\]', '[]', param_type)
+                # Strip generics
+                param_type = re.sub(r"<.*>", "", param_type)
+                param_type = re.sub(r"\s*\[\s*\]", "[]", param_type)
+                if "..." in param_type:
+                    param_type = param_type.replace("...", "[]")
+            
+            # If varargs detected in node but not in type, append []
+            if is_varargs and "[]" not in param_type and not param_type.endswith("[]"):
+                 param_type += "[]"
+
             param_name = self._node_text(name_node, source_bytes).strip()
-            parameters.append({
-                'name': param_name,
-                'type': param_type
-            })
+            parameters.append({"name": param_name, "type": param_type})
         return parameters
 
-    def _collect_modifiers(self, node, source_bytes: bytes) -> List[str]:
-        modifiers: List[str] = []
+    def _collect_modifiers(self, node, source_bytes: bytes) -> list[str]:
+        modifiers: list[str] = []
         for child in node.children:
-            if child.type == 'modifiers':
+            if child.type == "modifiers":
                 for mod in child.children:
                     text = self._node_text(mod, source_bytes).strip()
                     if text:
                         modifiers.append(text)
-            elif child.type in {'modifier', 'annotation', 'marker_annotation'}:
+            elif child.type in {"modifier", "annotation", "marker_annotation"}:
                 text = self._node_text(child, source_bytes).strip()
                 if text:
                     modifiers.append(text)
         return modifiers
 
-    def _collect_descendants(self, node, target_type: str) -> List:
+    def _collect_descendants(self, node, target_type: str) -> list:
         result = []
         stack = [node]
         while stack:
@@ -452,18 +501,20 @@ class JavaParser:
     def _node_text(self, node, source_bytes: bytes) -> str:
         if node is None:
             return ""
-        return source_bytes[node.start_byte:node.end_byte].decode('utf-8')
+        return source_bytes[node.start_byte : node.end_byte].decode("utf-8")
 
-    def _find_jdt_wrapper(self) -> Optional[str]:
+    def _find_jdt_wrapper(self) -> str | None:
         project_root = Path(__file__).parent.parent.parent
-        
+
         candidates = [
             # Relative paths (legacy)
             "genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar",
             "genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0.jar",
-            
             # Absolute paths relative to project root
-            str(project_root / "genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar"),
+            str(
+                project_root
+                / "genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar"
+            ),
             str(project_root / "genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0.jar"),
             str(project_root / "lib/genec-jdt-wrapper.jar"),
         ]
@@ -472,63 +523,89 @@ class JavaParser:
                 return path
         return None
 
-    def _get_inspector_jar(self) -> Optional[str]:
+    def _get_inspector_jar(self) -> str | None:
         if self.inspector_jar_path and os.path.exists(self.inspector_jar_path):
             return self.inspector_jar_path
         jar_path = self._find_jdt_wrapper()
         self.inspector_jar_path = jar_path
         return jar_path
 
-    def _convert_inspector_payload(self, payload: Dict) -> Optional[Dict]:
+    def _convert_inspector_payload(self, payload: dict) -> dict | None:
         try:
             class_info = {
-                'class_name': payload.get('className', ''),
-                'package_name': payload.get('packageName', ''),
-                'modifiers': payload.get('modifiers', []),
-                'extends': payload.get('extends', None),
-                'implements': payload.get('implements', []),
-                'methods': [],
-                'fields': [],
-                'constructors': []
+                "class_name": payload.get("className", ""),
+                "package_name": payload.get("packageName", ""),
+                "modifiers": payload.get("modifiers", []),
+                "extends": payload.get("extends", None),
+                "implements": payload.get("implements", []),
+                "methods": [],
+                "fields": [],
+                "constructors": [],
             }
 
-            for field_data in payload.get('fields', []):
-                class_info['fields'].append(
+            for field_data in payload.get("fields", []):
+                class_info["fields"].append(
                     ParsedField(
-                        name=field_data.get('name', ''),
-                        type=field_data.get('type', ''),
-                        modifiers=field_data.get('modifiers', []),
-                        line_number=field_data.get('line', 0)
+                        name=field_data.get("name", ""),
+                        type=field_data.get("type", ""),
+                        modifiers=field_data.get("modifiers", []),
+                        line_number=field_data.get("line", 0),
                     )
                 )
 
-            for method_data in payload.get('methods', []):
-                class_info['methods'].append(
+            for method_data in payload.get("methods", []):
+                parameters = method_data.get("parameters", [])
+                cleaned_parameters = []
+                for p in parameters:
+                    p_type = p.get("type", "")
+                    # Strip generics: List<String> -> List
+                    p_type = re.sub(r"<.*>", "", p_type)
+                    # Handle varargs normalization again just in case
+                    if "..." in p_type:
+                        p_type = p_type.replace("...", "[]")
+                    cleaned_parameters.append({"name": p.get("name", ""), "type": p_type})
+
+                # Rebuild signature from cleaned parameters
+                method_name = method_data.get("name", "")
+                signature = self._build_signature(method_name, cleaned_parameters)
+                
+                class_info["methods"].append(
                     ParsedMethod(
-                        name=method_data.get('name', ''),
-                        signature=method_data.get('signature', ''),
-                        return_type=method_data.get('returnType', 'void'),
-                        modifiers=method_data.get('modifiers', []),
-                        parameters=method_data.get('parameters', []),
-                        start_line=method_data.get('startLine', 0),
-                        end_line=method_data.get('endLine', 0),
-                        body=method_data.get('body', ''),
-                        is_constructor=False
+                        name=method_name,
+                        signature=signature,
+                        return_type=method_data.get("returnType", "void"),
+                        modifiers=method_data.get("modifiers", []),
+                        parameters=cleaned_parameters,
+                        start_line=method_data.get("startLine", 0),
+                        end_line=method_data.get("endLine", 0),
+                        body=method_data.get("body", ""),
+                        is_constructor=False,
                     )
                 )
 
-            for ctor_data in payload.get('constructors', []):
-                class_info['constructors'].append(
+            for ctor_data in payload.get("constructors", []):
+                parameters = ctor_data.get("parameters", [])
+                cleaned_parameters = []
+                for p in parameters:
+                    p_type = p.get("type", "")
+                    p_type = re.sub(r"<.*>", "", p_type)
+                    if "..." in p_type:
+                        p_type = p_type.replace("...", "[]")
+                    cleaned_parameters.append({"name": p.get("name", ""), "type": p_type})
+
+                signature = self._build_signature("<init>", cleaned_parameters)
+                
+                class_info["constructors"].append(
                     ParsedMethod(
-                        name=ctor_data.get('name', ''),
-                        signature=ctor_data.get('signature', ''),
-                        return_type='',
-                        modifiers=ctor_data.get('modifiers', []),
-                        parameters=ctor_data.get('parameters', []),
-                        start_line=ctor_data.get('startLine', 0),
-                        end_line=ctor_data.get('endLine', 0),
-                        body=ctor_data.get('body', ''),
-                        is_constructor=True
+                        name=ctor_data.get("name", ""),
+                        signature=signature,
+                        return_type="",
+                        modifiers=ctor_data.get("modifiers", []),
+                        parameters=cleaned_parameters,
+                        start_line=ctor_data.get("startLine", 0),
+                        end_line=ctor_data.get("endLine", 0),
+                        body=ctor_data.get("body", ""),
+                        is_constructor=True,
                     )
                 )
 
@@ -537,7 +614,7 @@ class JavaParser:
             self.logger.error(f"Failed to convert inspector payload: {exc}")
             return None
 
-    def extract_method_calls(self, method_body: str) -> Set[str]:
+    def extract_method_calls(self, method_body: str) -> set[str]:
         """
         Extract method calls from method body.
 
@@ -570,7 +647,7 @@ class JavaParser:
             return ts_methods
 
         # Regex fallback as last resort
-        tokens = re.findall(r'\b[A-Za-z_][A-Za-z0-9_]*\s*(?=\()', method_body)
+        tokens = re.findall(r"\b[A-Za-z_][A-Za-z0-9_]*\s*(?=\()", method_body)
         return {
             token.strip()
             for token in tokens
@@ -579,7 +656,7 @@ class JavaParser:
 
         return called_methods
 
-    def extract_field_accesses(self, method_body: str) -> Set[str]:
+    def extract_field_accesses(self, method_body: str) -> set[str]:
         """
         Extract field accesses from method body.
 
@@ -610,23 +687,24 @@ class JavaParser:
             return ts_fields
 
         tokens = {
-            token for token in re.findall(r'\b[A-Za-z_][A-Za-z0-9_]*\b', method_body)
-            if token not in self._KEYWORD_BLACKLIST and token not in {'this', 'super'}
+            token
+            for token in re.findall(r"\b[A-Za-z_][A-Za-z0-9_]*\b", method_body)
+            if token not in self._KEYWORD_BLACKLIST and token not in {"this", "super"}
         }
         return tokens
 
-    def _extract_method_calls_tree_sitter(self, method_body: str) -> Set[str]:
+    def _extract_method_calls_tree_sitter(self, method_body: str) -> set[str]:
         """Tree-sitter fallback for extracting method calls."""
         if not self.ts_parser or not method_body.strip():
             return set()
 
         try:
             wrapped = f"class Dummy {{ void dummy() {{ {method_body} }} }}"
-            source_bytes = wrapped.encode('utf-8')
+            source_bytes = wrapped.encode("utf-8")
             tree = self.ts_parser.parse(source_bytes)
             root = tree.root_node
 
-            calls: Set[str] = set()
+            calls: set[str] = set()
             for node in self._collect_descendants(root, "method_invocation"):
                 name_node = node.child_by_field_name("name")
                 if name_node:
@@ -646,18 +724,18 @@ class JavaParser:
             self.logger.debug(f"Tree-sitter method call extraction failed: {exc}")
             return set()
 
-    def _extract_field_accesses_tree_sitter(self, method_body: str) -> Set[str]:
+    def _extract_field_accesses_tree_sitter(self, method_body: str) -> set[str]:
         """Tree-sitter fallback for extracting field accesses."""
         if not self.ts_parser or not method_body.strip():
             return set()
 
         try:
             wrapped = f"class Dummy {{ void dummy() {{ {method_body} }} }}"
-            source_bytes = wrapped.encode('utf-8')
+            source_bytes = wrapped.encode("utf-8")
             tree = self.ts_parser.parse(source_bytes)
             root = tree.root_node
 
-            fields: Set[str] = set()
+            fields: set[str] = set()
 
             for node in self._collect_descendants(root, "field_access"):
                 field_node = node.child_by_field_name("field")
@@ -668,7 +746,7 @@ class JavaParser:
 
             for node in self._collect_descendants(root, "identifier"):
                 name = self._node_text(node, source_bytes).strip()
-                if name and name not in {'this', 'super'}:
+                if name and name not in {"this", "super"}:
                     fields.add(name)
 
             return fields
@@ -678,17 +756,17 @@ class JavaParser:
 
     def _flatten_reference_type_name(self, type_ref) -> str:
         """Build fully qualified type name from a javalang reference."""
-        parts: List[str] = []
+        parts: list[str] = []
         current = type_ref
         while current is not None:
-            name = getattr(current, 'name', '')
-            qualifier = getattr(current, 'qualifier', None)
+            name = getattr(current, "name", "")
+            qualifier = getattr(current, "qualifier", None)
             if qualifier:
                 name = f"{qualifier}.{name}" if name else qualifier
             if name:
                 parts.append(name)
-            current = getattr(current, 'sub_type', None)
-        return '.'.join(parts) if parts else str(type_ref)
+            current = getattr(current, "sub_type", None)
+        return ".".join(parts) if parts else str(type_ref)
 
     def _get_type_name(self, type_ref) -> str:
         """Extract type name from type reference, preserving array dimensions."""
@@ -696,29 +774,29 @@ class JavaParser:
             return "void"
         if isinstance(type_ref, str):
             base_name = type_ref.strip()
-        elif hasattr(type_ref, 'name') or hasattr(type_ref, 'sub_type'):
+        elif hasattr(type_ref, "name") or hasattr(type_ref, "sub_type"):
             base_name = self._flatten_reference_type_name(type_ref)
-        elif hasattr(type_ref, 'type'):
+        elif hasattr(type_ref, "type"):
             base_name = self._get_type_name(type_ref.type)
         else:
             base_name = str(type_ref)
 
-        dimensions = getattr(type_ref, 'dimensions', None)
+        dimensions = getattr(type_ref, "dimensions", None)
         if dimensions:
             try:
                 dim_count = len(dimensions)
             except TypeError:
                 dim_count = 1
-            base_name += '[]' * dim_count
+            base_name += "[]" * dim_count
 
         return base_name
 
-    def _build_signature(self, method_name: str, parameters: List[Dict[str, str]]) -> str:
+    def _build_signature(self, method_name: str, parameters: list[dict[str, str]]) -> str:
         """Build method signature string."""
-        param_types = [p['type'] for p in parameters]
+        param_types = [p["type"] for p in parameters]
         return f"{method_name}({','.join(param_types)})"
 
-    def _find_method_end_line(self, source_lines: List[str], start_line: int) -> int:
+    def _find_method_end_line(self, source_lines: list[str], start_line: int) -> int:
         """
         Find the end line of a method by counting braces.
 
@@ -736,10 +814,10 @@ class JavaParser:
             line = source_lines[i]
 
             for char in line:
-                if char == '{':
+                if char == "{":
                     brace_count += 1
                     in_method = True
-                elif char == '}':
+                elif char == "}":
                     brace_count -= 1
                     if in_method and brace_count == 0:
                         return i + 1

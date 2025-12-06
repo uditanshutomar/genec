@@ -54,7 +54,7 @@ class BuildToolAdapter(ABC):
         pass
 
     @abstractmethod
-    def run_all_tests(self, timeout_seconds: int = 1800) -> subprocess.CompletedProcess:
+    def run_all_tests(self, timeout_seconds: int = 300) -> subprocess.CompletedProcess:  # 5 minutes
         """Run all tests in the project."""
         pass
 
@@ -63,7 +63,7 @@ class MavenAdapter(BuildToolAdapter):
     """Adapter for Maven projects."""
 
     def run_tests(
-        self, test_selection: TestSelection, timeout_seconds: int = 1800
+        self, test_selection: TestSelection, timeout_seconds: int = 300  # 5 minutes
     ) -> subprocess.CompletedProcess:
         """Run selective tests with Maven."""
         if test_selection.strategy == DiscoveryStrategy.FULL_SUITE:
@@ -94,7 +94,7 @@ class MavenAdapter(BuildToolAdapter):
             self.logger.error(f"Maven tests timed out after {timeout_seconds}s")
             raise
 
-    def run_all_tests(self, timeout_seconds: int = 1800) -> subprocess.CompletedProcess:
+    def run_all_tests(self, timeout_seconds: int = 300) -> subprocess.CompletedProcess:  # 5 minutes
         """Run all Maven tests."""
         command = ["mvn", "test", "-q", "-Drat.skip=true"]  # Skip Apache RAT license checks
 
@@ -167,7 +167,7 @@ class GradleAdapter(BuildToolAdapter):
     """Adapter for Gradle projects."""
 
     def run_tests(
-        self, test_selection: TestSelection, timeout_seconds: int = 1800
+        self, test_selection: TestSelection, timeout_seconds: int = 300  # 5 minutes
     ) -> subprocess.CompletedProcess:
         """Run selective tests with Gradle."""
         if test_selection.strategy == DiscoveryStrategy.FULL_SUITE:
@@ -194,7 +194,7 @@ class GradleAdapter(BuildToolAdapter):
             self.logger.error(f"Gradle tests timed out after {timeout_seconds}s")
             raise
 
-    def run_all_tests(self, timeout_seconds: int = 1800) -> subprocess.CompletedProcess:
+    def run_all_tests(self, timeout_seconds: int = 300) -> subprocess.CompletedProcess:  # 5 minutes
         """Run all Gradle tests."""
         gradle_cmd = "./gradlew" if (self.repo_path / "gradlew").exists() else "gradle"
         command = [gradle_cmd, "test", "-q"]
@@ -263,7 +263,7 @@ class AntAdapter(BuildToolAdapter):
     """Adapter for Ant projects."""
 
     def run_tests(
-        self, test_selection: TestSelection, timeout_seconds: int = 1800
+        self, test_selection: TestSelection, timeout_seconds: int = 300  # 5 minutes
     ) -> subprocess.CompletedProcess:
         """Run tests with Ant."""
         # Ant doesn't have good selective test support
@@ -271,7 +271,7 @@ class AntAdapter(BuildToolAdapter):
         self.logger.warning("Ant doesn't support selective testing well. Running all tests.")
         return self.run_all_tests(timeout_seconds)
 
-    def run_all_tests(self, timeout_seconds: int = 1800) -> subprocess.CompletedProcess:
+    def run_all_tests(self, timeout_seconds: int = 300) -> subprocess.CompletedProcess:  # 5 minutes
         """Run all Ant tests."""
         command = ["ant", "test"]
 
@@ -314,9 +314,7 @@ def detect_build_tool(repo_path: str) -> BuildTool:
     return BuildTool.UNKNOWN
 
 
-def create_build_adapter(
-    repo_path: str, build_tool: BuildTool | None = None
-) -> BuildToolAdapter:
+def create_build_adapter(repo_path: str, build_tool: BuildTool | None = None) -> BuildToolAdapter:
     """
     Create appropriate build tool adapter.
 

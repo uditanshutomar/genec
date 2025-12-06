@@ -68,6 +68,7 @@ class EvolutionaryMiner:
         min_coupling_threshold: float = 0.3,
         max_changeset_size: int = 30,
         min_revisions: int = 5,
+        prefer_spoon: bool = False,
     ):
         """
         Initialize the evolutionary miner.
@@ -77,9 +78,12 @@ class EvolutionaryMiner:
             min_coupling_threshold: Minimum coupling threshold (default 0.3 like Code-Maat)
             max_changeset_size: Maximum changeset size to avoid refactoring noise (default 30)
             min_revisions: Minimum revisions required for method (default 5)
+            prefer_spoon: Whether to prefer Spoon (JVM) over lightweight parser (default: False)
         """
         # Use hybrid analyzer (Spoon + JavaParser fallback)
-        self.dependency_analyzer = HybridDependencyAnalyzer()
+        # For mining, we prefer the lightweight parser (JavaParser/Regex) because spawning
+        # a JVM for every commit is too slow and resource-intensive.
+        self.dependency_analyzer = HybridDependencyAnalyzer(prefer_spoon=prefer_spoon)
         # Keep JavaParser for legacy fallback in simple parsing
         self.parser = JavaParser()
         self.logger = get_logger(self.__class__.__name__)
@@ -483,11 +487,20 @@ class EvolutionaryMiner:
         # Strategy: Find the last word (parameter name) and take everything before it
         # But we need to handle generics carefully
 
+        # Check for varargs
+        is_varargs = False
+        if "..." in param:
+            is_varargs = True
+            param = param.replace("...", "")
+
         # Find the last occurrence of a simple identifier (after any closing >)
         # Match: type (possibly with generics) followed by parameter name
         match = re.match(r"^([\w.<>[\]]+(?:<[^>]+>)?)\s+(\w+)$", param)
         if match:
-            return match.group(1)
+            type_name = match.group(1)
+            if is_varargs:
+                type_name += "[]"
+            return type_name
 
         # If no match, try a more flexible approach
         # Look for pattern: type_with_possible_generics whitespace param_name
@@ -506,9 +519,14 @@ class EvolutionaryMiner:
                 break
 
         if last_space_idx > 0:
-            return param[:last_space_idx].strip()
+            type_name = param[:last_space_idx].strip()
+            if is_varargs:
+                type_name += "[]"
+            return type_name
 
         # No space found, might be just a type
+        if is_varargs:
+            param += "[]"
         return param
 
     def _normalize_generic_type(self, type_str: str) -> str:

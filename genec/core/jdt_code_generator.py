@@ -157,6 +157,31 @@ class JDTCodeGenerator:
             fields = self._infer_fields(cluster, class_deps)
             self.logger.info(f"Inferred fields: {fields}")
 
+        if not methods:
+            raise CodeGenerationError(
+                "JDT extraction requires at least one method. "
+                f"Cluster {cluster.id} has {len(fields)} fields but 0 methods. "
+                "Field-only extraction is not currently supported."
+            )
+
+        # Validate inputs
+        if not new_class_name or not new_class_name.isidentifier():
+            raise CodeGenerationError(f"Invalid new class name: '{new_class_name}'")
+
+        # Filter and validate methods
+        valid_methods = [m for m in methods if m and isinstance(m, str) and m.strip()]
+        if len(valid_methods) != len(methods):
+            self.logger.warning(
+                f"Filtered out {len(methods) - len(valid_methods)} invalid/empty method signatures"
+            )
+        methods = valid_methods
+
+        if not methods:
+            raise CodeGenerationError(
+                "JDT extraction requires at least one valid method signature. "
+                f"Cluster {cluster.id} has {len(fields)} fields but 0 valid methods."
+            )
+
         # Build refactoring specification
         spec = {
             "projectPath": repo_path,

@@ -130,11 +130,18 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
             return;
         }
 
+        // Use OS temp directory to avoid polluting project
+        const os = require('os');
+        const tempDir = os.tmpdir();
+        const tempModifiedPath = path.join(tempDir, `genec_preview_${path.basename(this._targetFilePath)}`);
+        const tempNewClassPath = path.join(tempDir, `genec_preview_${suggestion.name}.java`);
+
+        // Track temp files for cleanup
+        const tempFiles: string[] = [tempModifiedPath, tempNewClassPath];
+
         try {
             // Create temp file for modified original
             const originalUri = vscode.Uri.file(this._targetFilePath);
-            const tempDir = path.dirname(this._targetFilePath); // Or use OS temp dir
-            const tempModifiedPath = path.join(tempDir, `_preview_${path.basename(this._targetFilePath)}`);
 
             // Write modified content to temp file
             fs.writeFileSync(tempModifiedPath, suggestion.modified_original_code, 'utf8');
@@ -148,13 +155,30 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
             );
 
             // Open new class in a new tab (read-only if possible, or just a file)
-            const tempNewClassPath = path.join(tempDir, `_preview_${suggestion.name}.java`);
             fs.writeFileSync(tempNewClassPath, suggestion.new_class_code, 'utf8');
             const newClassDoc = await vscode.workspace.openTextDocument(tempNewClassPath);
             await vscode.window.showTextDocument(newClassDoc, { viewColumn: vscode.ViewColumn.Beside, preview: true });
 
+            // Schedule cleanup when tabs are closed (fire and forget)
+            setTimeout(() => {
+                for (const tempFile of tempFiles) {
+                    try {
+                        if (fs.existsSync(tempFile)) {
+                            fs.unlinkSync(tempFile);
+                            this._outputChannel.appendLine(`[CLEANUP] Removed temp file: ${tempFile}`);
+                        }
+                    } catch (e) {
+                        // Ignore cleanup errors
+                    }
+                }
+            }, 60000); // Cleanup after 1 minute
+
         } catch (e: any) {
             vscode.window.showErrorMessage(`Failed to preview refactoring: ${e.message}`);
+            // Immediate cleanup on error
+            for (const tempFile of tempFiles) {
+                try { fs.unlinkSync(tempFile); } catch (e) { /* ignore */ }
+            }
         }
     }
 
@@ -248,7 +272,30 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
 
     private _stopRefactoring() {
         if (this._currentProcess) {
-            this._currentProcess.kill();
+            this._outputChannel.appendLine('[USER] Stop requested, sending SIGINT...');
+
+            // Graceful shutdown chain: SIGINT -> SIGTERM -> SIGKILL
+            // SIGINT allows Python to run cleanup handlers
+            this._currentProcess.kill('SIGINT');
+
+            const process = this._currentProcess;
+
+            // If still running after 3s, escalate to SIGTERM
+            setTimeout(() => {
+                if (process && !process.killed) {
+                    this._outputChannel.appendLine('[USER] Process still running, sending SIGTERM...');
+                    process.kill('SIGTERM');
+                }
+            }, 3000);
+
+            // If still running after 6s, force kill
+            setTimeout(() => {
+                if (process && !process.killed) {
+                    this._outputChannel.appendLine('[USER] Force killing process with SIGKILL...');
+                    process.kill('SIGKILL');
+                }
+            }, 6000);
+
             this._currentProcess = undefined;
             if (this._view) {
                 this._view.webview.postMessage({ type: 'status', value: 'Refactoring stopped by user.' });
@@ -419,6 +466,10 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
             this._outputChannel.appendLine('------------------------');
 
             const output = await new Promise<string>((resolve, reject) => {
+                // Timeout: 10 minutes max (prevents hanging forever)
+                const TIMEOUT_MS = 10 * 60 * 1000;
+                let timeoutId: NodeJS.Timeout | undefined;
+
                 this._currentProcess = cp.spawn(pythonPath, args, {
                     cwd: repoPath,
                     env: env
@@ -426,6 +477,22 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
 
                 let stdout = '';
                 let stderr = '';
+
+                // Set up timeout
+                timeoutId = setTimeout(() => {
+                    if (this._currentProcess) {
+                        this._outputChannel.appendLine('[TIMEOUT] Process exceeded 10 minute limit, terminating...');
+                        this._view?.webview.postMessage({ type: 'status', value: 'Timeout: killing process...' });
+
+                        // Graceful shutdown: SIGTERM first, then SIGKILL after 5s
+                        this._currentProcess.kill('SIGTERM');
+                        setTimeout(() => {
+                            if (this._currentProcess) {
+                                this._currentProcess.kill('SIGKILL');
+                            }
+                        }, 5000);
+                    }
+                }, TIMEOUT_MS);
 
                 this._currentProcess.stdout?.on('data', (data) => {
                     const dataStr = data.toString();
@@ -451,6 +518,10 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                 });
 
                 this._currentProcess.on('close', (code) => {
+                    // Clear timeout on close
+                    if (timeoutId) {
+                        clearTimeout(timeoutId);
+                    }
                     this._currentProcess = undefined;
                     this._outputChannel.appendLine(`Process exited with code: ${code}`);
 
@@ -463,6 +534,14 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                         // Send the actual stderr as the error message
                         reject(new Error(stderr || `GenEC failed with code ${code}`));
                     }
+                });
+
+                this._currentProcess.on('error', (err) => {
+                    if (timeoutId) {
+                        clearTimeout(timeoutId);
+                    }
+                    this._outputChannel.appendLine(`[ERROR] Process error: ${err.message}`);
+                    reject(new Error(`Failed to start GenEC: ${err.message}`));
                 });
             });
 
@@ -905,7 +984,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                     if (data.summary) {
                         resultsDiv.innerHTML = data.summary;
                         resultsDiv.innerHTML += '<hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--vscode-widget-border);">';
-                        
+
                         // Add click handlers for file links in the summary
                         resultsDiv.querySelectorAll('.file-link').forEach(link => {
                             link.addEventListener('click', (e) => {
@@ -930,7 +1009,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                                     // Handle both full path and basename just in case, usually suggestion.name is simple class name
                                     return filePath.split(/[/\\]/).pop().replace('.java', '');
                                 }));
-                            
+
                             suggestions = suggestions.filter(s => !appliedNames.has(s.name));
                         }
 
@@ -938,23 +1017,23 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                         const shouldSuggestions = suggestions.filter(s => s.quality_tier === 'should');
                         const couldSuggestions = suggestions.filter(s => s.quality_tier === 'could');
                         const potentialSuggestions = suggestions.filter(s => s.quality_tier === 'potential');
-                        
+
                         // Helper function to create tier section
                         const createTierSection = (title, emoji, suggestions, tierClass) => {
                             if (suggestions.length === 0) return;
-                            
+
                             const sectionHeader = document.createElement('h3');
                             sectionHeader.style.marginTop = '20px';
                             sectionHeader.style.marginBottom = '10px';
                             // Removed emoji from display as requested
                             sectionHeader.innerHTML = title + ' (' + suggestions.length + ')';
                             resultsDiv.appendChild(sectionHeader);
-                            
+
                             suggestions.forEach((suggestion, index) => {
                                 const div = document.createElement('div');
                                 div.className = 'result-item ' + tierClass;
-                                div.style.borderLeft = tierClass === 'tier-should' ? '4px solid #4CAF50' : 
-                                                       tierClass === 'tier-could' ? '4px solid #FF9800' : 
+                                div.style.borderLeft = tierClass === 'tier-should' ? '4px solid #4CAF50' :
+                                                       tierClass === 'tier-could' ? '4px solid #FF9800' :
                                                        '4px solid #9E9E9E';
                                 div.style.paddingLeft = '12px';
 
@@ -964,11 +1043,11 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                                 nameDiv.style.display = 'flex';
                                 nameDiv.style.alignItems = 'center';
                                 nameDiv.style.gap = '10px';
-                                
+
                                 const nameSpan = document.createElement('span');
                                 nameSpan.textContent = suggestion.name;
                                 nameDiv.appendChild(nameSpan);
-                                
+
                                 // Quality score badge
                                 if (suggestion.quality_score !== undefined) {
                                     const scoreBadge = document.createElement('span');
@@ -976,14 +1055,14 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                                     scoreBadge.style.borderRadius = '12px';
                                     scoreBadge.style.fontSize = '11px';
                                     scoreBadge.style.fontWeight = 'bold';
-                                    scoreBadge.style.background = tierClass === 'tier-should' ? '#4CAF50' : 
-                                                                   tierClass === 'tier-could' ? '#FF9800' : 
+                                    scoreBadge.style.background = tierClass === 'tier-should' ? '#4CAF50' :
+                                                                   tierClass === 'tier-could' ? '#FF9800' :
                                                                    '#9E9E9E';
                                     scoreBadge.style.color = 'white';
                                     scoreBadge.textContent = Math.round(suggestion.quality_score) + '/100';
                                     nameDiv.appendChild(scoreBadge);
                                 }
-                                
+
                                 if (suggestion.verified) {
                                     const verifiedSpan = document.createElement('span');
                                     verifiedSpan.className = 'verified';
@@ -1037,7 +1116,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                                 resultsDiv.appendChild(div);
                             });
                         };
-                        
+
                         // Display suggestions by tier with descriptions
                         if (shouldSuggestions.length > 0) {
                             const shouldDesc = document.createElement('p');
@@ -1049,7 +1128,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                             resultsDiv.appendChild(shouldDesc);
                         }
                         createTierSection('SHOULD Refactor (Auto-Applied)', '', shouldSuggestions, 'tier-should');
-                        
+
                         if (couldSuggestions.length > 0) {
                             const couldDesc = document.createElement('p');
                             couldDesc.style.fontSize = '12px';
@@ -1060,7 +1139,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                             resultsDiv.appendChild(couldDesc);
                         }
                         createTierSection('COULD Refactor', '', couldSuggestions, 'tier-could');
-                        
+
                         if (potentialSuggestions.length > 0) {
                             const potentialDesc = document.createElement('p');
                             potentialDesc.style.fontSize = '12px';
@@ -1071,7 +1150,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                             resultsDiv.appendChild(potentialDesc);
                         }
                         createTierSection('POTENTIAL Refactoring', '', potentialSuggestions, 'tier-potential');
-                        
+
                     } else {
                         // Fallback: Show detected clusters if no suggestions
                         if (data.clusters && data.clusters.length > 0) {

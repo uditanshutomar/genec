@@ -85,11 +85,13 @@ class BehavioralVerifier:
                 # Step 3: Create marker file for crash recovery
                 marker_file.write_text(original_class_file, encoding="utf-8")
 
-                # Step 4: Backup the original file
+                # Step 4: Backup the original file with mtime for safety
                 original_path = repo / original_class_file
+                backup_mtime: dict[Path, float] = {}  # Track original mtimes
                 if original_path.exists():
                     backup_data[original_path] = original_path.read_text(encoding="utf-8")
-                    self.logger.debug(f"Backed up: {original_path}")
+                    backup_mtime[original_path] = original_path.stat().st_mtime
+                    self.logger.debug(f"Backed up: {original_path} (mtime: {backup_mtime[original_path]})")
 
                 # Step 5: Apply refactoring IN-PLACE
                 self.logger.info("Applying refactoring in-place")

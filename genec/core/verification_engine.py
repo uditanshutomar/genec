@@ -124,9 +124,12 @@ class VerificationEngine:
         if self.enable_equivalence:
             self.logger.info("Layer 0: Equivalence Checking (Behavioral Preservation)")
 
-            # Build refactored files dict
+            # Build refactored files dict (use os.path.join for cross-platform)
+            import os
+            package_path = class_deps.package_name.replace('.', os.sep)
+            new_class_path = os.path.join("src", "main", "java", package_path, f"{suggestion.proposed_class_name}.java")
             refactored_files = {
-                f"src/main/java/{class_deps.package_name.replace('.', '/')}/{suggestion.proposed_class_name}.java": suggestion.new_class_code,
+                new_class_path: suggestion.new_class_code,
                 original_class_file: suggestion.modified_original_code,
             }
 

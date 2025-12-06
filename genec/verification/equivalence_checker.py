@@ -6,6 +6,7 @@ refactored code produces identical outputs to the original code.
 """
 
 import subprocess
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -14,6 +15,10 @@ from genec.core.llm_interface import RefactoringSuggestion
 from genec.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
+
+# Module-level lock for serializing equivalence checking
+# Prevents concurrent modifications to the same files
+_equivalence_lock = threading.Lock()
 
 
 @dataclass
@@ -93,77 +98,79 @@ class EquivalenceChecker:
         """
         self.logger.info(f"Checking equivalence for {suggestion.proposed_class_name}")
 
-        try:
-            # Step 1: Discover tests
-            tests = self._discover_tests(original_class_file, repo_path)
+        # Serialize equivalence checking to prevent concurrent file modifications
+        with _equivalence_lock:
+            try:
+                # Step 1: Discover tests
+                tests = self._discover_tests(original_class_file, repo_path)
 
-            if not tests:
-                self.logger.warning("No tests found for class, cannot verify equivalence")
+                if not tests:
+                    self.logger.warning("No tests found for class, cannot verify equivalence")
+                    return EquivalenceResult(
+                        is_equivalent=True,  # Assume OK if no tests
+                        tests_run=0,
+                        tests_passed_original=0,
+                        tests_passed_refactored=0,
+                        differing_tests=[],
+                        error_message="No tests found",
+                    )
+
+                self.logger.info(f"Found {len(tests)} tests to run")
+
+                # Step 2: Run tests on original code
+                self.logger.info("Running tests on original code...")
+                original_results = self._run_tests(tests, repo_path, is_original=True)
+
+                # Step 3: Apply refactoring temporarily
+                self.logger.info("Applying refactoring...")
+                backup_files = self._backup_and_apply_refactoring(
+                    original_class_file, refactored_files, repo_path
+                )
+
+                try:
+                    # Step 4: Run tests on refactored code
+                    self.logger.info("Running tests on refactored code...")
+                    refactored_results = self._run_tests(tests, repo_path, is_original=False)
+
+                    # Step 5: Compare results
+                    is_equivalent, differing = self._compare_test_results(
+                        original_results, refactored_results
+                    )
+
+                    original_passed = sum(1 for r in original_results.values() if r.passed)
+                    refactored_passed = sum(1 for r in refactored_results.values() if r.passed)
+
+                    result = EquivalenceResult(
+                        is_equivalent=is_equivalent,
+                        tests_run=len(tests),
+                        tests_passed_original=original_passed,
+                        tests_passed_refactored=refactored_passed,
+                        differing_tests=differing,
+                    )
+
+                    if is_equivalent:
+                        self.logger.info("✓ Behavioral equivalence verified")
+                    else:
+                        self.logger.warning(
+                            f"✗ Behavioral differences detected in {len(differing)} tests"
+                        )
+
+                    return result
+
+                finally:
+                    # Step 6: Restore original files
+                    self._restore_backup(backup_files, repo_path)
+
+            except Exception as e:
+                self.logger.error(f"Equivalence checking failed: {e}", exc_info=True)
                 return EquivalenceResult(
-                    is_equivalent=True,  # Assume OK if no tests
+                    is_equivalent=False,
                     tests_run=0,
                     tests_passed_original=0,
                     tests_passed_refactored=0,
                     differing_tests=[],
-                    error_message="No tests found",
+                    error_message=str(e),
                 )
-
-            self.logger.info(f"Found {len(tests)} tests to run")
-
-            # Step 2: Run tests on original code
-            self.logger.info("Running tests on original code...")
-            original_results = self._run_tests(tests, repo_path, is_original=True)
-
-            # Step 3: Apply refactoring temporarily
-            self.logger.info("Applying refactoring...")
-            backup_files = self._backup_and_apply_refactoring(
-                original_class_file, refactored_files, repo_path
-            )
-
-            try:
-                # Step 4: Run tests on refactored code
-                self.logger.info("Running tests on refactored code...")
-                refactored_results = self._run_tests(tests, repo_path, is_original=False)
-
-                # Step 5: Compare results
-                is_equivalent, differing = self._compare_test_results(
-                    original_results, refactored_results
-                )
-
-                original_passed = sum(1 for r in original_results.values() if r.passed)
-                refactored_passed = sum(1 for r in refactored_results.values() if r.passed)
-
-                result = EquivalenceResult(
-                    is_equivalent=is_equivalent,
-                    tests_run=len(tests),
-                    tests_passed_original=original_passed,
-                    tests_passed_refactored=refactored_passed,
-                    differing_tests=differing,
-                )
-
-                if is_equivalent:
-                    self.logger.info("✓ Behavioral equivalence verified")
-                else:
-                    self.logger.warning(
-                        f"✗ Behavioral differences detected in {len(differing)} tests"
-                    )
-
-                return result
-
-            finally:
-                # Step 6: Restore original files
-                self._restore_backup(backup_files, repo_path)
-
-        except Exception as e:
-            self.logger.error(f"Equivalence checking failed: {e}", exc_info=True)
-            return EquivalenceResult(
-                is_equivalent=False,
-                tests_run=0,
-                tests_passed_original=0,
-                tests_passed_refactored=0,
-                differing_tests=[],
-                error_message=str(e),
-            )
 
     def _discover_tests(self, class_file: str, repo_path: str) -> list[str]:
         """

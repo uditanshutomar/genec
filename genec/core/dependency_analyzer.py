@@ -101,15 +101,8 @@ class DependencyAnalyzer:
             self.logger.error(f"Failed to read {class_file}: {e}")
             return None
 
-        # Parse AST
-        tree = self.parser.parse_file(class_file)
-        if not tree:
-            self.logger.warning(
-                f"Primary parser failed for {class_file}; attempting tree-sitter fallback."
-            )
-
-        # Extract class information
-        class_info = self.parser.extract_class_info(tree, source_code, class_file)
+        # Extract class information (parser will handle priority and lazy parsing)
+        class_info = self.parser.extract_class_info(None, source_code, class_file)
         if not class_info:
             self.logger.error(f"Failed to extract class info from {class_file}")
             return None
