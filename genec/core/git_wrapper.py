@@ -74,9 +74,17 @@ class GitWrapper:
                 is_repo=False, current_branch="", has_uncommitted_changes=False, is_clean=True
             )
 
+        try:
+            if self.repo.head.is_detached:
+                current_branch = f"HEAD detached at {self.repo.head.commit.hexsha[:7]}"
+            else:
+                current_branch = self.repo.active_branch.name
+        except Exception:
+            current_branch = "unknown"
+
         return GitStatus(
             is_repo=True,
-            current_branch=self.repo.active_branch.name,
+            current_branch=current_branch,
             has_uncommitted_changes=self.repo.is_dirty(),
             is_clean=not self.repo.is_dirty(),
         )

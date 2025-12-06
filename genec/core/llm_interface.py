@@ -23,45 +23,7 @@ except ImportError:
 
 logger = get_logger(__name__)
 
-# Few-shot example for Extract Class refactoring (2024 best practice)
-EXTRACT_CLASS_EXAMPLE = """
-<example>
-<cluster_members>
-Methods:
-  - public boolean validateEmail(String email)
-    Description: Checks if email format is valid using regex pattern.
-  - public boolean validatePhone(String phone)
-    Description: Validates phone number format.
-  - public boolean validateAddress(String address)
-    Description: Checks if address contains required components.
-Fields:
-  - EMAIL_PATTERN
-  - PHONE_PATTERN
-</cluster_members>
-
-<reasoning>
-Step 1: Primary Responsibility Analysis
-These methods share a common responsibility: input validation. They validate different types of user input (email, phone, address) using pattern matching.
-
-Step 2: Shared Concept/Domain
-All methods belong to the "validation" domain. They share validation patterns and have no business logic beyond checking format correctness.
-
-Step 3: Extraction Benefits
-- Improves Single Responsibility Principle: Validation logic is isolated
-- Enhances Reusability: Validator can be used by multiple classes
-- Reduces Complexity: Original class becomes simpler and more focused
-
-Step 4: Design Justification
-Follows the Extract Class refactoring pattern to separate validation concerns. The new class will have high cohesion (all methods validate input) and low coupling (minimal dependencies on other classes).
-</reasoning>
-
-<class_name>InputValidator</class_name>
-
-<rationale>
-These methods form a cohesive validation unit that should be extracted into an InputValidator class. They share validation patterns, have a single clear responsibility (input validation), and are frequently reused together. Extracting them improves code organization by separating validation concerns from business logic.
-</rationale>
-</example>
-"""
+# Few-shot examples are now imported from genec.core.prompts
 
 
 @dataclass
@@ -196,7 +158,7 @@ class LLMInterface:
         # Generate cache key from cluster methods and class name
         import hashlib
 
-        cache_key_data = f"{class_deps.class_name}:{sorted(cluster.methods)}"
+        cache_key_data = f"{class_deps.class_name}:{sorted(cluster.get_methods())}"
         cache_key = hashlib.md5(cache_key_data.encode()).hexdigest()
 
         # Check cache first - avoid re-processing same clusters on retry
@@ -372,33 +334,19 @@ class LLMInterface:
         self.logger.info(f"Initial suggestion: {suggestion_v1.proposed_class_name}")
 
         # Round 2: Critique and refine
-        critique_prompt = f"""Review this Extract Class refactoring suggestion:
+        from genec.core.prompts import CRITIQUE_PROMPT_TEMPLATE
 
-**Proposed Class Name:** {suggestion_v1.proposed_class_name}
+        cluster_members = "\n".join(
+            [f"- {m}" for m in cluster.get_methods()[:10]]
+        )  # Limit to 10 for brevity
+        if len(cluster.get_methods()) > 10:
+            cluster_members += f"\n... and {len(cluster.get_methods()) - 10} more"
 
-**Rationale:** {suggestion_v1.rationale}
-
-**Cluster Members:**
-{', '.join(cluster.get_methods()[:5])}{'...' if len(cluster.get_methods()) > 5 else ''}
-
-**Critique:**
-1. Does the class name clearly convey single responsibility?
-2. Is the rationale convincing and based on design principles?
-3. Are there alternative names that might be clearer?
-4. Any improvements needed?
-
-**If improvements are needed**, provide a **refined** suggestion:
-
-<class_name>RefinedClassName</class_name>
-
-<rationale>
-Improved rationale.
-</rationale>
-
-<confidence>0-1 score</confidence>
-
-If the original is already optimal, respond with the same suggestion and confidence 0.95+.
-"""
+        critique_prompt = CRITIQUE_PROMPT_TEMPLATE.format(
+            class_name=suggestion_v1.proposed_class_name,
+            rationale=suggestion_v1.rationale,
+            cluster_members=cluster_members,
+        )
 
         response_v2 = self._call_claude(critique_prompt)
         if not response_v2:
@@ -434,6 +382,12 @@ If the original is already optimal, respond with the same suggestion and confide
         Optimized for JDT-based generation: sends only signatures and fields
         to minimize token usage while still allowing for accurate naming.
         """
+        from genec.core.prompts import (
+            FEW_SHOT_EXAMPLES,
+            MAIN_PROMPT_TEMPLATE,
+            SYSTEM_PROMPT,
+        )
+
         methods = cluster.get_methods()
         fields = cluster.get_fields()
 
@@ -461,81 +415,11 @@ If the original is already optimal, respond with the same suggestion and confide
         # Format evolutionary context
         evo_context = self._format_evolutionary_context(cluster, evo_data) if evo_data else ""
 
-        # Enhanced prompt with 2024 best practices:
-        # - Few-shot example (1-shot learning)
-        # - Chain-of-thought reasoning
-        # - Explicit refactoring subcategories
-        # - Hallucination prevention
-        prompt = f"""You are a software refactoring expert specializing in the Extract Class refactoring pattern.
+        # Use the new template from prompts.py
+        # Prepend the system prompt to the main prompt for context
+        full_prompt = f"{SYSTEM_PROMPT}\n\n{MAIN_PROMPT_TEMPLATE.format(few_shot_examples=FEW_SHOT_EXAMPLES, context_str=context_str, evo_context=evo_context)}"
 
-**Context:** I have identified a cluster of cohesive methods and fields that should be extracted from a large class to improve code quality.
-
-**Refactoring Type:** Extract Class
-**Goal:** Create a new class with high cohesion and low coupling that encapsulates a single, well-defined responsibility.
-
-===== FEW-SHOT EXAMPLE =====
-{EXTRACT_CLASS_EXAMPLE}
-
-===== YOUR TASK =====
-
-**Cluster Members (Signatures & Context):**
-{context_str}
-
-{evo_context}
-
-**Instructions:**
-Before suggesting a class name, please think step-by-step using the following chain-of-thought reasoning:
-
-1. **Primary Responsibility Analysis**: What is the main responsibility shared by these methods? What do they collectively accomplish?
-
-2. **Shared Concept/Domain**: What domain concept or abstraction do these members represent? Are they part of a cohesive subsystem?
-
-3. **Extraction Benefits**: How will extracting these members improve the original class? Consider:
-   - Single Responsibility Principle
-   - Code reusability
-   - Complexity reduction
-   - Testability
-
-4. **Design Justification**: Which object-oriented principle or design pattern supports this extraction?
-
-After your step-by-step analysis, provide:
-- A descriptive Java class name (UpperCamelCase, noun describing single responsibility)
-- A concise rationale (2-3 sentences) explaining why these members belong together
-
-**Quality Guidelines:**
-- Class name must be a valid Java identifier (letters, digits, underscores only)
-- Class name should clearly convey the single responsibility
-- Avoid generic names like "Helper" or "Util" unless truly appropriate
-- Rationale should reference cohesion, coupling, or design principles
-
-**Output Format:**
-Provide your response in the following XML format:
-
-<reasoning>
-Step 1: Primary Responsibility Analysis
-[Your analysis here]
-
-Step 2: Shared Concept/Domain
-[Your analysis here]
-
-Step 3: Extraction Benefits
-[Your analysis here]
-
-Step 4: Design Justification
-[Your analysis here]
-</reasoning>
-
-<class_name>ProposedClassName</class_name>
-
-<rationale>
-Your 2-3 sentence explanation here.
-</rationale>
-
-<confidence>0.85</confidence>  # Rate your confidence (0.0-1.0) in this suggestion
-
-**Important:** Provide ONLY the XML tags specified above. Do not include code generation."""
-
-        return prompt
+        return full_prompt
 
     def _call_claude(self, prompt: str) -> str | None:
         """

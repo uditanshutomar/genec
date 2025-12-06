@@ -1,0 +1,651 @@
+{
+  "timestamp": "2025-12-06T06:24:43.950686",
+  "samples_evaluated": 50,
+  "results": [
+    {
+      "sample_id": 528,
+      "class_name": "UnorderedPartitionedKVWriter",
+      "repository": "/tmp/genec_eval/tez",
+      "clusters_detected": 2,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 9.570124626159668,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 554,
+      "class_name": "MailChimpServiceImpl",
+      "repository": "/tmp/genec_eval/unomi",
+      "clusters_detected": 2,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 14.13119101524353,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 592,
+      "class_name": "JobSchedulerService",
+      "repository": "/tmp/genec_eval/usergrid",
+      "clusters_detected": 4,
+      "suggestions_count": 1,
+      "verified_count": 1,
+      "avg_confidence": 0.88,
+      "execution_time": 28.511393070220947,
+      "suggested_class_names": [
+        "ScheduleTimer"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 652,
+      "class_name": "DimsDataList",
+      "repository": "/tmp/genec_eval/dawnsci",
+      "clusters_detected": 3,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 10.852198839187622,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 660,
+      "class_name": "LiveSignalEnforcement",
+      "repository": "/tmp/genec_eval/ditto",
+      "clusters_detected": 3,
+      "suggestions_count": 1,
+      "verified_count": 0,
+      "avg_confidence": 0.9,
+      "execution_time": 23.376884937286377,
+      "suggested_class_names": [
+        "AuthorizationEnforcer"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 704,
+      "class_name": "MetaDataFactoryImpl",
+      "repository": "/tmp/genec_eval/elk",
+      "clusters_detected": 7,
+      "suggestions_count": 2,
+      "verified_count": 0,
+      "avg_confidence": 0.89,
+      "execution_time": 103.72469115257263,
+      "suggested_class_names": [
+        "DataTypeConverter",
+        "StringObjectFactory"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 767,
+      "class_name": "CredentialServiceImpl",
+      "repository": "/tmp/genec_eval/kapua",
+      "clusters_detected": 3,
+      "suggestions_count": 1,
+      "verified_count": 1,
+      "avg_confidence": 0.92,
+      "execution_time": 20.71750235557556,
+      "suggested_class_names": [
+        "CredentialRepository"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 770,
+      "class_name": "org.eclipse.linuxtools.internal.systemtap.ui.ide.editors.stp.STPIndenter",
+      "repository": "https://github.com/eclipse/linuxtools",
+      "clusters_detected": 0,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 0.0,
+      "suggested_class_names": [],
+      "error": "Failed to clone repository"
+    },
+    {
+      "sample_id": 976,
+      "class_name": "MapImageLayerTablesSample",
+      "repository": "/tmp/genec_eval/arcgis-runtime-samples-java",
+      "clusters_detected": 2,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 29.974159240722656,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 1007,
+      "class_name": "JdepsConfiguration",
+      "repository": "/tmp/genec_eval/error-prone-javac",
+      "clusters_detected": 6,
+      "suggestions_count": 3,
+      "verified_count": 0,
+      "avg_confidence": 0.9133333333333334,
+      "execution_time": 1330.9779720306396,
+      "suggested_class_names": [
+        "ModuleRegistry",
+        "ModuleResolver",
+        "TokenValidator"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 1096,
+      "class_name": "FormatParser",
+      "repository": "/tmp/genec_eval/sagetv",
+      "clusters_detected": 4,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 27.61624002456665,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 1201,
+      "class_name": "MonoWhen",
+      "repository": "/tmp/genec_eval/reactor-core",
+      "clusters_detected": 3,
+      "suggestions_count": 1,
+      "verified_count": 0,
+      "avg_confidence": 0.88,
+      "execution_time": 20.566495180130005,
+      "suggested_class_names": [
+        "StreamCoordinator"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 1218,
+      "class_name": "com.salesforce.dva.argus.entity.Trigger",
+      "repository": "https://github.com/salesforce/Argus",
+      "clusters_detected": 0,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 0.0,
+      "suggested_class_names": [],
+      "error": "Failed to clone repository"
+    },
+    {
+      "sample_id": 1275,
+      "class_name": "_ConfigurationSettingsServiceSoapService",
+      "repository": "/tmp/genec_eval/team-explorer-everywhere",
+      "clusters_detected": 13,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 6.242384195327759,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 1463,
+      "class_name": "DefaultHotSpotLoweringProvider",
+      "repository": "/tmp/genec_eval/graal",
+      "clusters_detected": 3,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 7.803677082061768,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 1606,
+      "class_name": "GroupByMergingQueryRunnerV2",
+      "repository": "/tmp/genec_eval/incubator-druid",
+      "clusters_detected": 2,
+      "suggestions_count": 1,
+      "verified_count": 0,
+      "avg_confidence": 0.92,
+      "execution_time": 27.22970223426819,
+      "suggested_class_names": [
+        "GroupByQueryExecutor"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 1607,
+      "class_name": "StringFunctions",
+      "repository": "/tmp/genec_eval/incubator-brooklyn",
+      "clusters_detected": 23,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 5.1671411991119385,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 1631,
+      "class_name": "LuceneIndexForPartitionedRegion",
+      "repository": "/tmp/genec_eval/geode",
+      "clusters_detected": 4,
+      "suggestions_count": 2,
+      "verified_count": 1,
+      "avg_confidence": 0.8300000000000001,
+      "execution_time": 22.2957022190094,
+      "suggested_class_names": [
+        "LuceneRegionFactory",
+        "FileSystemFacade"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 1734,
+      "class_name": "org.eclipse.titanium.refactoring.fieldordering.ChangeCreator",
+      "repository": "https://github.com/eclipse/titan.EclipsePlug-ins",
+      "clusters_detected": 0,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 0.0,
+      "suggested_class_names": [],
+      "error": "Failed to clone repository"
+    },
+    {
+      "sample_id": 1776,
+      "class_name": "samples.transport.tcp.TCPSender",
+      "repository": "https://github.com/apache/axis1-java",
+      "clusters_detected": 0,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 0.0,
+      "suggested_class_names": [],
+      "error": "Failed to clone repository"
+    },
+    {
+      "sample_id": 1836,
+      "class_name": "AttributeUtils",
+      "repository": "/tmp/genec_eval/org.aspectj",
+      "clusters_detected": 1,
+      "suggestions_count": 1,
+      "verified_count": 1,
+      "avg_confidence": 0.88,
+      "execution_time": 26.053296089172363,
+      "suggested_class_names": [
+        "AttributeAccessor"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 1873,
+      "class_name": "OgnlHelper",
+      "repository": "/tmp/genec_eval/camel",
+      "clusters_detected": 10,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 4.501504898071289,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 1904,
+      "class_name": "CanalEntry",
+      "repository": "/tmp/genec_eval/canal",
+      "clusters_detected": 24,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 7.828851938247681,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 1995,
+      "class_name": "BatchWriterReplicationReplayer",
+      "repository": "/tmp/genec_eval/accumulo",
+      "clusters_detected": 1,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 4.023282766342163,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2008,
+      "class_name": "ConfigurationListener",
+      "repository": "/tmp/genec_eval/aries",
+      "clusters_detected": 2,
+      "suggestions_count": 1,
+      "verified_count": 0,
+      "avg_confidence": 0.88,
+      "execution_time": 18.53877282142639,
+      "suggested_class_names": [
+        "ConfigurationEventListener"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 2039,
+      "class_name": "UsageServiceImpl",
+      "repository": "/tmp/genec_eval/cloudstack",
+      "clusters_detected": 5,
+      "suggestions_count": 1,
+      "verified_count": 0,
+      "avg_confidence": 0.88,
+      "execution_time": 19.35880398750305,
+      "suggested_class_names": [
+        "UsageDataRepository"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 2053,
+      "class_name": "ExternalLoadBalancerDeviceManagerImpl",
+      "repository": "/tmp/genec_eval/cloudstack",
+      "clusters_detected": 18,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 5.700683116912842,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2055,
+      "class_name": "BrocadeVcsApi",
+      "repository": "/tmp/genec_eval/cloudstack",
+      "clusters_detected": 2,
+      "suggestions_count": 2,
+      "verified_count": 0,
+      "avg_confidence": 0.9,
+      "execution_time": 22.73564624786377,
+      "suggested_class_names": [
+        "HttpApiClient",
+        "NetworkTopologyConfigurator"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 2063,
+      "class_name": "BufferedDataBlockEncoder",
+      "repository": "/tmp/genec_eval/hbase",
+      "clusters_detected": 8,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 49.62650799751282,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2086,
+      "class_name": "THBaseService",
+      "repository": "/tmp/genec_eval/hbase",
+      "clusters_detected": 0,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 14.395467758178711,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2104,
+      "class_name": "ServletContextListenerStartup",
+      "repository": "/tmp/genec_eval/ignite",
+      "clusters_detected": 3,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 4.299467086791992,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2137,
+      "class_name": "Airavata",
+      "repository": "/tmp/genec_eval/airavata",
+      "clusters_detected": 0,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 25.819194078445435,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2197,
+      "class_name": "PlanModifierUtil",
+      "repository": "/tmp/genec_eval/hive",
+      "clusters_detected": 1,
+      "suggestions_count": 1,
+      "verified_count": 1,
+      "avg_confidence": 0.82,
+      "execution_time": 27.262105703353882,
+      "suggested_class_names": [
+        "OrderBySchemaAdjuster"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 2246,
+      "class_name": "IgnoreCommitOptimizeUpdateProcessorFactory",
+      "repository": "/tmp/genec_eval/lucene-solr",
+      "clusters_detected": 3,
+      "suggestions_count": 1,
+      "verified_count": 0,
+      "avg_confidence": 0.8,
+      "execution_time": 24.02201008796692,
+      "suggested_class_names": [
+        "ComponentConfiguration"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 2275,
+      "class_name": "org.eclipse.jdt.internal.core.hierarchy.HierarchyResolver",
+      "repository": "https://github.com/eclipse/eclipse.jdt.core",
+      "clusters_detected": 0,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 0.0,
+      "suggested_class_names": [],
+      "error": "Failed to clone repository"
+    },
+    {
+      "sample_id": 2291,
+      "class_name": "RSerialize",
+      "repository": "/tmp/genec_eval/fastr",
+      "clusters_detected": 14,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 81.49985718727112,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2307,
+      "class_name": "WhileNode",
+      "repository": "/tmp/genec_eval/fastr",
+      "clusters_detected": 3,
+      "suggestions_count": 1,
+      "verified_count": 0,
+      "avg_confidence": 0.88,
+      "execution_time": 18.06991219520569,
+      "suggested_class_names": [
+        "LoopExecutor"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 2310,
+      "class_name": "FastRTrace",
+      "repository": "/tmp/genec_eval/fastr",
+      "clusters_detected": 0,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 4.019467115402222,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2313,
+      "class_name": "TextAndButtonSection",
+      "repository": "/tmp/genec_eval/birt",
+      "clusters_detected": 8,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 6.90595817565918,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2326,
+      "class_name": "FolderArchiveFile",
+      "repository": "/tmp/genec_eval/birt",
+      "clusters_detected": 7,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 4.59699010848999,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2369,
+      "class_name": "HDFSTextLineReader",
+      "repository": "/tmp/genec_eval/asterixdb",
+      "clusters_detected": 2,
+      "suggestions_count": 2,
+      "verified_count": 1,
+      "avg_confidence": 0.91,
+      "execution_time": 22.77977991104126,
+      "suggested_class_names": [
+        "BufferedLineReader",
+        "BufferConfiguration"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 2393,
+      "class_name": "BookKeeper",
+      "repository": "/tmp/genec_eval/bookkeeper",
+      "clusters_detected": 6,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 6.027391195297241,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2413,
+      "class_name": "DynamicWebAppClusterImpl",
+      "repository": "/tmp/genec_eval/brooklyn-library",
+      "clusters_detected": 3,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 35.2367479801178,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2416,
+      "class_name": "TemporalIntervalStartDatetimeAccessor",
+      "repository": "/tmp/genec_eval/asterixdb",
+      "clusters_detected": 2,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 30.004868745803833,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2447,
+      "class_name": "SensorResource",
+      "repository": "/tmp/genec_eval/brooklyn-server",
+      "clusters_detected": 2,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 53.802801847457886,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2557,
+      "class_name": "JAXRSOutInterceptor",
+      "repository": "/tmp/genec_eval/cxf",
+      "clusters_detected": 7,
+      "suggestions_count": 3,
+      "verified_count": 0,
+      "avg_confidence": 0.9133333333333334,
+      "execution_time": 44.57232189178467,
+      "suggested_class_names": [
+        "ResponseWriter",
+        "ResponseSerializer",
+        "ResponseGenerator"
+      ],
+      "error": null
+    },
+    {
+      "sample_id": 2644,
+      "class_name": "GangliaServer",
+      "repository": "/tmp/genec_eval/flume",
+      "clusters_detected": 6,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 30.55745005607605,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2649,
+      "class_name": "TimestampTracker",
+      "repository": "/tmp/genec_eval/fluo",
+      "clusters_detected": 2,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 36.73417806625366,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2661,
+      "class_name": "DepositAccountAssembler",
+      "repository": "/tmp/genec_eval/fineract",
+      "clusters_detected": 2,
+      "suggestions_count": 0,
+      "verified_count": 0,
+      "avg_confidence": 0.0,
+      "execution_time": 8.68605375289917,
+      "suggested_class_names": [],
+      "error": null
+    },
+    {
+      "sample_id": 2751,
+      "class_name": "Prefixes",
+      "repository": "/tmp/genec_eval/sis",
+      "clusters_detected": 3,
+      "suggestions_count": 2,
+      "verified_count": 1,
+      "avg_confidence": 0.815,
+      "execution_time": 21.996309995651245,
+      "suggested_class_names": [
+        "UnitPrefixConverter",
+        "SymbolFormatter"
+      ],
+      "error": null
+    }
+  ]
+}

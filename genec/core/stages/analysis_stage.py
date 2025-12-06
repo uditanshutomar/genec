@@ -30,7 +30,7 @@ class AnalysisStage(PipelineStage):
 
         # Stage 1: Dependency Analysis
         try:
-            class_deps = self.dependency_analyzer.analyze(class_file)
+            class_deps = self.dependency_analyzer.analyze_class(class_file)
             context.set("class_deps", class_deps)
             context.results["class_dependencies"] = class_deps
         except Exception as e:

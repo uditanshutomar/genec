@@ -40,21 +40,51 @@ class RefactoringStage(PipelineStage):
         # For now, implementing the logic to try them one by one
 
         for i, suggestion in enumerate(suggestions):
-            self.logger.info(f"Processing suggestion {i+1}/{len(suggestions)}: {suggestion.name}")
+            confidence_info = f" (confidence: {suggestion.confidence_score:.2f})" if suggestion.confidence_score is not None else ""
+            self.logger.info(f"Processing suggestion {i+1}/{len(suggestions)}: {suggestion.proposed_class_name}{confidence_info}")
+
+            # Pre-screening: skip very low confidence suggestions
+            min_verification_confidence = app_config.get("min_verification_confidence", 0.0)
+            if min_verification_confidence > 0.0 and suggestion.confidence_score is not None:
+                if suggestion.confidence_score < min_verification_confidence:
+                    self.logger.info(
+                        f"Skipping verification for {suggestion.proposed_class_name} "
+                        f"(confidence {suggestion.confidence_score:.2f} < threshold {min_verification_confidence})"
+                    )
+                    suggestion.verification_status = "skipped_low_confidence"
+                    continue
 
             # Apply
-            success = self.applicator.apply_refactoring(suggestion)
+            success = self.applicator.apply_refactoring(
+                suggestion,
+                original_class_file=context.class_file,
+                repo_path=context.repo_path,
+                dry_run=dry_run
+            )
             if not success:
-                self.logger.warning(f"Failed to apply suggestion {suggestion.name}")
+                self.logger.warning(f"Failed to apply suggestion {suggestion.proposed_class_name}")
                 continue
 
             # Verify
-            is_valid = self.verification_engine.verify(
-                context.class_file, suggestion, context.repo_path
+            class_deps = context.get("class_deps")
+            try:
+                with open(context.class_file, encoding="utf-8") as f:
+                    original_code = f.read()
+            except Exception as e:
+                self.logger.error(f"Failed to read original file: {e}")
+                original_code = ""
+            
+            verification_result = self.verification_engine.verify_refactoring(
+                suggestion=suggestion,
+                original_code=original_code,
+                original_class_file=context.class_file,
+                repo_path=context.repo_path,
+                class_deps=class_deps,
             )
+            is_valid = verification_result.is_valid
 
             if is_valid:
-                self.logger.info(f"Suggestion {suggestion.name} verified successfully")
+                self.logger.info(f"Suggestion {suggestion.proposed_class_name} verified successfully")
                 verified_suggestions.append(suggestion)
                 suggestion.verification_status = "verified"
 
@@ -63,7 +93,7 @@ class RefactoringStage(PipelineStage):
                     self.logger.info("Reverting changes (auto-apply disabled)...")
                     self.applicator.revert_changes()
             else:
-                self.logger.warning(f"Suggestion {suggestion.name} failed verification")
+                self.logger.warning(f"Suggestion {suggestion.proposed_class_name} failed verification")
                 suggestion.verification_status = "failed"
                 # Always revert failed suggestions
                 self.applicator.revert_changes()

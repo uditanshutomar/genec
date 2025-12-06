@@ -59,6 +59,23 @@ class RefactoringApplicator:
         self.enable_git = enable_git  # NEW
         self.git_wrapper = None  # Will be initialized when needed
         self.logger = get_logger(self.__class__.__name__)
+        self._last_application: RefactoringApplication | None = None  # Track last application for revert
+
+    def revert_changes(self) -> bool:
+        """
+        Revert the last applied refactoring.
+        
+        Returns:
+            True if revert successful, False otherwise
+        """
+        if self._last_application is None:
+            self.logger.warning("No previous application to revert")
+            return False
+        
+        success = self.rollback_refactoring(self._last_application)
+        if success:
+            self._last_application = None
+        return success
 
     def apply_refactoring(
         self,
@@ -165,7 +182,7 @@ class RefactoringApplicator:
 
             self.logger.info("Refactoring applied successfully")
 
-            return RefactoringApplication(
+            result = RefactoringApplication(
                 success=True,
                 new_class_path=str(new_class_path),
                 original_class_path=str(original_path),
@@ -173,6 +190,8 @@ class RefactoringApplicator:
                 commit_hash=commit_hash,
                 branch_name=branch_name,
             )
+            self._last_application = result  # Store for revert
+            return result
 
         except Exception as e:
             self.logger.error(f"Failed to apply refactoring: {e}", exc_info=True)

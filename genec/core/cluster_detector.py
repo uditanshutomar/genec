@@ -389,38 +389,42 @@ class ClusterDetector:
         # Calculate semantic similarities and add edges
         from scipy.spatial.distance import euclidean
 
-        edges_added = 0
         edges_augmented = 0
+        edges_weakened = 0
 
         for i, method1 in enumerate(methods):
             for j, method2 in enumerate(methods[i + 1 :], i + 1):
+                # Only process pairs that already have a structural edge
+                if not G_aug.has_edge(method1, method2):
+                    continue
+                    
                 # Calculate semantic similarity (1 - normalized euclidean distance)
                 dist = euclidean(feature_matrix[i], feature_matrix[j])
                 # Normalize distance to [0, 1]
                 max_dist = np.sqrt(feature_matrix.shape[1])  # Max possible Euclidean distance
                 semantic_sim = 1.0 - (dist / max_dist)
 
-                # Only add/augment if similarity is above threshold
+                # Augment existing edge with hybrid weight
+                graph_weight = G_aug[method1][method2]["weight"]
+                
                 if semantic_sim >= self.semantic_threshold:
-                    if G_aug.has_edge(method1, method2):
-                        # Augment existing edge with hybrid weight
-                        graph_weight = G_aug[method1][method2]["weight"]
-                        hybrid_weight = (
-                            self.hybrid_alpha * graph_weight
-                            + (1 - self.hybrid_alpha) * semantic_sim
-                        )
-                        G_aug[method1][method2]["weight"] = hybrid_weight
-                        edges_augmented += 1
-                    else:
-                        # Add new semantic edge
-                        G_aug.add_edge(
-                            method1, method2, weight=(1 - self.hybrid_alpha) * semantic_sim
-                        )
-                        edges_added += 1
+                    # Reinforce: methods are structurally AND semantically similar
+                    hybrid_weight = (
+                        self.hybrid_alpha * graph_weight
+                        + (1 - self.hybrid_alpha) * semantic_sim
+                    )
+                    G_aug[method1][method2]["weight"] = hybrid_weight
+                    edges_augmented += 1
+                else:
+                    # Weaken: structurally connected but semantically dissimilar
+                    # This helps separate dissimilar methods even if they share some connection
+                    weakening_factor = 0.9  # Reduce by 10%
+                    G_aug[method1][method2]["weight"] = graph_weight * weakening_factor
+                    edges_weakened += 1
 
         self.logger.info(
-            f"Semantic augmentation: {edges_added} new edges, {edges_augmented} edges augmented "
-            f"(alpha={self.hybrid_alpha:.2f})"
+            f"Semantic augmentation: {edges_augmented} edges reinforced, {edges_weakened} edges weakened "
+            f"(alpha={self.hybrid_alpha:.2f}, threshold={self.semantic_threshold:.2f})"
         )
 
         return G_aug
@@ -945,6 +949,15 @@ class ClusterDetector:
                 self.logger.debug(
                     f"Cluster {cluster.id} cohesion too low "
                     f"({cluster.internal_cohesion:.4f} < {self.min_cohesion})"
+                )
+                continue
+
+            # Quality score pre-filter (NEW)
+            min_quality = self.quality_metrics_config.get("min_quality_score", 0.0)
+            if min_quality > 0 and cluster.quality_score < min_quality:
+                self.logger.debug(
+                    f"Cluster {cluster.id} quality too low "
+                    f"({cluster.quality_score:.4f} < {min_quality})"
                 )
                 continue
 

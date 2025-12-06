@@ -53,6 +53,12 @@ class PipelineResult:
     execution_time: float = 0.0
     structural_actions: list[str] = field(default_factory=list)
 
+    # Confidence metrics
+    avg_confidence: float = 0.0
+    min_confidence: float = 0.0
+    max_confidence: float = 0.0
+    high_confidence_count: int = 0  # confidence >= 0.8
+
 
 class GenECPipeline:
     """Main GenEC pipeline for Extract Class refactoring."""
@@ -279,9 +285,10 @@ class GenECPipeline:
             api_key=llm_config.get("api_key"),
             model=llm_config.get("model", "claude-sonnet-4-20250514"),
             max_tokens=llm_config.get("max_tokens", 4000),
-            temperature=llm_config.get("temperature", 0.3),
+            temperature=llm_config.get("temperature", 0.2),
             timeout=llm_config.get("timeout", 120),
             use_chunking=chunking_config.get("enabled", True),
+            enable_refinement=llm_config.get("enable_refinement", False),
         )
 
         # Code Generator - Eclipse JDT or String Manipulation
@@ -415,18 +422,30 @@ class GenECPipeline:
         # Emit structured progress for VS Code extension (goes to stderr)
         self._emit_progress(stage=0, total=6, message="Initializing pipeline")
 
-        # Initialize verification engine with repo_path
-        if self.verification_engine is None:
-            self.verification_engine = VerificationEngine(
-                enable_syntactic=self.verify_config.get("enable_syntactic", True),
-                enable_semantic=self.verify_config.get("enable_semantic", True),
-                enable_behavioral=self.verify_config.get("enable_behavioral", False),
-                enable_coverage=self.verify_config.get("enable_coverage", False),  # NEW
-                java_compiler=self.verify_config.get("java_compiler", "javac"),
-                maven_command=self.verify_config.get("maven_command", "mvn"),
-                gradle_command=self.verify_config.get("gradle_command", "gradle"),
-                repo_path=repo_path,
-            )
+        # Verification engine
+        verification_config = self.config.get("verification", {})
+        syntactic_config = verification_config.get("syntactic", {})
+        lenient_mode = syntactic_config.get("lenient_mode", False)
+
+        # Get project root for JDT and verification engine
+        project_root = self._get_project_root()
+
+        self.verification_engine = VerificationEngine(
+            enable_equivalence=verification_config.get("enable_equivalence", False),
+            enable_syntactic=verification_config.get("enable_syntactic", True),
+            enable_static_analysis=verification_config.get("enable_static_analysis", False),
+            enable_multiversion=verification_config.get("enable_multiversion", False),
+            enable_semantic=verification_config.get("enable_semantic", True),
+            enable_behavioral=verification_config.get("enable_behavioral", True),
+            enable_performance=verification_config.get("enable_performance", False),
+            enable_coverage=verification_config.get("enable_coverage", False),
+            java_compiler=verification_config.get("java_compiler", "javac"),
+            maven_command=verification_config.get("maven_command", "mvn"),
+            gradle_command=verification_config.get("gradle_command", "gradle"),
+            build_tool=verification_config.get("build_tool", "maven"),
+            repo_path=project_root,
+            lenient_mode=lenient_mode,  # Pass lenient mode
+        )
 
         result = PipelineResult(class_name=Path(class_file).stem)
 
@@ -468,6 +487,23 @@ class GenECPipeline:
             result.ranked_clusters = results.get("ranked_clusters", [])
             result.suggestions = results.get("suggestions", [])
             result.verified_suggestions = results.get("verified_suggestions", [])
+
+            # Calculate confidence metrics
+            suggestions = result.suggestions
+            if suggestions:
+                confidence_scores = [
+                    s.confidence_score for s in suggestions if s.confidence_score is not None
+                ]
+                if confidence_scores:
+                    result.avg_confidence = sum(confidence_scores) / len(confidence_scores)
+                    result.min_confidence = min(confidence_scores)
+                    result.max_confidence = max(confidence_scores)
+                    result.high_confidence_count = sum(1 for c in confidence_scores if c >= 0.8)
+                    self.logger.info(
+                        f"Confidence metrics: avg={result.avg_confidence:.2f}, "
+                        f"min={result.min_confidence:.2f}, max={result.max_confidence:.2f}, "
+                        f"high (>=0.8)={result.high_confidence_count}/{len(suggestions)}"
+                    )
 
             result.execution_time = time.time() - start_time
             self.logger.info(f"Execution time: {result.execution_time:.2f} seconds")

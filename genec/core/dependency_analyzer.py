@@ -76,7 +76,7 @@ class DependencyAnalyzer:
     # Dependency weights
     WEIGHT_METHOD_CALL = 1.0
     WEIGHT_FIELD_ACCESS = 0.8
-    WEIGHT_SHARED_FIELD = 0.6
+    WEIGHT_SHARED_FIELD = 0.9  # Boosted from 0.6 to emphasize field-based cohesion
 
     def __init__(self):
         """Initialize the dependency analyzer."""

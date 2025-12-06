@@ -41,9 +41,7 @@ class TestFinder:
             "*Spec.java",  # BDD specs
         ]
 
-    def find_affected_tests(
-        self, class_name: str, package_name: str | None = None
-    ) -> list[Path]:
+    def find_affected_tests(self, class_name: str, package_name: str | None = None) -> list[Path]:
         """
         Find test files that reference the given class.
 

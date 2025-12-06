@@ -1,7 +1,5 @@
 """Cohesion metrics calculator (LCOM5)."""
 
-
-
 from genec.core.dependency_analyzer import ClassDependencies
 from genec.utils.logging_utils import get_logger
 

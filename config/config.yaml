@@ -1,5 +1,5 @@
 fusion:
-  alpha: 1.0
+  alpha: 0.8  # Restored after ablation study
   edge_threshold: 0.05
 
   # Adaptive fusion (Stage 3 enhancement)
@@ -20,19 +20,54 @@ fusion:
       - json
 evolution:
   # Git history analysis window
-  window_months: 60              # How far back to look in git history (months) - 5 years
+  window_months: 240              # How far back to look in git history (months) - 20 years
   min_commits: 1                 # Minimum commits to consider a method
 
   # Code-Maat evolutionary coupling filters (Stage 2 improvements)
-  min_coupling_threshold: 0.3    # Minimum coupling strength 0.0-1.0 (default: 0.3 = 30%)
-  max_changeset_size: 30         # Skip commits touching >N methods (filters refactorings)
-  min_revisions: 5               # Minimum revisions required (stricter than min_commits)
+  min_coupling_threshold: 0.1    # Minimum coupling strength 0.0-1.0 (default: 0.3 = 30%)
+  max_changeset_size: 100        # Skip commits touching >N methods (filters refactorings)
+  min_revisions: 1               # Minimum revisions required (stricter than min_commits)
 clustering:
-  algorithm: louvain
+  algorithm: leiden               # Changed from louvain - more robust clustering
   min_cluster_size: 3
-  max_cluster_size: 50
-  min_cohesion: 0.3
-  resolution: 0.8
+  max_cluster_size: 15            # Reduced from 50 to get smaller, focused clusters
+  min_cohesion: 0.5               # Increased from 0.3 for stricter filtering
+  resolution: 0.5                 # Base resolution (used as fallback)
+  
+  # Field-based clustering boost (new)
+  field_weight_boost: 1.5         # Boost edge weight when methods share field access
+  shared_field_min_methods: 2     # Minimum methods sharing a field to apply boost
+  
+  # Multi-resolution consensus - tries multiple resolutions and picks best
+  multi_resolution:
+    enabled: true                  # Enable multi-resolution clustering
+    resolution_range: [0.3, 0.5, 0.7, 0.9, 1.1]  # Resolutions to try
+    quality_metric: silhouette     # Use silhouette score to pick best
+  
+  # Semantic method analysis - adds code complexity features to clustering
+  semantic:
+    enabled: true                  # Enable semantic feature extraction
+    features:                      # Features to extract (null = all)
+      - cyclomatic_complexity
+      - loc
+      - num_parameters
+      - field_usage_count
+      - shared_field_ratio
+  
+  # Hybrid clustering - combines graph structure with semantic features
+  # Fixed: Only reinforces existing edges (no new edges), weakens dissimilar pairs
+  hybrid:
+    enabled: true                  # Re-enabled after fix
+    alpha: 0.85                    # 85% graph structure, 15% semantic
+    semantic_threshold: 0.3        # Threshold for reinforcing edges
+  
+  # Quality pre-filtering - skip low-quality clusters before LLM
+  quality_metrics:
+    min_quality_score: 0.15        # Lowered from 0.3 - less aggressive filtering
+    
+  # Connectivity validation
+  validate_connectivity: true
+  split_disconnected: true
 chunking:
   enabled: true
   include_imports: true
@@ -41,8 +76,14 @@ llm:
   provider: anthropic
   model: claude-sonnet-4-20250514
   max_tokens: 4000
-  temperature: 0.3
+  temperature: 0.2            # Lowered from 0.3 for more consistent naming
   timeout: 120
+  enable_refinement: true     # Multi-shot refinement for better suggestions
+
+naming:
+  # Confidence-based filtering and sorting
+  min_confidence_threshold: 0.7  # Filter out suggestions below this threshold (0.0 = disabled)
+  sort_by_confidence: true        # Sort suggestions by confidence (highest first)
 code_generation:
   engine: eclipse_jdt
   jdt_wrapper_jar: genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar
@@ -76,6 +117,7 @@ refactoring_application:
   create_backups: true    # Create backups before modifying files
   backup_dir: .genec_backups  # Directory for backups
   dry_run: false          # If true, only simulate (don't actually write files)
+  min_verification_confidence: 0.5  # Skip verification for suggestions below this confidence (0.0 = disabled)
 logging:
   level: INFO
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

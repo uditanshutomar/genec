@@ -1,7 +1,5 @@
 """Coupling metrics calculator (CBO)."""
 
-
-
 from genec.core.dependency_analyzer import ClassDependencies
 from genec.parsers.java_parser import JavaParser
 from genec.utils.logging_utils import get_logger

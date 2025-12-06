@@ -34,6 +34,11 @@ class VerificationResult:
     performance_regression: float = 0.0  # NEW
     error_message: str | None = None
 
+    @property
+    def is_valid(self) -> bool:
+        """Return True if verification passed (at minimum syntactic check)."""
+        return self.status in ("PASS", "PASSED", "VALID") or self.syntactic_pass
+
 
 class VerificationEngine:
     """Orchestrates multi-layer verification of refactoring suggestions."""
@@ -53,37 +58,23 @@ class VerificationEngine:
         gradle_command: str = "gradle",
         build_tool: str = "maven",
         repo_path: str | None = None,
+        lenient_mode: bool = False,  # NEW
     ):
         """
         Initialize verification engine.
-
-        Args:
-            enable_equivalence: Enable equivalence checking
-            enable_syntactic: Enable syntactic verification
-            enable_static_analysis: Enable static analysis
-            enable_multiversion: Enable multi-version compilation (NEW)
-            enable_semantic: Enable semantic verification
-            enable_behavioral: Enable behavioral verification
-            enable_performance: Enable performance regression testing (NEW)
-            enable_coverage: Enable coverage verification (NEW)
-            java_compiler: Java compiler command
-            maven_command: Maven command
-            gradle_command: Gradle command
-            build_tool: Build tool
-            repo_path: Path to repository root
         """
         self.enable_equivalence = enable_equivalence
         self.enable_syntactic = enable_syntactic
         self.enable_static_analysis = enable_static_analysis
-        self.enable_multiversion = enable_multiversion  # NEW
+        self.enable_multiversion = enable_multiversion
         self.enable_semantic = enable_semantic
         self.enable_behavioral = enable_behavioral
-        self.enable_performance = enable_performance  # NEW
-        self.enable_coverage = enable_coverage  # NEW
+        self.enable_performance = enable_performance
+        self.enable_coverage = enable_coverage
 
         # Initialize verifiers
         self.equivalence_checker = EquivalenceChecker(build_tool=build_tool)
-        self.syntactic_verifier = SyntacticVerifier(java_compiler, repo_path)
+        self.syntactic_verifier = SyntacticVerifier(java_compiler, repo_path, lenient_mode=lenient_mode)
         self.static_analysis_verifier = StaticAnalysisVerifier()
         self.multiversion_compiler = MultiVersionCompilationVerifier()  # NEW
         self.semantic_verifier = SemanticVerifier()

@@ -260,7 +260,8 @@ def main():
                     methods = s.methods if hasattr(s, "methods") else []
                     method_count = len(methods) if methods else "unknown"
 
-                    print(f"  {i}. Extract class: {s.proposed_class_name}")
+                    confidence_str = f" (confidence: {s.confidence_score:.2f})" if s.confidence_score is not None else ""
+                    print(f"  {i}. Extract class: {s.proposed_class_name}{confidence_str}")
                     print(f"     Methods to move: {method_count}")
                     if methods:
                         for m in methods[:5]:  # Show first 5 methods
@@ -281,12 +282,20 @@ def main():
             print(f"Original Metrics: {results.original_metrics}")
             print(f"Suggestions Generated: {len(results.suggestions)}")
             print(f"Verified Suggestions: {len(results.verified_suggestions)}")
+
+            # Show confidence metrics if available
+            if results.avg_confidence > 0:
+                print(f"Confidence Metrics: avg={results.avg_confidence:.2f}, "
+                      f"min={results.min_confidence:.2f}, max={results.max_confidence:.2f}, "
+                      f"high(>=0.8)={results.high_confidence_count}")
+
             print(f"Total Runtime: {runtime_str}")
 
             if results.verified_suggestions:
                 print("\nVerified Suggestions:")
                 for i, s in enumerate(results.verified_suggestions, 1):
-                    print(f"{i}. {s.proposed_class_name}")
+                    confidence_str = f" (confidence: {s.confidence_score:.2f})" if s.confidence_score is not None else ""
+                    print(f"{i}. {s.proposed_class_name}{confidence_str}")
 
     except KeyboardInterrupt:
         if args.json:

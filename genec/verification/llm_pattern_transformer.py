@@ -167,9 +167,7 @@ Only suggest transformations with confidence >= 0.6.
 """
         return prompt
 
-    def _parse_transformation_response(
-        self, response_text: str
-    ) -> TransformationStrategy | None:
+    def _parse_transformation_response(self, response_text: str) -> TransformationStrategy | None:
         """Parse LLM response into transformation strategy."""
         lines = response_text.strip().split("\n")
 

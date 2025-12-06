@@ -175,6 +175,7 @@ class EvolutionaryMiner:
             return EvolutionaryData(class_file=normalized_class_file)
 
         self.logger.info(f"Found {len(commits)} commits affecting {normalized_class_file}")
+        print(f"DEBUG: Found {len(commits)} commits affecting {normalized_class_file}")
 
         # Track method changes per commit
         evo_data = EvolutionaryData(class_file=normalized_class_file, total_commits=len(commits))
@@ -933,10 +934,20 @@ class EvolutionaryMiner:
             evo_data: EvolutionaryData object
             top_n: If specified, return only top N methods. If None, return all.
 
-        Returns:
-            List of (method_signature, sum_of_coupling) tuples, sorted by sum descending
+```
         """
         sum_of_coupling: dict[str, float] = {}
+
+        # Debugging: Print top 10 co-changes if available
+        # Note: co_change_counts is not directly available here, assuming user meant evo_data.cochange_matrix
+        # or evo_data.coupling_strengths for debugging purposes.
+        # The original instruction was "Print top 10 co-changes", so we'll use cochange_matrix.
+        if hasattr(evo_data, 'cochange_matrix') and evo_data.cochange_matrix:
+            self.logger.debug(f"DEBUG: Total co-changes found: {len(evo_data.cochange_matrix)}")
+            # Sort co-changes by count in descending order and take top 10
+            sorted_cochanges = sorted(evo_data.cochange_matrix.items(), key=lambda item: item[1], reverse=True)
+            for pair, count in sorted_cochanges[:10]:
+                 self.logger.debug(f"DEBUG: Co-change {pair}: {count}")
 
         # Sum all coupling strengths for each method
         for (m1, m2), strength in evo_data.coupling_strengths.items():

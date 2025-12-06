@@ -231,6 +231,10 @@ class JDTCodeGenerator:
             )
         methods = valid_methods
 
+        # Filter out accessors for extracted fields to prevent duplication
+        # (JDT often generates these automatically)
+        methods = self._filter_accessors(methods, fields)
+
         if not methods:
             raise CodeGenerationError(
                 "JDT extraction requires at least one valid method signature. "
@@ -426,6 +430,49 @@ class JDTCodeGenerator:
                     cluster.member_names.append(sig)
 
         return list(methods)
+
+    def _filter_accessors(self, methods: list[str], fields: list[str]) -> list[str]:
+        """
+        Filter out methods that are likely accessors for the extracted fields.
+
+        JDT often generates getters/setters for extracted fields automatically.
+        If these methods are also in the extraction list, it causes duplicate method errors.
+
+        Args:
+            methods: List of method signatures to extract
+            fields: List of field names to extract
+
+        Returns:
+            Filtered list of method signatures
+        """
+        if not fields:
+            return methods
+
+        filtered_methods = []
+        accessor_patterns = set()
+
+        for field in fields:
+            if not field:
+                continue
+            # Capitalize first letter
+            cap_field = field[0].upper() + field[1:] if len(field) > 1 else field.upper()
+            accessor_patterns.add(f"get{cap_field}(")
+            accessor_patterns.add(f"set{cap_field}(")
+            accessor_patterns.add(f"is{cap_field}(")
+
+        for method_sig in methods:
+            is_accessor = False
+            for pattern in accessor_patterns:
+                if method_sig.startswith(pattern):
+                    is_accessor = True
+                    break
+
+            if is_accessor:
+                self.logger.info(f"Filtered out potential duplicate accessor: {method_sig}")
+            else:
+                filtered_methods.append(method_sig)
+
+        return filtered_methods
 
     def _find_called_method_names(self, body: str, candidates: set[str]) -> set[str]:
         names: set[str] = set()
