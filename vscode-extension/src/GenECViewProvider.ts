@@ -118,7 +118,7 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
     private _safePostMessage(message: any): boolean {
         try {
             if (this._view && this._view.webview) {
-                this._safePostMessage(message);
+                this._view.webview.postMessage(message);
                 return true;
             }
             console.log('GenEC: Webview not available, skipping message:', message.type);

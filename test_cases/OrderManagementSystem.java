@@ -41,7 +41,7 @@ public class OrderManagementSystem {
     /**
 	 * Extracted functionality - created by GenEC refactoring.
 	 */
-	private OrderFulfillment orderFulfillment = new OrderFulfillment();
+	private OrderFulfillmentEngine orderFulfillmentEngine = new OrderFulfillmentEngine();
 	/**
 	 * Extracted functionality - created by GenEC refactoring.
 	 */
@@ -89,7 +89,7 @@ public class OrderManagementSystem {
         this.customerName = customerName;
         this.orderId = generateOrderId();
         this.orderDate = LocalDateTime.now();
-        orderFulfillment.getOrderProcessor().setOrderStatus("PENDING");
+        orderFulfillmentEngine.getOrderFulfillment().getOrderProcessor().setOrderStatus("PENDING");
         this.items = new ArrayList<>();
         this.itemQuantities = new HashMap<>();
         warehouseInventoryTracker.setWarehouseStock(new HashMap<>());
@@ -97,7 +97,7 @@ public class OrderManagementSystem {
         this.auditLog = new ArrayList<>();
         orderPriceCalculator.getPriceCalculator().setTaxRate(new BigDecimal("0.10"));
         discountCalculator.setDiscountPercentage(BigDecimal.ZERO);
-        orderFulfillment.getOrderProcessor().setPaymentStatus("PENDING");
+        orderFulfillmentEngine.getOrderFulfillment().getOrderProcessor().setPaymentStatus("PENDING");
         this.lastModified = LocalDateTime.now();
     }
 
@@ -243,7 +243,7 @@ public class OrderManagementSystem {
      * Challenge: Temporal coupling with inventory (both must succeed)
      */
     public boolean processPayment(String method, String cardNumber) {
-		return orderFulfillment.processPayment(method, cardNumber);
+		return orderFulfillmentEngine.processPayment(method, cardNumber);
 	}
 
     /**
@@ -251,7 +251,7 @@ public class OrderManagementSystem {
      * Cohesion: HIGH - payment logic
      */
     private boolean simulatePaymentGateway(String method, String cardNumber, BigDecimal amount) {
-		return orderFulfillment.simulatePaymentGateway(method, cardNumber, amount);
+		return orderFulfillmentEngine.simulatePaymentGateway(method, cardNumber, amount);
 	}
 
     /**
@@ -259,7 +259,7 @@ public class OrderManagementSystem {
      * Cohesion: HIGH - payment logic
      */
     public boolean refundPayment() {
-		return orderFulfillment.refundPayment();
+		return orderFulfillmentEngine.refundPayment();
 	}
 
     /**
@@ -307,7 +307,7 @@ public class OrderManagementSystem {
      * Cohesion: HIGH - inventory logic
      */
     private boolean reserveInventory() {
-		return orderFulfillment.reserveInventory();
+		return orderFulfillmentEngine.reserveInventory();
 	}
 
     /**
@@ -315,7 +315,7 @@ public class OrderManagementSystem {
      * Cohesion: HIGH - inventory logic
      */
     private void releaseInventory() {
-		orderFulfillment.releaseInventory();
+		orderFulfillmentEngine.releaseInventory();
 	}
 
     /**
@@ -420,7 +420,7 @@ public class OrderManagementSystem {
      * Cohesion: HIGH - notification logic
      */
     private void sendPaymentConfirmationEmail() {
-		orderFulfillment.sendPaymentConfirmationEmail();
+		orderFulfillmentEngine.sendPaymentConfirmationEmail();
 	}
 
     /**
@@ -443,7 +443,7 @@ public class OrderManagementSystem {
      * Cohesion: HIGH - notification logic
      */
     private void sendRefundNotificationEmail() {
-		orderFulfillment.sendRefundNotificationEmail();
+		orderFulfillmentEngine.sendRefundNotificationEmail();
 	}
 
     /**
@@ -477,7 +477,7 @@ public class OrderManagementSystem {
      * Cohesion: HIGH - notification logic
      */
     private void sendEmail(String to, String subject, String body) {
-		orderFulfillment.sendEmail(to, subject, body);
+		orderFulfillmentEngine.sendEmail(to, subject, body);
 	}
 
     // ========== UTILITY/SHARED METHODS ==========
@@ -496,7 +496,7 @@ public class OrderManagementSystem {
      * Ambiguous: Could be in PaymentProcessor or utility
      */
     private String generateTransactionId() {
-		return orderFulfillment.generateTransactionId();
+		return orderFulfillmentEngine.generateTransactionId();
 	}
 
     /**
@@ -519,7 +519,7 @@ public class OrderManagementSystem {
 
     public String getOrderId() { return orderId; }
     public String getOrderStatus() {
-		return orderFulfillment.getOrderStatus();
+		return orderFulfillmentEngine.getOrderStatus();
 	}
     public BigDecimal getTotalAmount() {
 		return orderPriceCalculator.getTotalAmount();

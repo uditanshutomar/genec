@@ -18,22 +18,31 @@ const fs = require("fs");
 const GenECViewProvider_1 = require("./GenECViewProvider");
 function activate(context) {
     console.log('GenEC extension is now active!');
-    // Validate Python installation at startup
-    const config = vscode.workspace.getConfiguration('genec');
-    const pythonPath = config.get('pythonPath') || 'python3';
-    validatePythonInstallation(pythonPath).then(valid => {
-        if (!valid) {
-            vscode.window.showWarningMessage(`GenEC: Python not found at '${pythonPath}'. Please configure genec.pythonPath in settings.`, 'Open Settings').then(selection => {
-                if (selection === 'Open Settings') {
-                    vscode.commands.executeCommand('workbench.action.openSettings', 'genec.pythonPath');
-                }
-            });
-        }
-        else {
-            // Python found - check and install dependencies
-            ensureDependencies(pythonPath, context);
-        }
-    });
+    // Check for bundled binary
+    const bundledPath = path.join(context.extensionPath, 'dist', 'genec');
+    const bundledExePath = path.join(context.extensionPath, 'dist', 'genec.exe');
+    const isBundled = fs.existsSync(bundledPath) || fs.existsSync(bundledExePath);
+    if (isBundled) {
+        console.log('GenEC: Running in bundled mode (binary found)');
+    }
+    else {
+        // Validate Python installation at startup
+        const config = vscode.workspace.getConfiguration('genec');
+        const pythonPath = config.get('pythonPath') || 'python3';
+        validatePythonInstallation(pythonPath).then(valid => {
+            if (!valid) {
+                vscode.window.showWarningMessage(`GenEC: Python not found at '${pythonPath}'. Please configure genec.pythonPath in settings.`, 'Open Settings').then(selection => {
+                    if (selection === 'Open Settings') {
+                        vscode.commands.executeCommand('workbench.action.openSettings', 'genec.pythonPath');
+                    }
+                });
+            }
+            else {
+                // Python found - check and install dependencies
+                ensureDependencies(pythonPath, context);
+            }
+        });
+    }
     // Cleanup any recovery files from previous crashes
     cleanupRecoveryFiles();
     // Register Webview View Provider

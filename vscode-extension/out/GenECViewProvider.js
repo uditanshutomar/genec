@@ -35,7 +35,12 @@ class GenECViewProvider {
             switch (data.type) {
                 case 'refactor': {
                     const config = vscode.workspace.getConfiguration('genec');
-                    const pythonPath = config.get('pythonPath') || 'python3';
+                    let pythonPath = config.get('pythonPath') || 'python3';
+                    // Check for bundled binary override
+                    const bundledPath = this._getExecutablePath();
+                    if (bundledPath) {
+                        pythonPath = bundledPath;
+                    }
                     const autoApply = config.get('autoApply') || false;
                     const minClusterSize = config.get('clustering.minClusterSize');
                     const maxClusterSize = config.get('clustering.maxClusterSize');
@@ -105,7 +110,7 @@ class GenECViewProvider {
     _safePostMessage(message) {
         try {
             if (this._view && this._view.webview) {
-                this._safePostMessage(message);
+                this._view.webview.postMessage(message);
                 return true;
             }
             console.log('GenEC: Webview not available, skipping message:', message.type);
@@ -412,7 +417,16 @@ class GenECViewProvider {
             try {
                 // Find a free port for WebSocket
                 const wsPort = 9876; // Default port, could be dynamic
-                const args = ['-m', 'genec.cli', '--target', this._targetFilePath, '--repo', repoPath, '--json'];
+                let args;
+                const isBinary = pythonPath.endsWith('genec') || pythonPath.endsWith('genec.exe');
+                if (isBinary) {
+                    // Standalone binary: pass args directly
+                    args = ['--target', this._targetFilePath, '--repo', repoPath, '--json'];
+                }
+                else {
+                    // Python interpreter: run module
+                    args = ['-m', 'genec.cli', '--target', this._targetFilePath, '--repo', repoPath, '--json'];
+                }
                 // Enable WebSocket progress
                 args.push('--websocket', wsPort.toString());
                 if (autoApply) {
@@ -1380,6 +1394,16 @@ class GenECViewProvider {
                 this._outputChannel.appendLine(`Failed to create WebSocket: ${e}`);
             }
         }, 1000); // 1s delay to let Python server start
+    }
+    _getExecutablePath() {
+        const extensionPath = this._context.extensionPath;
+        const bundledPath = path.join(extensionPath, 'dist', 'genec');
+        const bundledExePath = path.join(extensionPath, 'dist', 'genec.exe');
+        if (fs.existsSync(bundledPath))
+            return bundledPath;
+        if (fs.existsSync(bundledExePath))
+            return bundledExePath;
+        return undefined;
     }
 }
 exports.GenECViewProvider = GenECViewProvider;
