@@ -3,7 +3,6 @@
 import re
 import shutil
 import subprocess
-import tempfile
 import threading
 from pathlib import Path
 
@@ -123,7 +122,7 @@ class BehavioralVerifier:
             finally:
                 # Step 7: ALWAYS restore original state
                 self._restore_files(backup_data, new_class_file)
-                
+
                 # Remove marker file
                 if marker_file.exists():
                     marker_file.unlink()
@@ -131,16 +130,16 @@ class BehavioralVerifier:
     def _check_and_recover(self, repo: Path):
         """
         Check for interrupted verification and restore if needed.
-        
+
         This handles the case where GenEC was killed mid-verification.
         """
         marker_file = repo / ".genec_verification_in_progress"
         backup_dir = repo / ".genec_verification_backup"
-        
+
         if marker_file.exists():
             self.logger.warning("Detected interrupted verification, attempting recovery...")
             original_class_file = marker_file.read_text(encoding="utf-8").strip()
-            
+
             # Restore from backup if it exists
             if backup_dir.exists():
                 for backup_file in backup_dir.iterdir():
@@ -149,7 +148,7 @@ class BehavioralVerifier:
                         shutil.copy2(backup_file, target)
                         self.logger.info(f"Recovered: {target}")
                 shutil.rmtree(backup_dir)
-            
+
             marker_file.unlink()
             self.logger.info("Recovery complete")
 
@@ -191,7 +190,7 @@ class BehavioralVerifier:
     def _restore_files(self, backup_data: dict[Path, str], new_class_file: Path | None):
         """
         Restore backed-up files and delete new class file.
-        
+
         This is called in finally block to guarantee cleanup.
         """
         # Restore original files from backup
@@ -280,7 +279,7 @@ class BehavioralVerifier:
         return True
 
     def _run_tests(
-        self, repo_path: Path, build_system: str, timeout: int = 900
+        self, repo_path: Path, build_system: str, timeout: int = 180  # 3 minutes
     ) -> tuple[bool, str | None]:
         """
         Run test suite.
