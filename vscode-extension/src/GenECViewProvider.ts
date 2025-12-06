@@ -457,7 +457,14 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
         });
 
         try {
+            // Find a free port for WebSocket
+            const wsPort = 9876; // Default port, could be dynamic
+
             const args = ['-m', 'genec.cli', '--target', this._targetFilePath, '--repo', repoPath, '--json'];
+
+            // Enable WebSocket progress
+            args.push('--websocket', wsPort.toString());
+
             if (autoApply) {
                 args.push('--apply-all');
             }
@@ -470,6 +477,9 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
             if (minCohesion !== undefined) {
                 args.push('--min-cohesion', minCohesion.toString());
             }
+
+            // Start WebSocket client
+            this._connectWebSocket(wsPort);
 
             // Pass API key via environment variable for security (not visible in process list)
             const env = { ...process.env };
@@ -1412,5 +1422,54 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
         // Fallback to workspace folder
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(startPath));
         return workspaceFolder ? workspaceFolder.uri.fsPath : path.dirname(startPath);
+    }
+
+    private _connectWebSocket(port: number) {
+        // WebSocket is available in VS Code extension host environment (Node.js)
+        const WebSocket = require('ws');
+
+        // Wait a bit for server to start
+        setTimeout(() => {
+            try {
+                const ws = new WebSocket(`ws://localhost:${port}`);
+
+                ws.on('open', () => {
+                    this._outputChannel.appendLine(`WebSocket connected on port ${port}`);
+                });
+
+                ws.on('message', (data: any) => {
+                    try {
+                        const message = JSON.parse(data.toString());
+
+                        if (message.type === 'progress') {
+                            this._safePostMessage({
+                                type: 'progress',
+                                stage: message.stage,
+                                total: message.total,
+                                percent: message.percent,
+                                message: message.message
+                            });
+                        } else if (message.type === 'error') {
+                            this._outputChannel.appendLine(`WebSocket Error: ${message.message}`);
+                        }
+                    } catch (e) {
+                        // Ignore parse errors
+                    }
+                });
+
+                ws.on('error', (error: any) => {
+                    this._outputChannel.appendLine(`WebSocket connection error: ${error.message}`);
+                });
+
+                // Close when process ends
+                if (this._currentProcess) {
+                    this._currentProcess.on('exit', () => {
+                        try { ws.close(); } catch (e) { }
+                    });
+                }
+            } catch (e) {
+                this._outputChannel.appendLine(`Failed to create WebSocket: ${e}`);
+            }
+        }, 1000); // 1s delay to let Python server start
     }
 }
