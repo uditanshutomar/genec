@@ -64,6 +64,7 @@ genec-jdt-wrapper/target/
 commons-lang/
 .genec_backups/
 .genec_metadata/
+.genec_cache/
 
 # VS Code Extension
 vscode-extension/node_modules/

@@ -36,6 +36,7 @@ def main():
     signal.signal(signal.SIGTERM, handle_sigint)
 
     parser = argparse.ArgumentParser(description="GenEC: Generative Extract Class Refactoring Tool")
+    parser.add_argument("--version", action="version", version="GenEC 1.0.0")
 
     parser.add_argument("--target", required=True, help="Path to the Java class file to refactor")
     parser.add_argument("--repo", required=True, help="Path to the repository root")
@@ -147,11 +148,18 @@ def main():
         if not args.json:
             logger.info(f"Running GenEC on {target_path}...")
 
+        import time
+        start_time = time.time()
+        
         results = pipeline.run_full_pipeline(
             class_file=str(target_path),
             repo_path=str(repo_path),
             max_suggestions=args.max_suggestions,
         )
+        
+        # Calculate and log total runtime
+        total_runtime = time.time() - start_time
+        runtime_str = f"{total_runtime:.1f}s" if total_runtime < 60 else f"{total_runtime/60:.1f}m"
 
         if args.json:
             # Build message explaining results
@@ -165,6 +173,7 @@ def main():
             output = {
                 "status": "success",
                 "message": message,
+                "runtime": runtime_str,
                 "original_metrics": results.original_metrics,
                 "suggestions": [
                     {
@@ -190,11 +199,12 @@ def main():
             print(json.dumps(output, indent=2))
         else:
             print("\n" + "=" * 50)
-            print("Refactoring Completed Successfully")
+            print(f"Refactoring Completed Successfully (Runtime: {runtime_str})")
             print("=" * 50)
             print(f"Original Metrics: {results.original_metrics}")
             print(f"Suggestions Generated: {len(results.suggestions)}")
             print(f"Verified Suggestions: {len(results.verified_suggestions)}")
+            print(f"Total Runtime: {runtime_str}")
 
             if results.verified_suggestions:
                 print("\nVerified Suggestions:")
