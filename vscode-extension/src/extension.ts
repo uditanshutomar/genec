@@ -7,25 +7,34 @@ import { GenECViewProvider } from './GenECViewProvider';
 export function activate(context: vscode.ExtensionContext) {
     console.log('GenEC extension is now active!');
 
-    // Validate Python installation at startup
-    const config = vscode.workspace.getConfiguration('genec');
-    const pythonPath = config.get<string>('pythonPath') || 'python3';
+    // Check for bundled binary
+    const bundledPath = path.join(context.extensionPath, 'dist', 'genec');
+    const bundledExePath = path.join(context.extensionPath, 'dist', 'genec.exe');
+    const isBundled = fs.existsSync(bundledPath) || fs.existsSync(bundledExePath);
 
-    validatePythonInstallation(pythonPath).then(valid => {
-        if (!valid) {
-            vscode.window.showWarningMessage(
-                `GenEC: Python not found at '${pythonPath}'. Please configure genec.pythonPath in settings.`,
-                'Open Settings'
-            ).then(selection => {
-                if (selection === 'Open Settings') {
-                    vscode.commands.executeCommand('workbench.action.openSettings', 'genec.pythonPath');
-                }
-            });
-        } else {
-            // Python found - check and install dependencies
-            ensureDependencies(pythonPath, context);
-        }
-    });
+    if (isBundled) {
+        console.log('GenEC: Running in bundled mode (binary found)');
+    } else {
+        // Validate Python installation at startup
+        const config = vscode.workspace.getConfiguration('genec');
+        const pythonPath = config.get<string>('pythonPath') || 'python3';
+
+        validatePythonInstallation(pythonPath).then(valid => {
+            if (!valid) {
+                vscode.window.showWarningMessage(
+                    `GenEC: Python not found at '${pythonPath}'. Please configure genec.pythonPath in settings.`,
+                    'Open Settings'
+                ).then(selection => {
+                    if (selection === 'Open Settings') {
+                        vscode.commands.executeCommand('workbench.action.openSettings', 'genec.pythonPath');
+                    }
+                });
+            } else {
+                // Python found - check and install dependencies
+                ensureDependencies(pythonPath, context);
+            }
+        });
+    }
 
     // Cleanup any recovery files from previous crashes
     cleanupRecoveryFiles();

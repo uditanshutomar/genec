@@ -30,11 +30,15 @@ jupyter = [
     "jupyter>=1.0.0",
     "ipywidgets>=8.0.0",
 ]
+build = [
+    "pyinstaller>=6.0.0",
+]
 all = [
     "websockets>=12.0",
     "plotly>=5.18.0",
     "jupyter>=1.0.0",
     "ipywidgets>=8.0.0",
+    "pyinstaller>=6.0.0",
 ]
 
 [project.scripts]

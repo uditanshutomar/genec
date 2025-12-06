@@ -3,6 +3,7 @@
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+import sys
 
 import yaml
 
@@ -83,7 +84,7 @@ class GenECPipeline:
         self.logger.info("Initializing GenEC pipeline")
 
         # Ensure dependencies
-        project_root = Path(__file__).parent.parent.parent
+        project_root = self._get_project_root()
         self.dependency_manager = DependencyManager(project_root)
 
         # Check if auto-build is disabled via config
@@ -95,6 +96,14 @@ class GenECPipeline:
 
         # Initialize components
         self._initialize_components()
+
+    def _get_project_root(self) -> Path:
+        """Get project root directory, handling frozen (PyInstaller) state."""
+        if getattr(sys, "frozen", False):
+            # Running as compiled executable
+            return Path(sys._MEIPASS)
+        # Running as script
+        return Path(__file__).parent.parent.parent
 
     def _apply_overrides(self, config: dict, overrides: dict):
         """Recursively apply configuration overrides."""
@@ -285,7 +294,7 @@ class GenECPipeline:
 
                 # Resolve JAR path relative to project root if it's relative
                 jar_path = codegen_config.get("jdt_wrapper_jar")
-                project_root = Path(__file__).parent.parent.parent
+                project_root = self._get_project_root()
                 if not Path(jar_path).is_absolute():
                     self.jdt_wrapper_jar = str(project_root / jar_path)
                 else:
