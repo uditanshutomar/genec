@@ -341,9 +341,20 @@ class GenECPipeline:
             result.original_metrics = self._calculate_class_metrics(class_deps)
             self.logger.info(f"Original metrics: {result.original_metrics}")
 
-            # Read original code
+            # Read original code with size warning
             with open(class_file, encoding="utf-8") as f:
                 original_code = f.read()
+            
+            # Warn about large files that may cause memory/performance issues
+            line_count = original_code.count('\n')
+            if line_count > 10000:
+                self.logger.warning(
+                    f"Large file detected: {line_count} lines. "
+                    f"Analysis may be slow and memory-intensive. "
+                    f"Consider splitting very large classes manually first."
+                )
+            elif line_count > 5000:
+                self.logger.info(f"Processing large file with {line_count} lines...")
 
             # Stage 2: Mine evolutionary coupling
             self.logger.info("\n[Stage 2/6] Mining evolutionary coupling from Git history...")

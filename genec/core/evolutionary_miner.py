@@ -239,16 +239,31 @@ class EvolutionaryMiner:
         return evo_data
 
     def _get_file_commits(
-        self, repo: Repo, file_path: str, start_date: datetime, end_date: datetime
+        self, repo: Repo, file_path: str, start_date: datetime, end_date: datetime,
+        max_commits: int = 2000  # Memory limit: stop after this many commits
     ) -> list[git.Commit]:
-        """Get all commits affecting a file within a date range."""
+        """Get all commits affecting a file within a date range.
+        
+        Memory optimization: limits to max_commits to prevent OOM on large histories.
+        """
         commits = []
+        commit_count = 0
 
         try:
-            # Get commits for the file
+            # Get commits for the file with memory limit
             for commit in repo.iter_commits(paths=file_path, since=start_date.isoformat()):
                 if commit.committed_datetime.replace(tzinfo=None) <= end_date:
                     commits.append(commit)
+                    commit_count += 1
+                    
+                    # Memory safeguard: warn and stop if too many commits
+                    if commit_count >= max_commits:
+                        self.logger.warning(
+                            f"Large git history detected: {commit_count}+ commits. "
+                            f"Limiting to {max_commits} most recent commits for memory efficiency. "
+                            f"Consider reducing window_months in config."
+                        )
+                        break
         except GitCommandError as e:
             self.logger.error(f"Git command error: {e}")
 
