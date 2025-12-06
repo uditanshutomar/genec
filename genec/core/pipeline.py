@@ -409,6 +409,7 @@ class GenECPipeline:
                 enable_syntactic=self.verify_config.get("enable_syntactic", True),
                 enable_semantic=self.verify_config.get("enable_semantic", True),
                 enable_behavioral=self.verify_config.get("enable_behavioral", False),
+                enable_coverage=self.verify_config.get("enable_coverage", False),  # NEW
                 java_compiler=self.verify_config.get("java_compiler", "javac"),
                 maven_command=self.verify_config.get("maven_command", "mvn"),
                 gradle_command=self.verify_config.get("gradle_command", "gradle"),

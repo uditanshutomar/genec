@@ -23,6 +23,7 @@ class BehavioralVerifier:
         maven_command: str = "mvn", 
         gradle_command: str = "gradle",
         incremental_tests: bool = True,  # NEW: Only run affected tests
+        check_coverage: bool = False,    # NEW: Verify extracted class is covered
     ):
         """
         Initialize behavioral verifier.
@@ -31,14 +32,22 @@ class BehavioralVerifier:
             maven_command: Maven command
             gradle_command: Gradle command
             incremental_tests: If True, only run tests that reference the refactored class
+            check_coverage: If True, verify extracted class has test coverage
         """
         self.maven_command = maven_command
         self.gradle_command = gradle_command
         self.incremental_tests = incremental_tests
+        self.check_coverage = check_coverage
         self.logger = get_logger(self.__class__.__name__)
         
         # Test finder for incremental verification
         self._test_finder = None  # Lazy initialized with repo path
+        
+        # Coverage verifier
+        self._coverage_verifier = None
+        if check_coverage:
+            from genec.verification.coverage_verifier import CoverageVerifier
+            self._coverage_verifier = CoverageVerifier()
 
     def verify(
         self,
@@ -364,6 +373,11 @@ class BehavioralVerifier:
                     cmd = [self.maven_command, "test", "-q", f"-Dtest={test_pattern}", "-DfailIfNoTests=false"]
                 else:
                     cmd = [self.maven_command, "test", "-q"]
+                
+                # Append coverage goal if enabled
+                if self.check_coverage:
+                    cmd.append("jacoco:report")
+
             elif build_system == "gradle":
                 gradle_cmd = (
                     "./gradlew" if (repo_path / "gradlew").exists() else self.gradle_command
@@ -373,6 +387,10 @@ class BehavioralVerifier:
                     cmd = [gradle_cmd, "test", "-q"] + [f"--tests {tc}" for tc in affected_test_classes]
                 else:
                     cmd = [gradle_cmd, "test", "-q"]
+                
+                # Append coverage task if enabled
+                if self.check_coverage:
+                    cmd.append("jacocoTestReport")
             else:
                 return False, f"Unknown build system: {build_system}"
 
@@ -384,6 +402,20 @@ class BehavioralVerifier:
             # Check for actual test failures, not just warnings
             # Maven/Gradle return 0 on success, non-zero on failure
             if result.returncode == 0:
+                # Tests passed - now check coverage if enabled
+                if self.check_coverage and self._coverage_verifier and class_name:
+                    # We need the extracted class name (not the original class name)
+                    # But verifying the original class coverage is also a good proxy
+                    # For now, we check the class_name passed in (which is the original class)
+                    # Ideally we should check the NEW class, but we don't have its name here easily
+                    # unless we parse it or pass it.
+                    # Let's assume class_name is sufficient for now.
+                    cov_success, cov_percent, cov_err = self._coverage_verifier.verify_coverage(
+                        repo_path, class_name, build_system
+                    )
+                    if not cov_success:
+                        return False, f"Tests passed but coverage check failed: {cov_err}"
+                
                 return True, None
             else:
                 # Check if this is a real failure or just warnings

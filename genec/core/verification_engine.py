@@ -47,6 +47,7 @@ class VerificationEngine:
         enable_semantic: bool = True,
         enable_behavioral: bool = True,
         enable_performance: bool = False,  # NEW
+        enable_coverage: bool = False,     # NEW
         java_compiler: str = "javac",
         maven_command: str = "mvn",
         gradle_command: str = "gradle",
@@ -64,6 +65,7 @@ class VerificationEngine:
             enable_semantic: Enable semantic verification
             enable_behavioral: Enable behavioral verification
             enable_performance: Enable performance regression testing (NEW)
+            enable_coverage: Enable coverage verification (NEW)
             java_compiler: Java compiler command
             maven_command: Maven command
             gradle_command: Gradle command
@@ -77,6 +79,7 @@ class VerificationEngine:
         self.enable_semantic = enable_semantic
         self.enable_behavioral = enable_behavioral
         self.enable_performance = enable_performance  # NEW
+        self.enable_coverage = enable_coverage  # NEW
 
         # Initialize verifiers
         self.equivalence_checker = EquivalenceChecker(build_tool=build_tool)
@@ -84,7 +87,11 @@ class VerificationEngine:
         self.static_analysis_verifier = StaticAnalysisVerifier()
         self.multiversion_compiler = MultiVersionCompilationVerifier()  # NEW
         self.semantic_verifier = SemanticVerifier()
-        self.behavioral_verifier = BehavioralVerifier(maven_command, gradle_command)
+        self.behavioral_verifier = BehavioralVerifier(
+            maven_command, 
+            gradle_command,
+            check_coverage=enable_coverage
+        )
         self.performance_verifier = PerformanceVerifier()  # NEW
 
         self.logger = get_logger(self.__class__.__name__)

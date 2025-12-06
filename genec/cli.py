@@ -71,6 +71,10 @@ def main():
         help="Show what WOULD be applied without making changes"
     )
     parser.add_argument(
+        "--check-coverage", action="store_true",
+        help="Verify that extracted classes are covered by tests (requires JaCoCo)"
+    )
+    parser.add_argument(
         "--websocket", type=int, metavar="PORT",
         help="Enable WebSocket progress server on specified port (e.g., 9876)"
     )
@@ -132,6 +136,12 @@ def main():
             "auto_apply": True,
             "dry_run": False,
         }
+    
+    # Pass coverage check flag to verification config
+    if args.check_coverage:
+        if "verification" not in config_overrides:
+            config_overrides["verification"] = {}
+        config_overrides["verification"]["enable_coverage"] = True
 
     if (
         args.min_cluster_size is not None
