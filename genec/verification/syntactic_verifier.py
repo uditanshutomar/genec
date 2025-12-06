@@ -291,14 +291,12 @@ class SyntacticVerifier:
         try:
             self.logger.info(f"Compiling project with Maven in {self.repo_path}")
 
-            # Run Maven compile
+            # Run Maven compile - use project's own Java version settings
             cmd = [
                 'mvn',
                 '-q',
                 'compile',
                 '-DskipTests',
-                '-Dmaven.compiler.source=1.8',
-                '-Dmaven.compiler.target=1.8'
             ]
 
             if self.modules:
