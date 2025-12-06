@@ -21,6 +21,9 @@ export function activate(context: vscode.ExtensionContext) {
                     vscode.commands.executeCommand('workbench.action.openSettings', 'genec.pythonPath');
                 }
             });
+        } else {
+            // Python found - check and install dependencies
+            ensureDependencies(pythonPath, context);
         }
     });
 
@@ -32,6 +35,83 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(GenECViewProvider.viewType, provider)
     );
+
+    async function ensureDependencies(pythonPath: string, context: vscode.ExtensionContext) {
+        // Check if genec module is importable
+        const checkCmd = `${pythonPath} -c "import genec; print('ok')"`;
+
+        cp.exec(checkCmd, async (error, stdout) => {
+            if (error || !stdout.includes('ok')) {
+                console.log('GenEC: Dependencies not found, offering to install...');
+
+                const selection = await vscode.window.showInformationMessage(
+                    'GenEC requires Python dependencies. Install now?',
+                    'Install Dependencies',
+                    'Later'
+                );
+
+                if (selection === 'Install Dependencies') {
+                    await installDependencies(pythonPath, context);
+                }
+            } else {
+                console.log('GenEC: All dependencies already installed');
+            }
+        });
+    }
+
+    async function installDependencies(pythonPath: string, context: vscode.ExtensionContext) {
+        // Find requirements.txt in extension directory or genec project
+        const extensionPath = context.extensionPath;
+        let requirementsPath = path.join(extensionPath, '..', 'requirements.txt');
+
+        // Also check common locations
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (workspaceFolders) {
+            for (const folder of workspaceFolders) {
+                const wsReq = path.join(folder.uri.fsPath, 'requirements.txt');
+                if (fs.existsSync(wsReq)) {
+                    requirementsPath = wsReq;
+                    break;
+                }
+            }
+        }
+
+        // Show progress while installing
+        await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: 'GenEC: Installing Python dependencies...',
+            cancellable: false
+        }, async (progress) => {
+            return new Promise<void>((resolve, reject) => {
+                // Install with pip
+                let installCmd: string;
+                if (fs.existsSync(requirementsPath)) {
+                    installCmd = `${pythonPath} -m pip install -r "${requirementsPath}"`;
+                } else {
+                    // Fallback: install core packages directly
+                    installCmd = `${pythonPath} -m pip install anthropic gitpython networkx pyyaml websockets`;
+                }
+
+                console.log(`GenEC: Running: ${installCmd}`);
+                progress.report({ message: 'This may take a minute...' });
+
+                cp.exec(installCmd, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
+                    if (error) {
+                        console.log(`GenEC: Install failed: ${error.message}`);
+                        vscode.window.showErrorMessage(
+                            `Failed to install dependencies: ${error.message}. ` +
+                            `Try manually: pip install -r requirements.txt`
+                        );
+                        reject(error);
+                    } else {
+                        console.log('GenEC: Dependencies installed successfully');
+                        vscode.window.showInformationMessage('GenEC: Dependencies installed successfully!');
+                        resolve();
+                    }
+                });
+            });
+        });
+    }
 
     async function validatePythonInstallation(pythonPath: string): Promise<boolean> {
         return new Promise((resolve) => {
