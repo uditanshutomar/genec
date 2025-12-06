@@ -526,13 +526,55 @@ export class GenECViewProvider implements vscode.WebviewViewProvider {
                     // Log stderr for debugging
                     this._outputChannel.appendLine(`[STDERR] ${dataStr.trim()}`);
 
-                    // Parse progress from stderr
-                    const stageMatch = dataStr.match(/\[Stage \d+\/\d+\] .+/);
-                    if (stageMatch && this._view) {
-                        this._safePostMessage({
-                            type: 'status',
-                            value: stageMatch[0].trim()
-                        });
+                    // Parse each line for progress/errors
+                    const lines = dataStr.split('\n');
+                    for (const line of lines) {
+                        const trimmedLine = line.trim();
+                        if (!trimmedLine) continue;
+
+                        // Try to parse JSON progress events first
+                        if (trimmedLine.startsWith('{') && trimmedLine.includes('"type":"progress"')) {
+                            try {
+                                const progressEvent = JSON.parse(trimmedLine);
+                                if (progressEvent.type === 'progress') {
+                                    this._safePostMessage({
+                                        type: 'status',
+                                        value: `[${progressEvent.stage}/${progressEvent.total}] ${progressEvent.message}`
+                                    });
+                                }
+                            } catch { }
+                        }
+
+                        // Parse Stage progress from log format
+                        const stageMatch = trimmedLine.match(/\[Stage \d+\/\d+\] .+/);
+                        if (stageMatch) {
+                            this._safePostMessage({
+                                type: 'status',
+                                value: stageMatch[0].trim()
+                            });
+                        }
+
+                        // Show ERROR messages prominently to user
+                        if (trimmedLine.includes('ERROR') || trimmedLine.includes('Error:')) {
+                            const errorMsg = trimmedLine.replace(/^.*?(ERROR|Error:)\s*/, '').trim();
+                            if (errorMsg.length > 10) {  // Avoid empty/short errors
+                                this._safePostMessage({
+                                    type: 'error',
+                                    value: errorMsg
+                                });
+                            }
+                        }
+
+                        // Show critical warnings to user
+                        if (trimmedLine.includes('File too large') ||
+                            trimmedLine.includes('CONFLICT DETECTED') ||
+                            trimmedLine.includes('OOM') ||
+                            trimmedLine.includes('out of memory')) {
+                            this._safePostMessage({
+                                type: 'warning',
+                                value: trimmedLine.replace(/^.*?WARNING\s*:?\s*/, '').trim()
+                            });
+                        }
                     }
                 });
 

@@ -374,11 +374,21 @@ class GenECPipeline:
             with open(class_file, encoding="utf-8") as f:
                 original_code = f.read()
             
-            # Warn about large files that may cause memory/performance issues
+            # Check file size and warn/refuse for large files
             line_count = original_code.count('\n')
-            if line_count > 10000:
+            file_size_mb = len(original_code.encode('utf-8')) / (1024 * 1024)
+            
+            # Hard limit: refuse files over 100k lines to prevent OOM
+            if line_count > 100000:
+                self.logger.error(
+                    f"File too large: {line_count} lines ({file_size_mb:.1f}MB). "
+                    f"GenEC supports files up to 100,000 lines. "
+                    f"Please split this file manually first."
+                )
+                return result
+            elif line_count > 10000:
                 self.logger.warning(
-                    f"Large file detected: {line_count} lines. "
+                    f"Large file detected: {line_count} lines ({file_size_mb:.1f}MB). "
                     f"Analysis may be slow and memory-intensive. "
                     f"Consider splitting very large classes manually first."
                 )

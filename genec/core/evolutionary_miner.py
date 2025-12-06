@@ -795,8 +795,82 @@ class EvolutionaryMiner:
         try:
             with open(cache_file, "wb") as f:
                 pickle.dump(data, f)
+            
+            # Auto-cleanup old/large cache entries
+            self._cleanup_cache()
         except Exception as e:
             self.logger.warning(f"Failed to save cache: {e}")
+
+    def _cleanup_cache(
+        self, 
+        max_age_days: int = 30, 
+        max_size_mb: int = 100
+    ):
+        """
+        Clean up old and excessive cache files to prevent disk bloat.
+        
+        Args:
+            max_age_days: Remove files older than this (default 30 days)
+            max_size_mb: Maximum total cache size in MB (default 100MB)
+        """
+        if not self.cache_dir or not self.cache_dir.exists():
+            return
+        
+        try:
+            cache_files = list(self.cache_dir.glob("*.pkl"))
+            if not cache_files:
+                return
+            
+            now = datetime.now()
+            files_with_info = []
+            total_size = 0
+            
+            for cache_file in cache_files:
+                try:
+                    stat = cache_file.stat()
+                    age_days = (now - datetime.fromtimestamp(stat.st_mtime)).days
+                    size_bytes = stat.st_size
+                    files_with_info.append((cache_file, age_days, size_bytes))
+                    total_size += size_bytes
+                except Exception:
+                    continue
+            
+            # Remove files older than max_age_days
+            removed_count = 0
+            for cache_file, age_days, size_bytes in files_with_info:
+                if age_days > max_age_days:
+                    try:
+                        cache_file.unlink()
+                        total_size -= size_bytes
+                        removed_count += 1
+                    except Exception:
+                        pass
+            
+            # If still over size limit, remove oldest files first
+            max_size_bytes = max_size_mb * 1024 * 1024
+            if total_size > max_size_bytes:
+                # Sort by age (oldest first)
+                files_with_info.sort(key=lambda x: x[1], reverse=True)
+                
+                for cache_file, age_days, size_bytes in files_with_info:
+                    if total_size <= max_size_bytes:
+                        break
+                    if cache_file.exists():
+                        try:
+                            cache_file.unlink()
+                            total_size -= size_bytes
+                            removed_count += 1
+                        except Exception:
+                            pass
+            
+            if removed_count > 0:
+                self.logger.info(
+                    f"Cache cleanup: removed {removed_count} old/excess files. "
+                    f"Current cache size: {total_size / (1024*1024):.1f}MB"
+                )
+                
+        except Exception as e:
+            self.logger.debug(f"Cache cleanup failed: {e}")
 
     def _get_repo_signature(self, repo: Repo, class_file: str) -> str:
         """Compute a signature for the repo state relevant to caching."""
