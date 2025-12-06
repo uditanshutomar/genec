@@ -7,11 +7,75 @@ import { GenECViewProvider } from './GenECViewProvider';
 export function activate(context: vscode.ExtensionContext) {
     console.log('GenEC extension is now active!');
 
+    // Validate Python installation at startup
+    const config = vscode.workspace.getConfiguration('genec');
+    const pythonPath = config.get<string>('pythonPath') || 'python3';
+
+    validatePythonInstallation(pythonPath).then(valid => {
+        if (!valid) {
+            vscode.window.showWarningMessage(
+                `GenEC: Python not found at '${pythonPath}'. Please configure genec.pythonPath in settings.`,
+                'Open Settings'
+            ).then(selection => {
+                if (selection === 'Open Settings') {
+                    vscode.commands.executeCommand('workbench.action.openSettings', 'genec.pythonPath');
+                }
+            });
+        }
+    });
+
+    // Cleanup any recovery files from previous crashes
+    cleanupRecoveryFiles();
+
     // Register Webview View Provider
     const provider = new GenECViewProvider(context.extensionUri, context);
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(GenECViewProvider.viewType, provider)
     );
+
+    async function validatePythonInstallation(pythonPath: string): Promise<boolean> {
+        return new Promise((resolve) => {
+            cp.exec(`${pythonPath} --version`, (error, stdout, stderr) => {
+                if (error) {
+                    console.log(`GenEC: Python validation failed: ${error.message}`);
+                    resolve(false);
+                } else {
+                    console.log(`GenEC: Python found: ${stdout.trim() || stderr.trim()}`);
+                    resolve(true);
+                }
+            });
+        });
+    }
+
+    function cleanupRecoveryFiles() {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders) return;
+
+        for (const folder of workspaceFolders) {
+            const markerFile = path.join(folder.uri.fsPath, '.genec_verification_in_progress');
+            const backupDir = path.join(folder.uri.fsPath, '.genec_verification_backup');
+
+            // Clean up marker file
+            if (fs.existsSync(markerFile)) {
+                try {
+                    fs.unlinkSync(markerFile);
+                    console.log(`GenEC: Cleaned up recovery marker: ${markerFile}`);
+                } catch (e) {
+                    console.log(`GenEC: Failed to clean up marker: ${e}`);
+                }
+            }
+
+            // Clean up backup directory
+            if (fs.existsSync(backupDir)) {
+                try {
+                    fs.rmSync(backupDir, { recursive: true, force: true });
+                    console.log(`GenEC: Cleaned up recovery backup: ${backupDir}`);
+                } catch (e) {
+                    console.log(`GenEC: Failed to clean up backup: ${e}`);
+                }
+            }
+        }
+    }
 
     let disposable = vscode.commands.registerCommand('genec.refactorClass', async () => {
         const editor = vscode.window.activeTextEditor;

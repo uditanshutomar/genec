@@ -154,8 +154,17 @@ def main():
         )
 
         if args.json:
+            # Build message explaining results
+            if not results.suggestions:
+                message = "No refactoring suggestions found. Possible reasons: class is already well-factored, no cohesive method clusters detected, or class is too small."
+            elif not results.verified_suggestions:
+                message = f"Generated {len(results.suggestions)} suggestions but none passed verification. Check verification logs for details."
+            else:
+                message = f"Successfully generated {len(results.verified_suggestions)} verified suggestions."
+            
             output = {
                 "status": "success",
+                "message": message,
                 "original_metrics": results.original_metrics,
                 "suggestions": [
                     {

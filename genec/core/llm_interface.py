@@ -681,24 +681,34 @@ Your 2-3 sentence explanation here.
         clusters_to_process = clusters if max_suggestions is None else clusters[:max_suggestions]
         total = len(clusters_to_process)
 
+        # Rate limiting: reduce max workers to avoid API rate limits
+        safe_max_workers = min(max_workers, 2)  # Max 2 concurrent LLM calls
+        
         self.logger.info(
-            f"Generating suggestions for {total} clusters in parallel (max_workers={max_workers})..."
+            f"Generating suggestions for {total} clusters (max_workers={safe_max_workers}, rate-limited)..."
         )
 
         import concurrent.futures
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-            # Submit all tasks
-            future_to_cluster = {
-                executor.submit(
-                    self.generate_refactoring_suggestion,
+        import threading
+        
+        # Semaphore for rate limiting (max 2 concurrent requests)
+        rate_limiter = threading.Semaphore(2)
+        
+        def rate_limited_generate(cluster):
+            with rate_limiter:
+                return self.generate_refactoring_suggestion(
                     cluster,
                     original_code,
                     class_deps,
                     class_file,
                     repo_path,
                     evo_data,
-                ): cluster
+                )
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=safe_max_workers) as executor:
+            # Submit all tasks with rate limiting
+            future_to_cluster = {
+                executor.submit(rate_limited_generate, cluster): cluster
                 for cluster in clusters_to_process
             }
 
@@ -877,6 +887,11 @@ Your 2-3 sentence explanation here.
         # Check 4: UpperCamelCase (starts with capital)
         if not class_name[0].isupper():
             self.logger.warning(f"Class name '{class_name}' should start with uppercase")
+            return False
+
+        # Check 5: ASCII only (prevents encoding issues with file paths)
+        if not class_name.isascii():
+            self.logger.warning(f"Class name '{class_name}' contains non-ASCII characters")
             return False
 
         return True
