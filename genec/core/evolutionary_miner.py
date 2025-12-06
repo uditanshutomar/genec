@@ -151,7 +151,7 @@ class EvolutionaryMiner:
         repo_signature = self._get_repo_signature(repo, normalized_class_file)
 
         # Check cache
-        cache_key = self._get_cache_key(normalized_class_file, window_months, repo_signature)
+        cache_key = self._get_cache_key(normalized_class_file, window_months, min_commits, repo_signature)
         if self.cache_dir and self._is_cache_valid(cache_key):
             cached_data = self._load_from_cache(cache_key)
             if cached_data:
@@ -774,9 +774,11 @@ class EvolutionaryMiner:
             )
             self.logger.info("=" * 80)
 
-    def _get_cache_key(self, class_file: str, window_months: int, repo_signature: str) -> str:
+    def _get_cache_key(self, class_file: str, window_months: int, min_commits: int, repo_signature: str) -> str:
         """Generate cache key for a class file."""
-        key_str = f"{class_file}:{window_months}:{repo_signature}"
+        # Include configuration parameters in cache key to invalidate on config change
+        config_str = f"{self.min_coupling_threshold}:{self.max_changeset_size}:{self.min_revisions}"
+        key_str = f"{class_file}:{window_months}:{min_commits}:{config_str}:{repo_signature}"
         return hashlib.md5(key_str.encode()).hexdigest()  # nosec
 
     def _is_cache_valid(self, cache_key: str, ttl_days: int = 7) -> bool:
