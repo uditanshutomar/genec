@@ -246,7 +246,10 @@ class VerificationEngine:
             self.logger.info("Semantic verification skipped")
 
         # Layer 3: Behavioral Verification
-        if self.enable_behavioral:
+        # Skip if equivalence checking already passed - they both run tests,
+        # so this avoids redundant test execution
+        if self.enable_behavioral and not result.equivalence_pass:
+            # Only run behavioral if equivalence wasn't run or didn't pass
             self.logger.info("Layer 3: Behavioral Verification")
 
             behavioral_pass, error = self.behavioral_verifier.verify(
@@ -264,6 +267,10 @@ class VerificationEngine:
                 result.error_message = error
                 self.logger.warning(f"Behavioral verification failed: {error}")
                 return result
+        elif self.enable_behavioral and result.equivalence_pass:
+            # Equivalence already verified behavior - skip redundant check
+            result.behavioral_pass = True
+            self.logger.info("Behavioral verification skipped (equivalence already verified)")
         else:
             result.behavioral_pass = True
             self.logger.info("Behavioral verification skipped")
