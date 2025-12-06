@@ -12,12 +12,10 @@ Key features:
 - Preserves semantic context for accurate LLM suggestions
 """
 
-from typing import Set, List, Dict
 import logging
 
 from genec.core.cluster_detector import Cluster
-from genec.core.dependency_analyzer import ClassDependencies, MethodInfo, FieldInfo
-
+from genec.core.dependency_analyzer import ClassDependencies, FieldInfo, MethodInfo
 
 logger = logging.getLogger(__name__)
 
@@ -43,11 +41,7 @@ class ClusterContextBuilder:
         self.include_unused_fields_comment = include_unused_fields_comment
         self.logger = logger
 
-    def build_context(
-        self,
-        cluster: Cluster,
-        class_deps: ClassDependencies
-    ) -> str:
+    def build_context(self, cluster: Cluster, class_deps: ClassDependencies) -> str:
         """
         Build minimal context containing only cluster-relevant code.
 
@@ -136,11 +130,7 @@ class ClusterContextBuilder:
 
         return context
 
-    def _get_used_fields(
-        self,
-        cluster: Cluster,
-        class_deps: ClassDependencies
-    ) -> List[FieldInfo]:
+    def _get_used_fields(self, cluster: Cluster, class_deps: ClassDependencies) -> list[FieldInfo]:
         """
         Get fields accessed by cluster methods.
 
@@ -165,10 +155,8 @@ class ClusterContextBuilder:
         return [f for f in class_deps.fields if f.name in used_field_names]
 
     def _get_unused_fields(
-        self,
-        cluster: Cluster,
-        class_deps: ClassDependencies
-    ) -> List[FieldInfo]:
+        self, cluster: Cluster, class_deps: ClassDependencies
+    ) -> list[FieldInfo]:
         """
         Get fields NOT accessed by cluster.
 
@@ -186,10 +174,8 @@ class ClusterContextBuilder:
         return [f for f in class_deps.fields if f.name not in used_names]
 
     def _get_cluster_methods(
-        self,
-        cluster: Cluster,
-        class_deps: ClassDependencies
-    ) -> List[MethodInfo]:
+        self, cluster: Cluster, class_deps: ClassDependencies
+    ) -> list[MethodInfo]:
         """
         Get MethodInfo objects for cluster members.
 
@@ -211,11 +197,7 @@ class ClusterContextBuilder:
 
         return cluster_methods
 
-    def _get_dependencies(
-        self,
-        cluster: Cluster,
-        class_deps: ClassDependencies
-    ) -> Set[str]:
+    def _get_dependencies(self, cluster: Cluster, class_deps: ClassDependencies) -> set[str]:
         """
         Get methods called by cluster (but not in cluster).
 
@@ -261,14 +243,11 @@ class ClusterContextBuilder:
             "private String username;"
             "public static final int MAX_SIZE = 100;"
         """
-        modifiers = ' '.join(field.modifiers) if field.modifiers else 'private'
+        modifiers = " ".join(field.modifiers) if field.modifiers else "private"
         return f"{modifiers} {field.type} {field.name};"
 
     def _log_token_savings(
-        self,
-        cluster: Cluster,
-        class_deps: ClassDependencies,
-        context: str
+        self, cluster: Cluster, class_deps: ClassDependencies, context: str
     ) -> None:
         """
         Log estimated token savings from chunking.

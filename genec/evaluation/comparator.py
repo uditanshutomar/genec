@@ -1,13 +1,13 @@
 """Comparator for evaluating refactoring suggestions against ground truth."""
 
 import json
-from typing import List, Dict, Set, Tuple
 from dataclasses import dataclass, field
+
 import numpy as np
 from scipy import stats
 
-from genec.evaluation.ground_truth_builder import ExtractClassRefactoring
 from genec.core.llm_interface import RefactoringSuggestion
+from genec.evaluation.ground_truth_builder import ExtractClassRefactoring
 from genec.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
@@ -16,21 +16,23 @@ logger = get_logger(__name__)
 @dataclass
 class EvaluationMetrics:
     """Evaluation metrics for refactoring suggestions."""
+
     precision: float = 0.0
     recall: float = 0.0
     f1_score: float = 0.0
     true_positives: int = 0
     false_positives: int = 0
     false_negatives: int = 0
-    matches: List[Dict] = field(default_factory=list)
+    matches: list[dict] = field(default_factory=list)
 
 
 @dataclass
 class ComparisonResult:
     """Result of comparing tool outputs against ground truth."""
+
     tool_name: str
     metrics: EvaluationMetrics
-    quality_metrics: Dict[str, float] = field(default_factory=dict)
+    quality_metrics: dict[str, float] = field(default_factory=dict)
 
 
 class Comparator:
@@ -48,9 +50,9 @@ class Comparator:
 
     def evaluate_suggestions(
         self,
-        suggestions: List[RefactoringSuggestion],
-        ground_truth: List[ExtractClassRefactoring],
-        source_class: str
+        suggestions: list[RefactoringSuggestion],
+        ground_truth: list[ExtractClassRefactoring],
+        source_class: str,
     ) -> EvaluationMetrics:
         """
         Evaluate refactoring suggestions against ground truth.
@@ -69,10 +71,7 @@ class Comparator:
         )
 
         # Filter ground truth to only this class
-        relevant_gt = [
-            gt for gt in ground_truth
-            if source_class in gt.source_class
-        ]
+        relevant_gt = [gt for gt in ground_truth if source_class in gt.source_class]
 
         if not relevant_gt:
             self.logger.warning(f"No ground truth refactorings for {source_class}")
@@ -108,11 +107,13 @@ class Comparator:
                 metrics.true_positives += 1
                 matched_gt.add(best_match)
 
-                metrics.matches.append({
-                    'suggestion': suggestion.proposed_class_name,
-                    'ground_truth': relevant_gt[best_match].extracted_class,
-                    'similarity': best_similarity
-                })
+                metrics.matches.append(
+                    {
+                        "suggestion": suggestion.proposed_class_name,
+                        "ground_truth": relevant_gt[best_match].extracted_class,
+                        "similarity": best_similarity,
+                    }
+                )
 
                 self.logger.debug(
                     f"Matched: {suggestion.proposed_class_name} -> "
@@ -141,8 +142,8 @@ class Comparator:
             metrics.recall = 0.0
 
         if metrics.precision + metrics.recall > 0:
-            metrics.f1_score = 2 * (metrics.precision * metrics.recall) / (
-                metrics.precision + metrics.recall
+            metrics.f1_score = (
+                2 * (metrics.precision * metrics.recall) / (metrics.precision + metrics.recall)
             )
         else:
             metrics.f1_score = 0.0
@@ -157,10 +158,10 @@ class Comparator:
 
     def compare_approaches(
         self,
-        results: Dict[str, List[RefactoringSuggestion]],
-        ground_truth: List[ExtractClassRefactoring],
-        source_class: str
-    ) -> List[ComparisonResult]:
+        results: dict[str, list[RefactoringSuggestion]],
+        ground_truth: list[ExtractClassRefactoring],
+        source_class: str,
+    ) -> list[ComparisonResult]:
         """
         Compare multiple approaches against ground truth.
 
@@ -179,10 +180,7 @@ class Comparator:
 
             metrics = self.evaluate_suggestions(suggestions, ground_truth, source_class)
 
-            comparison = ComparisonResult(
-                tool_name=tool_name,
-                metrics=metrics
-            )
+            comparison = ComparisonResult(tool_name=tool_name, metrics=metrics)
 
             comparisons.append(comparison)
 
@@ -190,10 +188,10 @@ class Comparator:
 
     def statistical_comparison(
         self,
-        baseline_metrics: List[float],
-        approach_metrics: List[float],
-        metric_name: str = "F1-score"
-    ) -> Dict:
+        baseline_metrics: list[float],
+        approach_metrics: list[float],
+        metric_name: str = "F1-score",
+    ) -> dict:
         """
         Perform statistical comparison between baseline and approach.
 
@@ -223,15 +221,15 @@ class Comparator:
         cohen_d = np.mean(differences) / np.std(differences) if np.std(differences) > 0 else 0
 
         result = {
-            'metric_name': metric_name,
-            'baseline_mean': np.mean(baseline_metrics),
-            'approach_mean': np.mean(approach_metrics),
-            'difference': np.mean(differences),
-            't_statistic': t_stat,
-            'p_value': p_value,
-            'cohen_d': cohen_d,
-            'significant': p_value < 0.05,
-            'better': np.mean(approach_metrics) > np.mean(baseline_metrics)
+            "metric_name": metric_name,
+            "baseline_mean": np.mean(baseline_metrics),
+            "approach_mean": np.mean(approach_metrics),
+            "difference": np.mean(differences),
+            "t_statistic": t_stat,
+            "p_value": p_value,
+            "cohen_d": cohen_d,
+            "significant": p_value < 0.05,
+            "better": np.mean(approach_metrics) > np.mean(baseline_metrics),
         }
 
         self.logger.info(
@@ -245,7 +243,7 @@ class Comparator:
 
         return result
 
-    def _jaccard_similarity(self, set1: Set, set2: Set) -> float:
+    def _jaccard_similarity(self, set1: set, set2: set) -> float:
         """
         Calculate Jaccard similarity between two sets.
 
@@ -267,11 +265,7 @@ class Comparator:
 
         return intersection / union if union > 0 else 0.0
 
-    def save_evaluation_report(
-        self,
-        comparisons: List[ComparisonResult],
-        output_file: str
-    ):
+    def save_evaluation_report(self, comparisons: list[ComparisonResult], output_file: str):
         """
         Save evaluation report to JSON file.
 
@@ -279,35 +273,30 @@ class Comparator:
             comparisons: List of comparison results
             output_file: Output file path
         """
-        report = {
-            'approaches': []
-        }
+        report = {"approaches": []}
 
         for comparison in comparisons:
             approach_data = {
-                'name': comparison.tool_name,
-                'metrics': {
-                    'precision': comparison.metrics.precision,
-                    'recall': comparison.metrics.recall,
-                    'f1_score': comparison.metrics.f1_score,
-                    'true_positives': comparison.metrics.true_positives,
-                    'false_positives': comparison.metrics.false_positives,
-                    'false_negatives': comparison.metrics.false_negatives
+                "name": comparison.tool_name,
+                "metrics": {
+                    "precision": comparison.metrics.precision,
+                    "recall": comparison.metrics.recall,
+                    "f1_score": comparison.metrics.f1_score,
+                    "true_positives": comparison.metrics.true_positives,
+                    "false_positives": comparison.metrics.false_positives,
+                    "false_negatives": comparison.metrics.false_negatives,
                 },
-                'quality_metrics': comparison.quality_metrics,
-                'matches': comparison.metrics.matches
+                "quality_metrics": comparison.quality_metrics,
+                "matches": comparison.metrics.matches,
             }
-            report['approaches'].append(approach_data)
+            report["approaches"].append(approach_data)
 
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(report, f, indent=2)
 
         self.logger.info(f"Saved evaluation report to {output_file}")
 
-    def generate_summary_table(
-        self,
-        comparisons: List[ComparisonResult]
-    ) -> str:
+    def generate_summary_table(self, comparisons: list[ComparisonResult]) -> str:
         """
         Generate a formatted summary table.
 

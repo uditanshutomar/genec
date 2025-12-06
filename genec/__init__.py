@@ -7,4 +7,4 @@ __author__ = "GenEC Team"
 
 from genec.core.pipeline import GenECPipeline
 
-__all__ = ['GenECPipeline']
+__all__ = ["GenECPipeline"]

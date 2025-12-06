@@ -1,11 +1,10 @@
 """Static dependency analyzer for Java classes."""
 
-import numpy as np
 from dataclasses import dataclass, field
-from typing import List, Dict, Set, Optional
-from pathlib import Path
 
-from genec.parsers.java_parser import JavaParser, ParsedMethod, ParsedField
+import numpy as np
+
+from genec.parsers.java_parser import JavaParser
 from genec.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
@@ -14,11 +13,12 @@ logger = get_logger(__name__)
 @dataclass
 class MethodInfo:
     """Information about a method in a class."""
+
     name: str
     signature: str
     return_type: str
-    modifiers: List[str]
-    parameters: List[dict]
+    modifiers: list[str]
+    parameters: list[dict]
     start_line: int
     end_line: int
     body: str
@@ -35,9 +35,10 @@ class MethodInfo:
 @dataclass
 class FieldInfo:
     """Information about a field in a class."""
+
     name: str
     type: str
-    modifiers: List[str]
+    modifiers: list[str]
     line_number: int
 
     def __hash__(self):
@@ -52,18 +53,19 @@ class FieldInfo:
 @dataclass
 class ClassDependencies:
     """Complete dependency information for a Java class."""
+
     class_name: str
     package_name: str
     file_path: str
-    methods: List[MethodInfo] = field(default_factory=list)
-    fields: List[FieldInfo] = field(default_factory=list)
-    constructors: List[MethodInfo] = field(default_factory=list)
-    method_calls: Dict[str, List[str]] = field(default_factory=dict)  # method -> called methods
-    field_accesses: Dict[str, List[str]] = field(default_factory=dict)  # method -> accessed fields
-    dependency_matrix: Optional[np.ndarray] = None
-    member_names: List[str] = field(default_factory=list)  # All members (methods + fields)
+    methods: list[MethodInfo] = field(default_factory=list)
+    fields: list[FieldInfo] = field(default_factory=list)
+    constructors: list[MethodInfo] = field(default_factory=list)
+    method_calls: dict[str, list[str]] = field(default_factory=dict)  # method -> called methods
+    field_accesses: dict[str, list[str]] = field(default_factory=dict)  # method -> accessed fields
+    dependency_matrix: np.ndarray | None = None
+    member_names: list[str] = field(default_factory=list)  # All members (methods + fields)
 
-    def get_all_methods(self) -> List[MethodInfo]:
+    def get_all_methods(self) -> list[MethodInfo]:
         """Get all methods including constructors."""
         return self.methods + self.constructors
 
@@ -81,7 +83,7 @@ class DependencyAnalyzer:
         self.parser = JavaParser()
         self.logger = get_logger(self.__class__.__name__)
 
-    def analyze_class(self, class_file: str) -> Optional[ClassDependencies]:
+    def analyze_class(self, class_file: str) -> ClassDependencies | None:
         """
         Analyze a Java class file and extract all dependencies.
 
@@ -95,7 +97,7 @@ class DependencyAnalyzer:
 
         # Read source code
         try:
-            with open(class_file, 'r', encoding='utf-8') as f:
+            with open(class_file, encoding="utf-8") as f:
                 source_code = f.read()
         except Exception as e:
             self.logger.error(f"Failed to read {class_file}: {e}")
@@ -109,7 +111,7 @@ class DependencyAnalyzer:
 
         # Convert to our data structures
         methods = []
-        for parsed_method in class_info['methods']:
+        for parsed_method in class_info["methods"]:
             method_info = MethodInfo(
                 name=parsed_method.name,
                 signature=parsed_method.signature,
@@ -118,42 +120,42 @@ class DependencyAnalyzer:
                 parameters=parsed_method.parameters,
                 start_line=parsed_method.start_line,
                 end_line=parsed_method.end_line,
-                body=parsed_method.body
+                body=parsed_method.body,
             )
             methods.append(method_info)
 
         constructors = []
-        for parsed_constructor in class_info['constructors']:
+        for parsed_constructor in class_info["constructors"]:
             constructor_info = MethodInfo(
                 name=parsed_constructor.name,
                 signature=parsed_constructor.signature,
-                return_type='',
+                return_type="",
                 modifiers=parsed_constructor.modifiers,
                 parameters=parsed_constructor.parameters,
                 start_line=parsed_constructor.start_line,
                 end_line=parsed_constructor.end_line,
-                body=parsed_constructor.body
+                body=parsed_constructor.body,
             )
             constructors.append(constructor_info)
 
         fields = []
-        for parsed_field in class_info['fields']:
+        for parsed_field in class_info["fields"]:
             field_info = FieldInfo(
                 name=parsed_field.name,
                 type=parsed_field.type,
                 modifiers=parsed_field.modifiers,
-                line_number=parsed_field.line_number
+                line_number=parsed_field.line_number,
             )
             fields.append(field_info)
 
         # Create ClassDependencies object
         class_deps = ClassDependencies(
-            class_name=class_info['class_name'],
-            package_name=class_info['package_name'],
+            class_name=class_info["class_name"],
+            package_name=class_info["package_name"],
             file_path=class_file,
             methods=methods,
             fields=fields,
-            constructors=constructors
+            constructors=constructors,
         )
 
         # Extract method calls and field accesses
@@ -251,8 +253,9 @@ class DependencyAnalyzer:
 
         class_deps.dependency_matrix = matrix
 
-    def get_dependency_strength(self, class_deps: ClassDependencies,
-                               member1: str, member2: str) -> float:
+    def get_dependency_strength(
+        self, class_deps: ClassDependencies, member1: str, member2: str
+    ) -> float:
         """
         Get dependency strength between two members.
 

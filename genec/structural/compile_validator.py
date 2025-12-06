@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import shlex
 import subprocess
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Sequence
 
 from genec.utils.logging_utils import get_logger
 
@@ -84,10 +84,7 @@ class StructuralCompileValidator:
                 stderr=completed.stderr or "",
             )
         except subprocess.TimeoutExpired as exc:
-            msg = (
-                f"Compile command timed out after {self.timeout_seconds}s: "
-                f"{exc.cmd}"
-            )
+            msg = f"Compile command timed out after {self.timeout_seconds}s: " f"{exc.cmd}"
             self.logger.error(msg)
             return CompileResult(
                 success=False,

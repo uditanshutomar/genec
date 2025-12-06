@@ -1,7 +1,6 @@
 """Cohesion metrics calculator (LCOM5)."""
 
-import numpy as np
-from typing import Dict, Set
+
 
 from genec.core.dependency_analyzer import ClassDependencies
 from genec.utils.logging_utils import get_logger
@@ -123,12 +122,7 @@ class CohesionCalculator:
 
         return tcc
 
-    def _are_methods_connected(
-        self,
-        method1,
-        method2,
-        class_deps: ClassDependencies
-    ) -> bool:
+    def _are_methods_connected(self, method1, method2, class_deps: ClassDependencies) -> bool:
         """
         Check if two methods are directly connected.
 
@@ -160,7 +154,7 @@ class CohesionCalculator:
 
         return False
 
-    def calculate_cohesion_metrics(self, class_deps: ClassDependencies) -> Dict[str, float]:
+    def calculate_cohesion_metrics(self, class_deps: ClassDependencies) -> dict[str, float]:
         """
         Calculate all cohesion metrics.
 
@@ -170,9 +164,6 @@ class CohesionCalculator:
         Returns:
             Dictionary of metric names to values
         """
-        metrics = {
-            'lcom5': self.calculate_lcom5(class_deps),
-            'tcc': self.calculate_tcc(class_deps)
-        }
+        metrics = {"lcom5": self.calculate_lcom5(class_deps), "tcc": self.calculate_tcc(class_deps)}
 
         return metrics

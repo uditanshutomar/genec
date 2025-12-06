@@ -44,8 +44,9 @@ from enum import Enum
 
 class QualityTier(Enum):
     """Quality tier for refactoring suggestions."""
-    SHOULD = "should"        # High quality - strong recommendation
-    COULD = "could"          # Medium quality - conditional recommendation
+
+    SHOULD = "should"  # High quality - strong recommendation
+    COULD = "could"  # Medium quality - conditional recommendation
     POTENTIAL = "potential"  # Low quality - informational only
 
 
@@ -69,7 +70,7 @@ class Cluster:
     coverage: float | None = None
     is_connected: bool = True
     stability_score: float | None = None
-    
+
     # Quality tier metadata
     quality_tier: QualityTier | None = None
     quality_reasons: list[str] = field(default_factory=list)
@@ -89,35 +90,35 @@ class Cluster:
 def calculate_quality_tier(cluster: Cluster, evo_data=None) -> QualityTier:
     """
     Calculate quality tier for a cluster based on multiple factors.
-    
+
     Scoring criteria:
     - Evolutionary coupling strength (40%)
     - Internal cohesion (30%)
     - External coupling (20%)
     - Cluster size (10%)
-    
+
     Args:
         cluster: Cluster to evaluate
         evo_data: Optional evolutionary data for coupling analysis
-        
+
     Returns:
         QualityTier (SHOULD ≥70, COULD ≥40, POTENTIAL <40)
     """
     score = 0.0
     reasons = []
-    
+
     # Evolutionary evidence (40 points)
-    if evo_data and hasattr(evo_data, 'coupling_strengths'):
+    if evo_data and hasattr(evo_data, "coupling_strengths"):
         # Calculate average coupling strength for methods in cluster
         cluster_methods = cluster.get_methods()
         coupling_values = []
-        
+
         for i, method1 in enumerate(cluster_methods):
-            for method2 in cluster_methods[i+1:]:
+            for method2 in cluster_methods[i + 1 :]:
                 pair = tuple(sorted([method1, method2]))
                 if pair in evo_data.coupling_strengths:
                     coupling_values.append(evo_data.coupling_strengths[pair])
-        
+
         if coupling_values:
             avg_coupling = sum(coupling_values) / len(coupling_values)
             if avg_coupling > 0.5:
@@ -133,7 +134,7 @@ def calculate_quality_tier(cluster: Cluster, evo_data=None) -> QualityTier:
             reasons.append("No evolutionary coupling found")
     else:
         reasons.append("No evolutionary data available")
-    
+
     # Internal cohesion (30 points)
     if cluster.internal_cohesion > 0.7:
         score += 30
@@ -146,7 +147,7 @@ def calculate_quality_tier(cluster: Cluster, evo_data=None) -> QualityTier:
         reasons.append(f"Low internal cohesion ({cluster.internal_cohesion:.2f})")
     else:
         reasons.append(f"Very low internal cohesion ({cluster.internal_cohesion:.2f})")
-    
+
     # External coupling (20 points - inverted, lower is better)
     if cluster.external_coupling < 0.3:
         score += 20
@@ -156,7 +157,7 @@ def calculate_quality_tier(cluster: Cluster, evo_data=None) -> QualityTier:
         reasons.append(f"Moderate external coupling ({cluster.external_coupling:.2f})")
     else:
         reasons.append(f"High external coupling ({cluster.external_coupling:.2f})")
-    
+
     # Cluster size (10 points)
     size = len(cluster.member_names)
     if 3 <= size <= 10:
@@ -167,11 +168,11 @@ def calculate_quality_tier(cluster: Cluster, evo_data=None) -> QualityTier:
         reasons.append(f"Large cluster ({size} members)")
     else:
         reasons.append(f"Small cluster ({size} members)")
-    
+
     # Update cluster metadata
     cluster.quality_score = score
     cluster.quality_reasons = reasons
-    
+
     # Assign tier based on score
     if score >= 70:
         tier = QualityTier.SHOULD
@@ -179,7 +180,7 @@ def calculate_quality_tier(cluster: Cluster, evo_data=None) -> QualityTier:
         tier = QualityTier.COULD
     else:
         tier = QualityTier.POTENTIAL
-    
+
     cluster.quality_tier = tier
     return tier
 

@@ -5,16 +5,11 @@ Uses an LLM to analyze whether a cluster can be safely extracted by understandin
 the semantic relationships between methods, abstract dependencies, and design patterns.
 """
 
-from typing import List, Tuple
 from dataclasses import dataclass
 
 from genec.core.cluster_detector import Cluster
-from genec.core.dependency_analyzer import ClassDependencies, MethodInfo
-from genec.llm import (
-    AnthropicClientWrapper,
-    LLMRequestFailed,
-    LLMServiceUnavailable,
-)
+from genec.core.dependency_analyzer import ClassDependencies
+from genec.llm import AnthropicClientWrapper, LLMRequestFailed, LLMServiceUnavailable
 from genec.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
@@ -23,10 +18,11 @@ logger = get_logger(__name__)
 @dataclass
 class SemanticValidationResult:
     """Result of LLM semantic validation."""
+
     is_valid: bool
     confidence: float  # 0.0 to 1.0
     reasoning: str
-    suggested_modifications: List[str]
+    suggested_modifications: list[str]
 
 
 class LLMSemanticValidator:
@@ -46,10 +42,7 @@ class LLMSemanticValidator:
         self.enabled = self.llm.enabled
 
     def validate_extraction_semantics(
-        self,
-        cluster: Cluster,
-        class_deps: ClassDependencies,
-        identified_issues: List[str]
+        self, cluster: Cluster, class_deps: ClassDependencies, identified_issues: list[str]
     ) -> SemanticValidationResult:
         """
         Use LLM to analyze whether extraction is semantically valid despite identified issues.
@@ -73,7 +66,7 @@ class LLMSemanticValidator:
                 is_valid=False,
                 confidence=0.0,
                 reasoning="LLM validation disabled - no API key",
-                suggested_modifications=[]
+                suggested_modifications=[],
             )
 
         # Build context for LLM
@@ -105,14 +98,11 @@ class LLMSemanticValidator:
                 is_valid=False,
                 confidence=0.0,
                 reasoning=f"LLM validation error: {str(e)}",
-                suggested_modifications=[]
+                suggested_modifications=[],
             )
 
     def _build_validation_context(
-        self,
-        cluster: Cluster,
-        class_deps: ClassDependencies,
-        identified_issues: List[str]
+        self, cluster: Cluster, class_deps: ClassDependencies, identified_issues: list[str]
     ) -> str:
         """Build context prompt for LLM analysis."""
 
@@ -125,8 +115,12 @@ class LLMSemanticValidator:
         for method_sig in cluster_methods[:10]:  # Limit to first 10 to avoid token limits
             method_info = method_by_sig.get(method_sig)
             if method_info:
-                modifiers = ', '.join(method_info.modifiers) if method_info.modifiers else 'none'
-                body_preview = (method_info.body[:200] + '...') if method_info.body and len(method_info.body) > 200 else method_info.body or 'no body'
+                modifiers = ", ".join(method_info.modifiers) if method_info.modifiers else "none"
+                body_preview = (
+                    (method_info.body[:200] + "...")
+                    if method_info.body and len(method_info.body) > 200
+                    else method_info.body or "no body"
+                )
                 method_details.append(
                     f"  - {method_sig}\n"
                     f"    Modifiers: {modifiers}\n"
@@ -165,7 +159,7 @@ Consider Java's access control, inheritance, and composition patterns.
 
     def _parse_llm_response(self, response_text: str) -> SemanticValidationResult:
         """Parse structured LLM response."""
-        lines = response_text.strip().split('\n')
+        lines = response_text.strip().split("\n")
 
         is_valid = False
         confidence = 0.0
@@ -174,24 +168,24 @@ Consider Java's access control, inheritance, and composition patterns.
 
         for line in lines:
             line = line.strip()
-            if line.startswith('VALID:'):
-                is_valid = 'yes' in line.lower()
-            elif line.startswith('CONFIDENCE:'):
+            if line.startswith("VALID:"):
+                is_valid = "yes" in line.lower()
+            elif line.startswith("CONFIDENCE:"):
                 try:
-                    confidence = float(line.split(':', 1)[1].strip())
+                    confidence = float(line.split(":", 1)[1].strip())
                 except:
                     confidence = 0.5
-            elif line.startswith('REASONING:'):
-                reasoning = line.split(':', 1)[1].strip()
-            elif line.startswith('MODIFICATIONS:'):
-                mods = line.split(':', 1)[1].strip()
-                if mods.lower() != 'none':
-                    modifications = [m.strip() for m in mods.split(',')]
+            elif line.startswith("REASONING:"):
+                reasoning = line.split(":", 1)[1].strip()
+            elif line.startswith("MODIFICATIONS:"):
+                mods = line.split(":", 1)[1].strip()
+                if mods.lower() != "none":
+                    modifications = [m.strip() for m in mods.split(",")]
 
         # If reasoning spans multiple lines, capture it
-        if 'REASONING:' in response_text:
-            reasoning_start = response_text.index('REASONING:') + len('REASONING:')
-            reasoning_end = response_text.find('MODIFICATIONS:', reasoning_start)
+        if "REASONING:" in response_text:
+            reasoning_start = response_text.index("REASONING:") + len("REASONING:")
+            reasoning_end = response_text.find("MODIFICATIONS:", reasoning_start)
             if reasoning_end == -1:
                 reasoning_end = len(response_text)
             reasoning = response_text[reasoning_start:reasoning_end].strip()
@@ -200,5 +194,5 @@ Consider Java's access control, inheritance, and composition patterns.
             is_valid=is_valid,
             confidence=confidence,
             reasoning=reasoning,
-            suggested_modifications=modifications
+            suggested_modifications=modifications,
         )

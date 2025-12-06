@@ -6,28 +6,41 @@ GenEC is a hybrid framework for automated Extract Class refactoring that combine
 
 ## High-Level Architecture
 
+GenEC uses a modular **Pipeline Architecture** orchestrated by a `PipelineRunner`. The process is divided into distinct, sequential **Stages**, each responsible for a specific phase of the refactoring lifecycle.
+
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      GenEC Pipeline                              │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│  ┌───────────────┐    ┌────────────────┐    ┌──────────────┐   │
-│  │   Analysis    │───▶│   Clustering   │───▶│  Validation  │   │
-│  │   (Static +   │    │   (Louvain)    │    │  (3-Tier)    │   │
-│  │  Evolutionary)│    │                │    │              │   │
-│  └───────────────┘    └────────────────┘    └──────┬───────┘   │
-│                                                     │           │
-│                                              ┌──────▼───────┐   │
-│                                              │  Generation  │   │
-│  ┌───────────────┐    ┌────────────────┐    │  (LLM +      │   │
-│  │ Transformation│◀───│  Verification  │◀───│   JDT)       │   │
-│  │   Guidance    │    │  (Multi-Layer) │    │              │   │
-│  └───────────────┘    └────────────────┘    └──────────────┘   │
-│                                                                   │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           PipelineRunner                                │
+│                                                                         │
+│  ┌──────────────┐   ┌──────────────────┐   ┌──────────────┐             │
+│  │ AnalysisStage│──▶│GraphProcessing   │──▶│Clustering    │             │
+│  │              │   │Stage             │   │Stage         │             │
+│  └──────┬───────┘   └────────┬─────────┘   └──────┬───────┘             │
+│         │                    │                    │                     │
+│         ▼                    ▼                    ▼                     │
+│  ┌──────────────┐   ┌──────────────────┐   ┌──────────────┐             │
+│  │Refactoring   │◀──│NamingStage       │◀──│(Validation)  │             │
+│  │Stage         │   │                  │   │              │             │
+│  └──────────────┘   └──────────────────┘   └──────────────┘             │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
+### Pipeline Stages
+
+1.  **AnalysisStage**: Performs static dependency analysis (AST) and evolutionary mining (Git history).
+2.  **GraphProcessingStage**: Fuses static and evolutionary graphs, calculates centrality metrics, and exports graph data.
+3.  **ClusteringStage**: Detects communities (clusters) using Louvain algorithm, filters them based on quality tiers, and ranks them.
+4.  **NamingStage**: Generates meaningful class names and refactoring suggestions using LLM (Claude).
+5.  **RefactoringStage**: Applies refactorings (transactionally) and verifies them using the multi-tier verification engine.
+
 ## Core Components
+
+### 0. Pipeline Orchestration
+
+- **PipelineRunner**: Orchestrates the sequential execution of stages.
+  - [genec/core/pipeline_runner.py](../genec/core/pipeline_runner.py)
+- **PipelineStage**: Abstract base class for all stages.
+  - [genec/core/stages/base_stage.py](../genec/core/stages/base_stage.py)
 
 ### 1. Analysis Layer
 

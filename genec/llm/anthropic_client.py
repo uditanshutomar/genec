@@ -13,7 +13,6 @@ import os
 import random
 import time
 from dataclasses import dataclass
-from typing import Optional
 
 import anthropic
 
@@ -40,13 +39,13 @@ class LLMConfig:
     initial_backoff: float = 1.0  # seconds
     backoff_factor: float = 2.0
     max_backoff: float = 30.0
-    timeout: Optional[float] = 60.0  # seconds
+    timeout: float | None = 60.0  # seconds
 
 
 class AnthropicClientWrapper:
     """Centralised Anthropic messages client with retry/backoff."""
 
-    def __init__(self, api_key: Optional[str] = None, config: Optional[LLMConfig] = None):
+    def __init__(self, api_key: str | None = None, config: LLMConfig | None = None):
         self.logger = get_logger(self.__class__.__name__)
         self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         self.config = config or LLMConfig()
@@ -71,7 +70,7 @@ class AnthropicClientWrapper:
         self,
         prompt: str,
         *,
-        model: Optional[str] = None,
+        model: str | None = None,
         max_tokens: int = 2000,
         temperature: float = 0.2,
     ) -> str:
@@ -91,7 +90,7 @@ class AnthropicClientWrapper:
         truncated_prompt = self._truncate_prompt(prompt)
         attempt = 0
         backoff = self.config.initial_backoff
-        last_error: Optional[Exception] = None
+        last_error: Exception | None = None
 
         while attempt < self.config.max_retries:
             attempt += 1

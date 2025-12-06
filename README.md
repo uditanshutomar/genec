@@ -102,6 +102,13 @@ python scripts/evaluate_all.py \
 ```
 genec/
 ├── core/
+│   ├── stages/                   # Pipeline stages
+│   │   ├── analysis_stage.py
+│   │   ├── clustering_stage.py
+│   │   ├── graph_processing_stage.py
+│   │   ├── naming_stage.py
+│   │   └── refactoring_stage.py
+│   ├── pipeline_runner.py        # Pipeline orchestrator
 │   ├── dependency_analyzer.py    # Static Java analysis
 │   ├── evolutionary_miner.py     # Git history mining
 │   ├── graph_builder.py          # Graph construction & fusion
@@ -134,18 +141,16 @@ genec/
 
 ## Pipeline Stages
 
-1. **Dependency Analysis**: Extract method calls, field accesses from Java AST
-2. **Evolutionary Mining**: Analyze Git history for co-changing methods
-3. **Graph Building**: Create and fuse static + evolutionary graphs
-4. **Cluster Detection**: Apply Louvain algorithm, filter and rank clusters
-   - **Extraction Validation**: Static analysis for abstract methods, inner classes, private dependencies
-   - **Auto-fix**: Iterative transitive closure for missing private method dependencies
-   - **LLM Semantic Validation**: Intelligent override for borderline cases (confidence >= 0.7)
-5. **LLM Generation**: Generate refactoring suggestions via Claude API
-6. **Verification**: Validate through syntactic, semantic, behavioral layers
-7. **Transformation Guidance** (for rejected clusters):
-   - **Pattern Suggestions**: Design patterns to enable blocked extractions
-   - **Structural Plans**: Accessor/facade scaffolding for complex changes
+1.  **AnalysisStage**: Extract method calls, field accesses from Java AST and analyze Git history for co-changing methods.
+2.  **GraphProcessingStage**: Create and fuse static + evolutionary graphs, calculate metrics, and export data.
+3.  **ClusteringStage**: Apply Louvain algorithm, filter and rank clusters.
+    - **Extraction Validation**: Static analysis for abstract methods, inner classes, private dependencies
+    - **Auto-fix**: Iterative transitive closure for missing private method dependencies
+    - **LLM Semantic Validation**: Intelligent override for borderline cases (confidence >= 0.7)
+4.  **NamingStage**: Generate refactoring suggestions via Claude API (LLM).
+5.  **RefactoringStage**: Apply and verify refactorings.
+    - **Verification**: Validate through syntactic, semantic, behavioral layers
+    - **Transformation Guidance** (for rejected clusters): Pattern suggestions and structural plans
 
 ## Metrics
 

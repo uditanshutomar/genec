@@ -242,7 +242,7 @@ class JavaParser:
         # Lazily parse if tree not provided
         if not tree:
             tree = self.parse_file_content(source_code)
-            
+
         info = self._extract_class_info_javalang(tree, source_code)
         if info:
             return info
@@ -428,27 +428,28 @@ class JavaParser:
             if param.type not in ("formal_parameter", "spread_parameter"):
                 continue
 
-
             # self.logger.info(f"Param node text: {self._node_text(param, source_bytes)}")
             type_node = param.child_by_field_name("type")
             name_node = param.child_by_field_name("name")
-            
+
             # Check for varargs (spread_parameter implies varargs)
-            is_varargs = param.type == "spread_parameter" or "..." in self._node_text(param, source_bytes)
-            
+            is_varargs = param.type == "spread_parameter" or "..." in self._node_text(
+                param, source_bytes
+            )
+
             if not name_node:
                 # In spread_parameter, the name might be the child after '...'
                 # structure: ... type declarator
                 # or type ... declarator
                 # Let's try to find a variable_declarator or identifier
                 for child in param.named_children:
-                     if child.type == "identifier" and child != type_node:
-                         name_node = child
-                         break
-            
+                    if child.type == "identifier" and child != type_node:
+                        name_node = child
+                        break
+
             if not name_node:
-                 continue
-                
+                continue
+
             param_type = self._node_text(type_node, source_bytes).strip() if type_node else ""
             if param_type:
                 # Strip generics
@@ -456,10 +457,10 @@ class JavaParser:
                 param_type = re.sub(r"\s*\[\s*\]", "[]", param_type)
                 if "..." in param_type:
                     param_type = param_type.replace("...", "[]")
-            
+
             # If varargs detected in node but not in type, append []
             if is_varargs and "[]" not in param_type and not param_type.endswith("[]"):
-                 param_type += "[]"
+                param_type += "[]"
 
             param_name = self._node_text(name_node, source_bytes).strip()
             parameters.append({"name": param_name, "type": param_type})
@@ -568,7 +569,7 @@ class JavaParser:
                 # Rebuild signature from cleaned parameters
                 method_name = method_data.get("name", "")
                 signature = self._build_signature(method_name, cleaned_parameters)
-                
+
                 class_info["methods"].append(
                     ParsedMethod(
                         name=method_name,
@@ -594,7 +595,7 @@ class JavaParser:
                     cleaned_parameters.append({"name": p.get("name", ""), "type": p_type})
 
                 signature = self._build_signature("<init>", cleaned_parameters)
-                
+
                 class_info["constructors"].append(
                     ParsedMethod(
                         name=ctor_data.get("name", ""),

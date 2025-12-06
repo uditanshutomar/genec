@@ -13,11 +13,10 @@ these plans to perform the actual rewrites automatically.
 
 from __future__ import annotations
 
+import datetime
+import textwrap
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional, Dict
-import textwrap
-import datetime
 
 from genec.core.cluster_detector import Cluster
 from genec.core.dependency_analyzer import ClassDependencies
@@ -31,8 +30,8 @@ class StructuralAction:
     """Describes a suggested structural change."""
 
     description: str
-    details: Optional[str] = None
-    artifacts: Dict[str, str] = field(default_factory=dict)  # filename -> content
+    details: str | None = None
+    artifacts: dict[str, str] = field(default_factory=dict)  # filename -> content
 
 
 @dataclass
@@ -41,9 +40,9 @@ class StructuralTransformResult:
 
     cluster_id: int
     applied: bool
-    actions: List[StructuralAction] = field(default_factory=list)
-    notes: Optional[str] = None
-    plan_path: Optional[Path] = None
+    actions: list[StructuralAction] = field(default_factory=list)
+    notes: str | None = None
+    plan_path: Path | None = None
 
 
 class StructuralTransformer:
@@ -86,9 +85,7 @@ class StructuralTransformer:
                 f"Cluster too large for automated structural plan "
                 f"({method_count} methods, {field_count} fields)"
             )
-            self.logger.info(
-                "Skipping structural plan for cluster %s: %s", cluster.id, note
-            )
+            self.logger.info("Skipping structural plan for cluster %s: %s", cluster.id, note)
             return StructuralTransformResult(
                 cluster_id=cluster.id,
                 applied=False,
@@ -120,7 +117,7 @@ class StructuralTransformer:
         self,
         cluster: Cluster,
         class_deps: ClassDependencies,
-        issues: List,
+        issues: list,
         repo_path: str,
         class_file: str,
     ) -> StructuralAction:
@@ -201,8 +198,8 @@ class StructuralTransformer:
     def _render_scaffolding_section(
         self,
         class_name: str,
-        inner_classes: List[str],
-        abstract_calls: List[str],
+        inner_classes: list[str],
+        abstract_calls: list[str],
     ) -> str:
         """Render guidance text for façade/accessor scaffolding."""
         inner_section = (
@@ -218,8 +215,7 @@ class StructuralTransformer:
         abstract_section = (
             "### Abstract Method Adaptations\n"
             + "\n".join(
-                f"- Provide Strategy/Callback override for `{sig}`."
-                for sig in abstract_calls
+                f"- Provide Strategy/Callback override for `{sig}`." for sig in abstract_calls
             )
             if abstract_calls
             else "### Abstract Method Adaptations\n- None detected."

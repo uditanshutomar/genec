@@ -274,19 +274,17 @@ class RefactoringApplicator:
             content: Content to write
         """
         import tempfile
-        
+
         # Create parent directories if they don't exist
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Atomic write: write to temp file in same directory, then rename
         # Using same directory ensures atomic rename on same filesystem
         fd, temp_path = tempfile.mkstemp(
-            suffix='.tmp', 
-            prefix=f'.{file_path.name}_',
-            dir=file_path.parent
+            suffix=".tmp", prefix=f".{file_path.name}_", dir=file_path.parent
         )
         try:
-            with os.fdopen(fd, 'w', encoding='utf-8') as f:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
                 f.write(content)
             # Atomic rename (works on POSIX and Windows)
             os.replace(temp_path, file_path)

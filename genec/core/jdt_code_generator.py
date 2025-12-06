@@ -21,6 +21,7 @@ Architecture:
 import json
 import os
 import re
+import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -53,7 +54,11 @@ class JDTCodeGenerator:
     Uses Eclipse JDT's battle-tested refactoring engine (15+ years of development).
     """
 
-    def __init__(self, jdt_wrapper_jar: str | None = None, timeout: int = 60):
+    DEFAULT_DOWNLOAD_URL = "https://github.com/uditanshutomar/genec/releases/download/v0.1.0/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar"
+
+    def __init__(
+        self, jdt_wrapper_jar: str | None = None, timeout: int = 60, auto_download: bool = True
+    ):
         """
         Initialize JDT code generator.
 
@@ -61,6 +66,7 @@ class JDTCodeGenerator:
             jdt_wrapper_jar: Path to genec-jdt-wrapper JAR file.
                            If None, looks in default location.
             timeout: Timeout for JDT process in seconds
+            auto_download: If True, download JAR if missing
         """
         self.logger = get_logger(self.__class__.__name__)
         self.timeout = timeout
@@ -70,10 +76,22 @@ class JDTCodeGenerator:
             jdt_wrapper_jar = self._find_jdt_wrapper()
 
         if not os.path.exists(jdt_wrapper_jar):
-            raise FileNotFoundError(
-                f"Eclipse JDT wrapper JAR not found: {jdt_wrapper_jar}\n"
-                f"Please build it with: cd genec-jdt-wrapper && mvn package"
-            )
+            if auto_download:
+                self.logger.info(
+                    f"JDT wrapper not found at {jdt_wrapper_jar}. Attempting download..."
+                )
+                try:
+                    self._download_jdt_wrapper(jdt_wrapper_jar)
+                except Exception as e:
+                    self.logger.error(f"Failed to download JDT wrapper: {e}")
+                    # Fall through to error
+
+            if not os.path.exists(jdt_wrapper_jar):
+                raise FileNotFoundError(
+                    f"Eclipse JDT wrapper JAR not found: {jdt_wrapper_jar}\n"
+                    f"Please build it with: cd genec-jdt-wrapper && mvn package\n"
+                    f"Or download manually from: {self.DEFAULT_DOWNLOAD_URL}"
+                )
 
         self.jdt_wrapper_jar = jdt_wrapper_jar
         self.logger.info(f"Using Eclipse JDT wrapper: {jdt_wrapper_jar}")
@@ -81,8 +99,14 @@ class JDTCodeGenerator:
     def _find_jdt_wrapper(self) -> str:
         """Find JDT wrapper JAR in default locations."""
         project_root = Path(__file__).parent.parent.parent
+        user_home = Path.home()
+
+        # Standard user location
+        user_lib = user_home / ".genec" / "lib" / "genec-jdt-wrapper.jar"
 
         possible_locations = [
+            # User directory (highest priority if exists)
+            str(user_lib),
             # Relative paths (legacy)
             "genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar",
             "lib/genec-jdt-wrapper.jar",
@@ -97,6 +121,37 @@ class JDTCodeGenerator:
         for location in possible_locations:
             if os.path.exists(location):
                 return location
+
+        # If not found, return the user lib path as the target for download
+        return str(user_lib)
+
+    def _download_jdt_wrapper(self, target_path: str):
+        """Download JDT wrapper JAR."""
+        import ssl
+        import urllib.request
+
+        target = Path(target_path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+
+        self.logger.info(f"Downloading JDT wrapper from {self.DEFAULT_DOWNLOAD_URL}...")
+
+        # Bypass SSL verification if needed (sometimes issues in some envs)
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+
+        try:
+            with (
+                urllib.request.urlopen(self.DEFAULT_DOWNLOAD_URL, context=ctx) as response,
+                open(target_path, "wb") as out_file,
+            ):
+                shutil.copyfileobj(response, out_file)
+            self.logger.info("Download complete.")
+        except Exception as e:
+            # Clean up partial file
+            if os.path.exists(target_path):
+                os.unlink(target_path)
+            raise e
 
         # Default to expected Maven output location (absolute)
         return str(
@@ -278,7 +333,7 @@ class JDTCodeGenerator:
         for method_sig in cluster_methods:
             accessed = class_deps.field_accesses.get(method_sig, [])
             used_fields.update(accessed)
-            
+
         if not used_fields:
             return []
 
@@ -290,7 +345,7 @@ class JDTCodeGenerator:
 
         # 3. Filter to keep only exclusively used fields
         exclusive_fields = [f for f in used_fields if f not in external_usage]
-        
+
         # Log excluded fields for debugging
         excluded = used_fields - set(exclusive_fields)
         if excluded:
@@ -342,22 +397,22 @@ class JDTCodeGenerator:
                         if candidate_sig in methods:
                             continue
                         modifiers = [m.lower() for m in modifiers_by_sig.get(candidate_sig, [])]
-                        
+
                         should_add = False
-                        
+
                         # Add private helper methods
                         if "private" in modifiers:
                             should_add = True
-                            
+
                         # Add package-private helper methods (no visibility modifier)
                         # Treat them like private helpers as they are often implementation details
                         elif not any(m in modifiers for m in ["public", "protected"]):
                             should_add = True
-                            
+
                         # Add static helper methods (they're often utilities used by the cluster)
                         elif "static" in modifiers:
                             should_add = True
-                            
+
                         if should_add:
                             methods.add(candidate_sig)
                             added = True

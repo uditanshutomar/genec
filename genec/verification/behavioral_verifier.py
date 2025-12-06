@@ -19,11 +19,11 @@ class BehavioralVerifier:
     """Verifies refactorings preserve behavior by running test suites."""
 
     def __init__(
-        self, 
-        maven_command: str = "mvn", 
+        self,
+        maven_command: str = "mvn",
         gradle_command: str = "gradle",
         incremental_tests: bool = True,  # NEW: Only run affected tests
-        check_coverage: bool = False,    # NEW: Verify extracted class is covered
+        check_coverage: bool = False,  # NEW: Verify extracted class is covered
     ):
         """
         Initialize behavioral verifier.
@@ -39,14 +39,15 @@ class BehavioralVerifier:
         self.incremental_tests = incremental_tests
         self.check_coverage = check_coverage
         self.logger = get_logger(self.__class__.__name__)
-        
+
         # Test finder for incremental verification
         self._test_finder = None  # Lazy initialized with repo path
-        
+
         # Coverage verifier
         self._coverage_verifier = None
         if check_coverage:
             from genec.verification.coverage_verifier import CoverageVerifier
+
             self._coverage_verifier = CoverageVerifier()
 
     def verify(
@@ -110,7 +111,9 @@ class BehavioralVerifier:
                 if original_path.exists():
                     backup_data[original_path] = original_path.read_text(encoding="utf-8")
                     backup_mtime[original_path] = original_path.stat().st_mtime
-                    self.logger.debug(f"Backed up: {original_path} (mtime: {backup_mtime[original_path]})")
+                    self.logger.debug(
+                        f"Backed up: {original_path} (mtime: {backup_mtime[original_path]})"
+                    )
 
                 # Step 5: Apply refactoring IN-PLACE
                 self.logger.info("Applying refactoring in-place")
@@ -210,17 +213,17 @@ class BehavioralVerifier:
             return False, f"Error applying refactoring: {str(e)}", None
 
     def _restore_files(
-        self, 
-        backup_data: dict[Path, str], 
+        self,
+        backup_data: dict[Path, str],
         new_class_file: Path | None,
-        backup_mtime: dict[Path, float] | None = None
+        backup_mtime: dict[Path, float] | None = None,
     ):
         """
         Restore backed-up files and delete new class file.
 
         This is called in finally block to guarantee cleanup.
         Checks mtime to detect if user modified file during verification.
-        
+
         Args:
             backup_data: Dict mapping path to original content
             new_class_file: Path to newly created class file to delete
@@ -234,7 +237,7 @@ class BehavioralVerifier:
                     if path.exists():
                         current_mtime = path.stat().st_mtime
                         original_mtime = backup_mtime[path]
-                        
+
                         # If mtime changed beyond what we expect from our own write,
                         # the user may have edited the file
                         if current_mtime > original_mtime + 1:  # 1s tolerance
@@ -244,7 +247,7 @@ class BehavioralVerifier:
                                 f"Original mtime: {original_mtime}, Current: {current_mtime}"
                             )
                             continue
-                
+
                 path.write_text(content, encoding="utf-8")
                 self.logger.debug(f"Restored: {path}")
             except Exception as e:
@@ -328,9 +331,9 @@ class BehavioralVerifier:
         return True
 
     def _run_tests(
-        self, 
-        repo_path: Path, 
-        build_system: str, 
+        self,
+        repo_path: Path,
+        build_system: str,
         timeout: int = 180,  # 3 minutes
         class_name: str | None = None,  # For incremental verification
     ) -> tuple[bool, str | None]:
@@ -351,10 +354,10 @@ class BehavioralVerifier:
             affected_test_classes = []
             if self.incremental_tests and class_name:
                 from genec.verification.test_finder import TestFinder
-                
+
                 if self._test_finder is None:
                     self._test_finder = TestFinder(repo_path)
-                
+
                 affected_tests = self._test_finder.find_affected_tests(class_name)
                 if affected_tests:
                     affected_test_classes = self._test_finder.get_test_class_names(affected_tests)
@@ -364,16 +367,22 @@ class BehavioralVerifier:
                     )
                 else:
                     self.logger.info("No affected tests found, running full suite")
-            
+
             # Build command based on build system and incremental mode
             if build_system == "maven":
                 if affected_test_classes:
                     # Run only affected tests
                     test_pattern = ",".join(affected_test_classes)
-                    cmd = [self.maven_command, "test", "-q", f"-Dtest={test_pattern}", "-DfailIfNoTests=false"]
+                    cmd = [
+                        self.maven_command,
+                        "test",
+                        "-q",
+                        f"-Dtest={test_pattern}",
+                        "-DfailIfNoTests=false",
+                    ]
                 else:
                     cmd = [self.maven_command, "test", "-q"]
-                
+
                 # Append coverage goal if enabled
                 if self.check_coverage:
                     cmd.append("jacoco:report")
@@ -384,10 +393,12 @@ class BehavioralVerifier:
                 )
                 if affected_test_classes:
                     # Run only affected tests
-                    cmd = [gradle_cmd, "test", "-q"] + [f"--tests {tc}" for tc in affected_test_classes]
+                    cmd = [gradle_cmd, "test", "-q"] + [
+                        f"--tests {tc}" for tc in affected_test_classes
+                    ]
                 else:
                     cmd = [gradle_cmd, "test", "-q"]
-                
+
                 # Append coverage task if enabled
                 if self.check_coverage:
                     cmd.append("jacocoTestReport")
@@ -415,7 +426,7 @@ class BehavioralVerifier:
                     )
                     if not cov_success:
                         return False, f"Tests passed but coverage check failed: {cov_err}"
-                
+
                 return True, None
             else:
                 # Check if this is a real failure or just warnings

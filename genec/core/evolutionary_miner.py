@@ -128,7 +128,7 @@ class EvolutionaryMiner:
 
         try:
             repo = Repo(repo_path)
-            
+
             # Check for git lock file to prevent conflicts with other git operations
             git_lock_file = Path(repo_path) / ".git" / "index.lock"
             if git_lock_file.exists():
@@ -139,11 +139,14 @@ class EvolutionaryMiner:
                 )
                 # Wait briefly in case it's a transient lock
                 import time
+
                 time.sleep(1)
                 if git_lock_file.exists():
-                    self.logger.error("Git lock file still present. Skipping mining to avoid conflicts.")
+                    self.logger.error(
+                        "Git lock file still present. Skipping mining to avoid conflicts."
+                    )
                     return EvolutionaryData(class_file=normalized_class_file)
-                    
+
         except Exception as e:
             self.logger.error(f"Failed to open repository {repo_path}: {e}")
             return EvolutionaryData(class_file=normalized_class_file)
@@ -151,7 +154,9 @@ class EvolutionaryMiner:
         repo_signature = self._get_repo_signature(repo, normalized_class_file)
 
         # Check cache
-        cache_key = self._get_cache_key(normalized_class_file, window_months, min_commits, repo_signature)
+        cache_key = self._get_cache_key(
+            normalized_class_file, window_months, min_commits, repo_signature
+        )
         if self.cache_dir and self._is_cache_valid(cache_key):
             cached_data = self._load_from_cache(cache_key)
             if cached_data:
@@ -239,11 +244,15 @@ class EvolutionaryMiner:
         return evo_data
 
     def _get_file_commits(
-        self, repo: Repo, file_path: str, start_date: datetime, end_date: datetime,
-        max_commits: int = 2000  # Memory limit: stop after this many commits
+        self,
+        repo: Repo,
+        file_path: str,
+        start_date: datetime,
+        end_date: datetime,
+        max_commits: int = 2000,  # Memory limit: stop after this many commits
     ) -> list[git.Commit]:
         """Get all commits affecting a file within a date range.
-        
+
         Memory optimization: limits to max_commits to prevent OOM on large histories.
         """
         commits = []
@@ -255,7 +264,7 @@ class EvolutionaryMiner:
                 if commit.committed_datetime.replace(tzinfo=None) <= end_date:
                     commits.append(commit)
                     commit_count += 1
-                    
+
                     # Memory safeguard: warn and stop if too many commits
                     if commit_count >= max_commits:
                         self.logger.warning(
@@ -267,14 +276,17 @@ class EvolutionaryMiner:
         except GitCommandError as e:
             error_str = str(e).lower()
             # Check if this is a transient/retryable error
-            if any(keyword in error_str for keyword in ['lock', 'timeout', 'busy', 'temporary']):
+            if any(keyword in error_str for keyword in ["lock", "timeout", "busy", "temporary"]):
                 self.logger.warning(f"Transient git error, retrying: {e}")
                 import time
+
                 for retry in range(3):
                     try:
-                        time.sleep(2 ** retry)  # Exponential backoff: 1s, 2s, 4s
+                        time.sleep(2**retry)  # Exponential backoff: 1s, 2s, 4s
                         # Retry the git operation
-                        for commit in repo.iter_commits(paths=file_path, since=start_date.isoformat()):
+                        for commit in repo.iter_commits(
+                            paths=file_path, since=start_date.isoformat()
+                        ):
                             if commit.committed_datetime.replace(tzinfo=None) <= end_date:
                                 if commit not in commits:  # Avoid duplicates
                                     commits.append(commit)
@@ -774,7 +786,9 @@ class EvolutionaryMiner:
             )
             self.logger.info("=" * 80)
 
-    def _get_cache_key(self, class_file: str, window_months: int, min_commits: int, repo_signature: str) -> str:
+    def _get_cache_key(
+        self, class_file: str, window_months: int, min_commits: int, repo_signature: str
+    ) -> str:
         """Generate cache key for a class file."""
         # Include configuration parameters in cache key to invalidate on config change
         config_str = f"{self.min_coupling_threshold}:{self.max_changeset_size}:{self.min_revisions}"
@@ -816,36 +830,32 @@ class EvolutionaryMiner:
         try:
             with open(cache_file, "wb") as f:
                 pickle.dump(data, f)
-            
+
             # Auto-cleanup old/large cache entries
             self._cleanup_cache()
         except Exception as e:
             self.logger.warning(f"Failed to save cache: {e}")
 
-    def _cleanup_cache(
-        self, 
-        max_age_days: int = 30, 
-        max_size_mb: int = 100
-    ):
+    def _cleanup_cache(self, max_age_days: int = 30, max_size_mb: int = 100):
         """
         Clean up old and excessive cache files to prevent disk bloat.
-        
+
         Args:
             max_age_days: Remove files older than this (default 30 days)
             max_size_mb: Maximum total cache size in MB (default 100MB)
         """
         if not self.cache_dir or not self.cache_dir.exists():
             return
-        
+
         try:
             cache_files = list(self.cache_dir.glob("*.pkl"))
             if not cache_files:
                 return
-            
+
             now = datetime.now()
             files_with_info = []
             total_size = 0
-            
+
             for cache_file in cache_files:
                 try:
                     stat = cache_file.stat()
@@ -855,7 +865,7 @@ class EvolutionaryMiner:
                     total_size += size_bytes
                 except Exception:
                     continue
-            
+
             # Remove files older than max_age_days
             removed_count = 0
             for cache_file, age_days, size_bytes in files_with_info:
@@ -866,13 +876,13 @@ class EvolutionaryMiner:
                         removed_count += 1
                     except Exception:
                         pass
-            
+
             # If still over size limit, remove oldest files first
             max_size_bytes = max_size_mb * 1024 * 1024
             if total_size > max_size_bytes:
                 # Sort by age (oldest first)
                 files_with_info.sort(key=lambda x: x[1], reverse=True)
-                
+
                 for cache_file, age_days, size_bytes in files_with_info:
                     if total_size <= max_size_bytes:
                         break
@@ -883,13 +893,13 @@ class EvolutionaryMiner:
                             removed_count += 1
                         except Exception:
                             pass
-            
+
             if removed_count > 0:
                 self.logger.info(
                     f"Cache cleanup: removed {removed_count} old/excess files. "
                     f"Current cache size: {total_size / (1024*1024):.1f}MB"
                 )
-                
+
         except Exception as e:
             self.logger.debug(f"Cache cleanup failed: {e}")
 

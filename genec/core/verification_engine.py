@@ -47,7 +47,7 @@ class VerificationEngine:
         enable_semantic: bool = True,
         enable_behavioral: bool = True,
         enable_performance: bool = False,  # NEW
-        enable_coverage: bool = False,     # NEW
+        enable_coverage: bool = False,  # NEW
         java_compiler: str = "javac",
         maven_command: str = "mvn",
         gradle_command: str = "gradle",
@@ -88,9 +88,7 @@ class VerificationEngine:
         self.multiversion_compiler = MultiVersionCompilationVerifier()  # NEW
         self.semantic_verifier = SemanticVerifier()
         self.behavioral_verifier = BehavioralVerifier(
-            maven_command, 
-            gradle_command,
-            check_coverage=enable_coverage
+            maven_command, gradle_command, check_coverage=enable_coverage
         )
         self.performance_verifier = PerformanceVerifier()  # NEW
 
@@ -133,8 +131,11 @@ class VerificationEngine:
 
             # Build refactored files dict (use os.path.join for cross-platform)
             import os
-            package_path = class_deps.package_name.replace('.', os.sep)
-            new_class_path = os.path.join("src", "main", "java", package_path, f"{suggestion.proposed_class_name}.java")
+
+            package_path = class_deps.package_name.replace(".", os.sep)
+            new_class_path = os.path.join(
+                "src", "main", "java", package_path, f"{suggestion.proposed_class_name}.java"
+            )
             refactored_files = {
                 new_class_path: suggestion.new_class_code,
                 original_class_file: suggestion.modified_original_code,

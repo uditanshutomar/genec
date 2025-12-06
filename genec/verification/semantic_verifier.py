@@ -1,13 +1,12 @@
 """Semantic verification of refactoring transformations."""
 
 import re
-from typing import Set, Dict, Tuple, Optional
 import tempfile
 from pathlib import Path
 
-from genec.parsers.java_parser import JavaParser, ParsedMethod
-from genec.core.dependency_analyzer import ClassDependencies
 from genec.core.cluster_detector import Cluster
+from genec.core.dependency_analyzer import ClassDependencies
+from genec.parsers.java_parser import JavaParser
 from genec.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
@@ -27,8 +26,8 @@ class SemanticVerifier:
         new_class_code: str,
         modified_original_code: str,
         cluster: Cluster,
-        class_deps: ClassDependencies
-    ) -> Tuple[bool, Optional[str]]:
+        class_deps: ClassDependencies,
+    ) -> tuple[bool, str | None]:
         """
         Verify semantic correctness of the refactoring.
 
@@ -71,47 +70,55 @@ class SemanticVerifier:
             # Verify extracted members exist in original
             for method_sig in cluster_methods:
                 # Match by method name (signatures might differ slightly)
-                method_name = method_sig.split('(')[0]
+                method_name = method_sig.split("(")[0]
                 if method_name == class_deps.class_name:
                     continue  # Skip constructors
-                if not any(method_name in m for m in original_members['methods']):
+                if not any(method_name in m for m in original_members["methods"]):
                     return False, f"Extracted method {method_name} not found in original class"
 
             for field in cluster_fields:
-                if field not in original_members['fields']:
+                if field not in original_members["fields"]:
                     return False, f"Extracted field {field} not found in original class"
 
             # Verify extracted members appear in new class
             for method_sig in cluster_methods:
-                method_name = method_sig.split('(')[0]
+                method_name = method_sig.split("(")[0]
                 if method_name == class_deps.class_name:
                     continue  # Skip constructors
-                if not any(method_name in m for m in new_class_members['methods']):
+                if not any(method_name in m for m in new_class_members["methods"]):
                     return False, f"Method {method_name} missing from new class"
 
             for field in cluster_fields:
-                if field not in new_class_members['fields']:
+                if field not in new_class_members["fields"]:
                     return False, f"Field {field} missing from new class"
 
             # Verify extracted members removed from modified original
             for method_sig in cluster_methods:
-                method_name = method_sig.split('(')[0]
+                method_name = method_sig.split("(")[0]
                 if method_name == class_deps.class_name:
                     continue  # Skip constructors
-                if method_name in modified_members['methods']:
-                    if not self._is_delegation_method(modified_info, modified_original_code, method_name):
-                        return False, f"Method {method_name} still in modified class (not delegation)"
+                if method_name in modified_members["methods"]:
+                    if not self._is_delegation_method(
+                        modified_info, modified_original_code, method_name
+                    ):
+                        return (
+                            False,
+                            f"Method {method_name} still in modified class (not delegation)",
+                        )
 
             # Verify no unexpected member loss
             # (Modified + New should roughly equal Original, accounting for delegation)
-            original_method_count = len(original_members['methods'])
-            modified_method_count = len(modified_members['methods'])
-            new_class_method_count = len(new_class_members['methods'])
+            original_method_count = len(original_members["methods"])
+            modified_method_count = len(modified_members["methods"])
+            new_class_method_count = len(new_class_members["methods"])
 
             # Allow for delegation methods and constructors
             total_after = modified_method_count + new_class_method_count
             if total_after < original_method_count - 2:  # Allow some tolerance
-                return False, f"Too many methods lost in refactoring: {original_method_count} -> {total_after}"
+                return (
+                    False,
+                    f"Too many methods lost in refactoring: {original_method_count} -> {total_after}",
+                )
 
             self.logger.info("Semantic verification PASSED")
             return True, None
@@ -121,30 +128,27 @@ class SemanticVerifier:
             self.logger.error(error_msg)
             return False, error_msg
 
-    def _extract_members(self, class_info: Dict) -> Dict[str, Set[str]]:
+    def _extract_members(self, class_info: dict) -> dict[str, set[str]]:
         """
         Extract method and field names from parsed class information.
 
         Returns:
             Dict with 'methods' and 'fields' sets
         """
-        members = {
-            'methods': set(),
-            'fields': set()
-        }
+        members = {"methods": set(), "fields": set()}
 
-        for method in class_info.get('methods', []):
-            members['methods'].add(method.name)
+        for method in class_info.get("methods", []):
+            members["methods"].add(method.name)
 
-        for constructor in class_info.get('constructors', []):
-            members['methods'].add(constructor.name)
+        for constructor in class_info.get("constructors", []):
+            members["methods"].add(constructor.name)
 
-        for field in class_info.get('fields', []):
-            members['fields'].add(field.name)
+        for field in class_info.get("fields", []):
+            members["fields"].add(field.name)
 
         return members
 
-    def _is_delegation_method(self, class_info: Dict, source: str, method_name: str) -> bool:
+    def _is_delegation_method(self, class_info: dict, source: str, method_name: str) -> bool:
         """
         Check if a method is a simple delegation method.
 
@@ -157,10 +161,10 @@ class SemanticVerifier:
         Returns:
             True if method appears to be a delegation
         """
-        for method in class_info.get('methods', []):
+        for method in class_info.get("methods", []):
             if method.name != method_name:
                 continue
-            body = (method.body or '').strip()
+            body = (method.body or "").strip()
             if not body:
                 return False
 
@@ -172,31 +176,31 @@ class SemanticVerifier:
             # Remove signature and enclosing braces if present
             statements = []
             for idx, line in enumerate(body_lines):
-                if idx == 0 and ('(' in line and line.endswith('{')):
+                if idx == 0 and ("(" in line and line.endswith("{")):
                     continue
-                if line == '}' or line == '};':
+                if line == "}" or line == "};":
                     continue
                 statements.append(line)
 
             if len(statements) == 1:
-                stmt = statements[0].rstrip(';').strip()
+                stmt = statements[0].rstrip(";").strip()
 
                 # Allow optional return keyword
-                stmt = re.sub(r'^\s*return\s+', '', stmt).strip()
+                stmt = re.sub(r"^\s*return\s+", "", stmt).strip()
 
                 # Remove explicit this/super qualifiers that don't affect delegation
-                stmt = re.sub(r'^(?:this|super)\.', '', stmt)
+                stmt = re.sub(r"^(?:this|super)\.", "", stmt)
 
                 # Extract call target before argument list
-                target = stmt.split('(')[0].strip()
+                target = stmt.split("(")[0].strip()
                 if not target:
                     continue
 
                 # Collapse chained this./super. occurrences within the target (e.g., this.helper.method)
-                target = target.replace('this.', '').replace('super.', '')
+                target = target.replace("this.", "").replace("super.", "")
 
                 # Ensure the statement invokes another object's method with the same name
-                if '.' in target and target.split('.')[-1] == method_name:
+                if "." in target and target.split(".")[-1] == method_name:
                     return True
 
         # Constructors aren't used for delegation here
@@ -215,31 +219,33 @@ class SemanticVerifier:
         # - Opening brace on same or different line
         pattern = re.compile(
             rf"(?:public|protected|private|static|\s)*\s+{re.escape(method_name)}\s*\([^{{]*?\)\s*(?:throws\s+[^{{]*?)?\s*\{{([^{{}}]*)\}}",
-            re.DOTALL
+            re.DOTALL,
         )
         for match in pattern.finditer(source):
             body = match.group(1).strip()
             if not body:
                 continue
-            statements = [line.strip().rstrip(';') for line in body.splitlines() if line.strip()]
+            statements = [line.strip().rstrip(";") for line in body.splitlines() if line.strip()]
             if len(statements) > 1:
                 continue
             if not statements:
                 continue
             stmt = statements[0]
-            stmt = stmt.replace('return', '').strip()
+            stmt = stmt.replace("return", "").strip()
             # Check if it's calling another class's method with the same name
             if f".{method_name}(" in stmt:
                 return True
         return False
 
-    def _extract_info_with_fallback(self, source: str, file_path: Optional[str]) -> Optional[Dict]:
+    def _extract_info_with_fallback(self, source: str, file_path: str | None) -> dict | None:
         info = self.parser.extract_class_info(None, source, file_path)
         if info or file_path:
             return info
 
         # Write to temp file and retry with inspector
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.java', delete=False, encoding='utf-8') as tmp:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".java", delete=False, encoding="utf-8"
+        ) as tmp:
             tmp.write(source)
             tmp_path = tmp.name
 
@@ -249,10 +255,8 @@ class SemanticVerifier:
             Path(tmp_path).unlink(missing_ok=True)
 
     def verify_no_behavior_change(
-        self,
-        original_code: str,
-        modified_code: str
-    ) -> Tuple[bool, Optional[str]]:
+        self, original_code: str, modified_code: str
+    ) -> tuple[bool, str | None]:
         """
         Verify that behavior is preserved (simplified version).
 

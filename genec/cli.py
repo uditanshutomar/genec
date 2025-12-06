@@ -21,7 +21,7 @@ def main():
 
     # Track if we're in a cancellable state
     _cancellation_requested = False
-    
+
     def handle_sigint(signum, frame):
         """Handle SIGINT (Ctrl+C) gracefully."""
         nonlocal _cancellation_requested
@@ -30,7 +30,7 @@ def main():
             sys.exit(130)
         _cancellation_requested = True
         raise KeyboardInterrupt("Cancellation requested")
-    
+
     # Install signal handler (allow graceful cancellation)
     signal.signal(signal.SIGINT, handle_sigint)
     signal.signal(signal.SIGTERM, handle_sigint)
@@ -46,8 +46,9 @@ def main():
         help="Path to configuration file (default: config/config.yaml)",
     )
     parser.add_argument(
-        "--multi-file", action="store_true",
-        help="Enable multi-file mode: analyze dependency order across files"
+        "--multi-file",
+        action="store_true",
+        help="Enable multi-file mode: analyze dependency order across files",
     )
     parser.add_argument("--api-key", help="Anthropic API key (overrides ANTHROPIC_API_KEY env var)")
     parser.add_argument(
@@ -67,16 +68,18 @@ def main():
     parser.add_argument("--max-cluster-size", type=int, help="Maximum cluster size")
     parser.add_argument("--min-cohesion", type=float, help="Minimum cohesion threshold")
     parser.add_argument(
-        "--dry-run", action="store_true", 
-        help="Show what WOULD be applied without making changes"
+        "--dry-run", action="store_true", help="Show what WOULD be applied without making changes"
     )
     parser.add_argument(
-        "--check-coverage", action="store_true",
-        help="Verify that extracted classes are covered by tests (requires JaCoCo)"
+        "--check-coverage",
+        action="store_true",
+        help="Verify that extracted classes are covered by tests (requires JaCoCo)",
     )
     parser.add_argument(
-        "--websocket", type=int, metavar="PORT",
-        help="Enable WebSocket progress server on specified port (e.g., 9876)"
+        "--websocket",
+        type=int,
+        metavar="PORT",
+        help="Enable WebSocket progress server on specified port (e.g., 9876)",
     )
     parser.add_argument(
         "--no-build", action="store_true", help="Disable automatic building of dependencies"
@@ -136,7 +139,7 @@ def main():
             "auto_apply": True,
             "dry_run": False,
         }
-    
+
     # Pass coverage check flag to verification config
     if args.check_coverage:
         if "verification" not in config_overrides:
@@ -175,6 +178,7 @@ def main():
         if args.websocket:
             try:
                 from genec.utils.progress_server import get_progress_server
+
                 progress_server = get_progress_server(args.websocket)
                 progress_server.start()
                 logger.info(f"WebSocket progress server started on port {args.websocket}")
@@ -182,21 +186,26 @@ def main():
                 logger.warning(f"Failed to start WebSocket server: {e}")
 
         import time
+
         start_time = time.time()
-        
+
         results = pipeline.run_full_pipeline(
             class_file=str(target_path),
             repo_path=str(repo_path),
             max_suggestions=args.max_suggestions,
         )
-        
+
         # Stop WebSocket server
         if progress_server:
-            progress_server.emit_complete({
-                "suggestions": len(results.verified_suggestions) if results.verified_suggestions else 0
-            })
+            progress_server.emit_complete(
+                {
+                    "suggestions": (
+                        len(results.verified_suggestions) if results.verified_suggestions else 0
+                    )
+                }
+            )
             progress_server.stop()
-        
+
         # Calculate and log total runtime
         total_runtime = time.time() - start_time
         runtime_str = f"{total_runtime:.1f}s" if total_runtime < 60 else f"{total_runtime/60:.1f}m"
@@ -209,7 +218,7 @@ def main():
                 message = f"Generated {len(results.suggestions)} suggestions but none passed verification. Check verification logs for details."
             else:
                 message = f"Successfully generated {len(results.verified_suggestions)} verified suggestions."
-            
+
             output = {
                 "status": "success",
                 "message": message,
@@ -246,11 +255,11 @@ def main():
                 print(f"\nFile: {target_path.name}")
                 print(f"Total verified suggestions: {len(results.verified_suggestions)}")
                 print("\nChanges that WOULD be applied:\n")
-                
+
                 for i, s in enumerate(results.verified_suggestions, 1):
-                    methods = s.methods if hasattr(s, 'methods') else []
-                    method_count = len(methods) if methods else 'unknown'
-                    
+                    methods = s.methods if hasattr(s, "methods") else []
+                    method_count = len(methods) if methods else "unknown"
+
                     print(f"  {i}. Extract class: {s.proposed_class_name}")
                     print(f"     Methods to move: {method_count}")
                     if methods:
@@ -258,14 +267,14 @@ def main():
                             print(f"       - {m}")
                         if len(methods) > 5:
                             print(f"       ... and {len(methods) - 5} more")
-                    if hasattr(s, 'reasoning') and s.reasoning:
+                    if hasattr(s, "reasoning") and s.reasoning:
                         print(f"     Reason: {s.reasoning[:100]}...")
                     print()
-                
+
                 print("-" * 60)
                 print("To apply these changes, run without --dry-run flag")
                 print("=" * 60)
-            
+
             print("\n" + "=" * 50)
             print(f"Refactoring Completed Successfully (Runtime: {runtime_str})")
             print("=" * 50)

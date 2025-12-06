@@ -34,8 +34,11 @@ pytest tests/ -v
 
 ```
 genec/
+├── genec/
 ├── genec/                      # Main package
 │   ├── core/                   # Core pipeline components
+│   │   ├── stages/             # Pipeline stages
+│   │   └── pipeline_runner.py  # Pipeline orchestrator
 │   ├── llm/                    # LLM client abstractions
 │   ├── parsers/                # Language parsers
 │   ├── metrics/                # Code quality metrics

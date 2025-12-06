@@ -76,7 +76,7 @@ class RefactoringSuggestion:
     cluster: Cluster | None = None
     confidence_score: float | None = None  # NEW: 0-1 confidence rating
     reasoning: str | None = None  # NEW: Chain-of-thought reasoning
-    
+
     # Quality tier metadata
     quality_tier: str | None = None  # "should", "could", or "potential"
     quality_score: float = 0.0
@@ -155,7 +155,7 @@ class LLMInterface:
                 "Anthropic API key not provided; LLM-based suggestions will be skipped."
             )
         self._available = self.llm.enabled
-        
+
         # LLM response cache: avoids re-processing same clusters on retry
         # Key: hash of (cluster methods, class_name) -> RefactoringSuggestion
         self._response_cache: dict[str, RefactoringSuggestion] = {}
@@ -195,17 +195,18 @@ class LLMInterface:
 
         # Generate cache key from cluster methods and class name
         import hashlib
+
         cache_key_data = f"{class_deps.class_name}:{sorted(cluster.methods)}"
         cache_key = hashlib.md5(cache_key_data.encode()).hexdigest()
-        
+
         # Check cache first - avoid re-processing same clusters on retry
         if cache_key in self._response_cache:
             self._cache_hits += 1
             self.logger.info(f"Cache hit for cluster {cluster.id} (hits: {self._cache_hits})")
             return self._response_cache[cache_key]
-        
+
         self._cache_misses += 1
-        
+
         # Generate suggestion using appropriate method
         suggestion = None
 
@@ -216,16 +217,20 @@ class LLMInterface:
             )
         # Use refinement loop if enabled
         elif self.enable_refinement:
-            suggestion = self._generate_with_refinement(cluster, original_code, class_deps, evo_data)
+            suggestion = self._generate_with_refinement(
+                cluster, original_code, class_deps, evo_data
+            )
         else:
             # Standard generation (Priority 1)
-            suggestion = self._generate_standard(cluster, original_code, class_deps, evo_data, max_retries)
-        
+            suggestion = self._generate_standard(
+                cluster, original_code, class_deps, evo_data, max_retries
+            )
+
         # Cache successful suggestions
         if suggestion is not None:
             self._response_cache[cache_key] = suggestion
             self.logger.debug(f"Cached suggestion for cluster {cluster.id}")
-        
+
         return suggestion
 
     def _generate_standard(
@@ -711,17 +716,17 @@ Your 2-3 sentence explanation here.
 
         # Rate limiting: reduce max workers to avoid API rate limits
         safe_max_workers = min(max_workers, 2)  # Max 2 concurrent LLM calls
-        
+
         self.logger.info(
             f"Generating suggestions for {total} clusters (max_workers={safe_max_workers}, rate-limited)..."
         )
 
         import concurrent.futures
         import threading
-        
+
         # Semaphore for rate limiting (max 2 concurrent requests)
         rate_limiter = threading.Semaphore(2)
-        
+
         def rate_limited_generate(cluster):
             with rate_limiter:
                 return self.generate_refactoring_suggestion(

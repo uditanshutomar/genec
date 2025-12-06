@@ -1,7 +1,7 @@
 """Verification modules for refactoring validation."""
 
-from genec.verification.syntactic_verifier import SyntacticVerifier
-from genec.verification.semantic_verifier import SemanticVerifier
 from genec.verification.behavioral_verifier import BehavioralVerifier
+from genec.verification.semantic_verifier import SemanticVerifier
+from genec.verification.syntactic_verifier import SyntacticVerifier
 
-__all__ = ['SyntacticVerifier', 'SemanticVerifier', 'BehavioralVerifier']
+__all__ = ["SyntacticVerifier", "SemanticVerifier", "BehavioralVerifier"]

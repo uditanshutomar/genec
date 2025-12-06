@@ -321,8 +321,8 @@ class TestDiscoveryEngine:
                 content = f.read(5000)  # Read first 5KB
                 if "@Test" in content or "@TestTemplate" in content:
                     return True
-        except:
-            pass
+        except Exception as e:
+            self.logger.debug(f"Error checking test file {file_path}: {e}")
 
         return False
 

@@ -6,16 +6,11 @@ extractions that would otherwise be impossible (e.g., Strategy pattern for
 abstract method dependencies, Visitor pattern for inner class access).
 """
 
-from typing import List, Dict, Optional
 from dataclasses import dataclass
 
 from genec.core.cluster_detector import Cluster
 from genec.core.dependency_analyzer import ClassDependencies
-from genec.llm import (
-    AnthropicClientWrapper,
-    LLMRequestFailed,
-    LLMServiceUnavailable,
-)
+from genec.llm import AnthropicClientWrapper, LLMRequestFailed, LLMServiceUnavailable
 from genec.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
@@ -24,11 +19,12 @@ logger = get_logger(__name__)
 @dataclass
 class TransformationStrategy:
     """Describes a pattern transformation to enable extraction."""
+
     pattern_name: str  # e.g., "Strategy", "Template Method", "Callback"
     description: str
-    modifications_needed: List[str]
+    modifications_needed: list[str]
     confidence: float  # 0.0 to 1.0
-    code_changes: Optional[Dict[str, str]] = None  # file -> suggested code
+    code_changes: dict[str, str] | None = None  # file -> suggested code
 
 
 class LLMPatternTransformer:
@@ -48,11 +44,8 @@ class LLMPatternTransformer:
         self.enabled = self.llm.enabled
 
     def suggest_transformation(
-        self,
-        cluster: Cluster,
-        class_deps: ClassDependencies,
-        blocking_issues: List[str]
-    ) -> Optional[TransformationStrategy]:
+        self, cluster: Cluster, class_deps: ClassDependencies, blocking_issues: list[str]
+    ) -> TransformationStrategy | None:
         """
         Use LLM to suggest design pattern transformations.
 
@@ -75,9 +68,7 @@ class LLMPatternTransformer:
         self.logger.info(f"Analyzing transformation patterns for cluster {cluster.id}")
 
         # Build context
-        context = self._build_transformation_context(
-            cluster, class_deps, blocking_issues
-        )
+        context = self._build_transformation_context(cluster, class_deps, blocking_issues)
 
         try:
             response_text = self.llm.send_message(
@@ -104,10 +95,7 @@ class LLMPatternTransformer:
             return None
 
     def _build_transformation_context(
-        self,
-        cluster: Cluster,
-        class_deps: ClassDependencies,
-        blocking_issues: List[str]
+        self, cluster: Cluster, class_deps: ClassDependencies, blocking_issues: list[str]
     ) -> str:
         """Build prompt for transformation analysis."""
 
@@ -119,12 +107,14 @@ class LLMPatternTransformer:
         for method_sig in cluster_methods[:8]:
             method_info = method_by_sig.get(method_sig)
             if method_info:
-                modifiers = ', '.join(method_info.modifiers) if method_info.modifiers else 'none'
-                body_preview = (method_info.body[:150] + '...') if method_info.body and len(method_info.body) > 150 else method_info.body or 'no body'
+                modifiers = ", ".join(method_info.modifiers) if method_info.modifiers else "none"
+                body_preview = (
+                    (method_info.body[:150] + "...")
+                    if method_info.body and len(method_info.body) > 150
+                    else method_info.body or "no body"
+                )
                 method_details.append(
-                    f"  {method_sig}\n"
-                    f"    Modifiers: {modifiers}\n"
-                    f"    Body: {body_preview}"
+                    f"  {method_sig}\n" f"    Modifiers: {modifiers}\n" f"    Body: {body_preview}"
                 )
 
         prompt = f"""You are a Java refactoring expert. Your task is to suggest design pattern transformations that would enable an otherwise impossible Extract Class refactoring.
@@ -177,9 +167,11 @@ Only suggest transformations with confidence >= 0.6.
 """
         return prompt
 
-    def _parse_transformation_response(self, response_text: str) -> Optional[TransformationStrategy]:
+    def _parse_transformation_response(
+        self, response_text: str
+    ) -> TransformationStrategy | None:
         """Parse LLM response into transformation strategy."""
-        lines = response_text.strip().split('\n')
+        lines = response_text.strip().split("\n")
 
         pattern_name = None
         confidence = 0.0
@@ -194,25 +186,25 @@ Only suggest transformations with confidence >= 0.6.
         for line in lines:
             line_stripped = line.strip()
 
-            if line_stripped.startswith('PATTERN:'):
-                pattern_name = line_stripped.split(':', 1)[1].strip()
-            elif line_stripped.startswith('CONFIDENCE:'):
+            if line_stripped.startswith("PATTERN:"):
+                pattern_name = line_stripped.split(":", 1)[1].strip()
+            elif line_stripped.startswith("CONFIDENCE:"):
                 try:
-                    confidence = float(line_stripped.split(':', 1)[1].strip())
+                    confidence = float(line_stripped.split(":", 1)[1].strip())
                 except:
                     confidence = 0.5
-            elif line_stripped.startswith('DESCRIPTION:'):
-                description = line_stripped.split(':', 1)[1].strip()
-            elif line_stripped.startswith('MODIFICATIONS:'):
+            elif line_stripped.startswith("DESCRIPTION:"):
+                description = line_stripped.split(":", 1)[1].strip()
+            elif line_stripped.startswith("MODIFICATIONS:"):
                 in_modifications = True
                 in_code = False
-            elif line_stripped.startswith('CODE_CHANGES:'):
+            elif line_stripped.startswith("CODE_CHANGES:"):
                 in_modifications = False
                 in_code = True
             elif in_modifications and line_stripped:
                 # Parse modification list
-                if line_stripped[0].isdigit() or line_stripped.startswith('-'):
-                    mod = line_stripped.lstrip('0123456789.-) ').strip()
+                if line_stripped[0].isdigit() or line_stripped.startswith("-"):
+                    mod = line_stripped.lstrip("0123456789.-) ").strip()
                     if mod:
                         modifications.append(mod)
             elif in_code:
@@ -220,14 +212,14 @@ Only suggest transformations with confidence >= 0.6.
 
         # Extract code changes
         if current_code:
-            code_changes['transformation'] = '\n'.join(current_code)
+            code_changes["transformation"] = "\n".join(current_code)
 
         # Multi-line description capture
-        if 'DESCRIPTION:' in response_text:
-            desc_start = response_text.index('DESCRIPTION:') + len('DESCRIPTION:')
-            desc_end = response_text.find('MODIFICATIONS:', desc_start)
+        if "DESCRIPTION:" in response_text:
+            desc_start = response_text.index("DESCRIPTION:") + len("DESCRIPTION:")
+            desc_end = response_text.find("MODIFICATIONS:", desc_start)
             if desc_end == -1:
-                desc_end = response_text.find('CODE_CHANGES:', desc_start)
+                desc_end = response_text.find("CODE_CHANGES:", desc_start)
             if desc_end == -1:
                 desc_end = len(response_text)
             description = response_text[desc_start:desc_end].strip()
@@ -238,16 +230,13 @@ Only suggest transformations with confidence >= 0.6.
                 description=description,
                 modifications_needed=modifications,
                 confidence=confidence,
-                code_changes=code_changes
+                code_changes=code_changes,
             )
 
         return None
 
     def apply_transformation_guidance(
-        self,
-        strategy: TransformationStrategy,
-        cluster: Cluster,
-        class_deps: ClassDependencies
+        self, strategy: TransformationStrategy, cluster: Cluster, class_deps: ClassDependencies
     ) -> str:
         """
         Generate guidance for applying the transformation.
@@ -269,9 +258,9 @@ REQUIRED MODIFICATIONS:
 
         if strategy.code_changes:
             guidance += "\nCODE STRUCTURE:\n"
-            guidance += strategy.code_changes.get('transformation', '')
+            guidance += strategy.code_changes.get("transformation", "")
 
-        guidance += f"""
+        guidance += """
 
 NEXT STEPS:
 1. Review the suggested transformation

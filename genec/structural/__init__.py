@@ -1,7 +1,7 @@
 """Structural transformation utilities for GenEC."""
 
-from .transformer import StructuralTransformer, StructuralTransformResult, StructuralAction
-from .compile_validator import StructuralCompileValidator, CompileResult
+from .compile_validator import CompileResult, StructuralCompileValidator
+from .transformer import StructuralAction, StructuralTransformer, StructuralTransformResult
 
 __all__ = [
     "StructuralTransformer",

@@ -1,16 +1,14 @@
 """Logging utilities for GenEC."""
 
 import logging
-import os
 from pathlib import Path
-from typing import Optional
 
 
 def setup_logger(
     name: str,
-    level: str = 'INFO',
-    log_file: Optional[str] = None,
-    format_string: Optional[str] = None
+    level: str = "INFO",
+    log_file: str | None = None,
+    format_string: str | None = None,
 ) -> logging.Logger:
     """
     Set up a logger with console and optional file handlers.
@@ -32,7 +30,7 @@ def setup_logger(
 
     # Default format
     if format_string is None:
-        format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format_string = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
     formatter = logging.Formatter(format_string)
 

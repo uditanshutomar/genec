@@ -1,7 +1,6 @@
 """Coupling metrics calculator (CBO)."""
 
-import javalang
-from typing import Set, List, Dict
+
 
 from genec.core.dependency_analyzer import ClassDependencies
 from genec.parsers.java_parser import JavaParser
@@ -19,9 +18,7 @@ class CouplingCalculator:
         self.logger = get_logger(self.__class__.__name__)
 
     def calculate_cbo(
-        self,
-        class_deps: ClassDependencies,
-        project_classes: List[str] = None
+        self, class_deps: ClassDependencies, project_classes: list[str] = None
     ) -> int:
         """
         Calculate CBO (Coupling Between Objects).
@@ -58,7 +55,7 @@ class CouplingCalculator:
 
             # Parameter types
             for param in method.parameters:
-                param_type = self._extract_base_type(param['type'])
+                param_type = self._extract_base_type(param["type"])
                 if param_type and self._is_project_class(param_type, project_classes):
                     coupled_classes.add(param_type)
 
@@ -73,9 +70,7 @@ class CouplingCalculator:
         return cbo
 
     def calculate_afferent_coupling(
-        self,
-        class_name: str,
-        all_class_deps: List[ClassDependencies]
+        self, class_name: str, all_class_deps: list[ClassDependencies]
     ) -> int:
         """
         Calculate afferent coupling (Ca).
@@ -104,9 +99,7 @@ class CouplingCalculator:
         return ca
 
     def calculate_efferent_coupling(
-        self,
-        class_deps: ClassDependencies,
-        all_class_names: List[str]
+        self, class_deps: ClassDependencies, all_class_names: list[str]
     ) -> int:
         """
         Calculate efferent coupling (Ce).
@@ -127,7 +120,7 @@ class CouplingCalculator:
         self,
         class_name: str,
         class_deps: ClassDependencies,
-        all_class_deps: List[ClassDependencies]
+        all_class_deps: list[ClassDependencies],
     ) -> float:
         """
         Calculate instability metric (I).
@@ -180,28 +173,38 @@ class CouplingCalculator:
             return ""
 
         # Remove generics
-        if '<' in type_string:
-            type_string = type_string[:type_string.index('<')]
+        if "<" in type_string:
+            type_string = type_string[: type_string.index("<")]
 
         # Remove array brackets
-        type_string = type_string.replace('[', '').replace(']', '')
+        type_string = type_string.replace("[", "").replace("]", "")
 
         # Remove whitespace
         type_string = type_string.strip()
 
         # Filter out primitives
-        primitives = {'int', 'long', 'short', 'byte', 'float', 'double', 'boolean', 'char', 'void'}
+        primitives = {"int", "long", "short", "byte", "float", "double", "boolean", "char", "void"}
         if type_string.lower() in primitives:
             return ""
 
         # Filter out Java standard library (simple heuristic)
-        java_stdlib = {'String', 'Integer', 'Long', 'Double', 'Boolean', 'Object', 'List', 'Map', 'Set'}
+        java_stdlib = {
+            "String",
+            "Integer",
+            "Long",
+            "Double",
+            "Boolean",
+            "Object",
+            "List",
+            "Map",
+            "Set",
+        }
         if type_string in java_stdlib:
             return ""
 
         return type_string
 
-    def _is_project_class(self, class_name: str, project_classes: List[str] = None) -> bool:
+    def _is_project_class(self, class_name: str, project_classes: list[str] = None) -> bool:
         """
         Check if a class name is a project class.
 
@@ -244,16 +247,14 @@ class CouplingCalculator:
                 return True
 
             for param in method.parameters:
-                if target_class in param['type']:
+                if target_class in param["type"]:
                     return True
 
         return False
 
     def calculate_coupling_metrics(
-        self,
-        class_deps: ClassDependencies,
-        all_class_deps: List[ClassDependencies] = None
-    ) -> Dict[str, float]:
+        self, class_deps: ClassDependencies, all_class_deps: list[ClassDependencies] = None
+    ) -> dict[str, float]:
         """
         Calculate all coupling metrics.
 
@@ -269,16 +270,14 @@ class CouplingCalculator:
         # CBO
         if all_class_deps:
             all_class_names = [cd.class_name for cd in all_class_deps]
-            metrics['cbo'] = self.calculate_cbo(class_deps, all_class_names)
+            metrics["cbo"] = self.calculate_cbo(class_deps, all_class_names)
         else:
-            metrics['cbo'] = self.calculate_cbo(class_deps)
+            metrics["cbo"] = self.calculate_cbo(class_deps)
 
         # Instability (requires all_class_deps)
         if all_class_deps:
-            metrics['instability'] = self.calculate_instability(
-                class_deps.class_name,
-                class_deps,
-                all_class_deps
+            metrics["instability"] = self.calculate_instability(
+                class_deps.class_name, class_deps, all_class_deps
             )
 
         return metrics

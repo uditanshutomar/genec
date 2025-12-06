@@ -1,12 +1,10 @@
 """Syntactic verification through compilation checks."""
 
-import subprocess
-import tempfile
-import shutil
-from pathlib import Path
-from typing import Optional, Tuple
 import os
 import re
+import subprocess
+import tempfile
+from pathlib import Path
 
 from genec.utils.logging_utils import get_logger
 
@@ -16,7 +14,7 @@ logger = get_logger(__name__)
 class SyntacticVerifier:
     """Verifies refactorings are syntactically correct by compiling them."""
 
-    def __init__(self, java_compiler: str = 'javac', repo_path: Optional[str] = None):
+    def __init__(self, java_compiler: str = "javac", repo_path: str | None = None):
         """
         Initialize syntactic verifier.
 
@@ -38,18 +36,15 @@ class SyntacticVerifier:
         if self.source_paths:
             self.logger.debug(
                 "Discovered source paths for syntactic verification: %s",
-                [str(p) for p in self.source_paths]
+                [str(p) for p in self.source_paths],
             )
 
         # Discover module names (if any) to adjust module reads when compiling
         self.modules = self._discover_modules() if repo_path else []
 
     def verify(
-        self,
-        new_class_code: str,
-        modified_original_code: str,
-        package_name: str = ""
-    ) -> Tuple[bool, Optional[str]]:
+        self, new_class_code: str, modified_original_code: str, package_name: str = ""
+    ) -> tuple[bool, str | None]:
         """
         Verify that refactored code compiles successfully.
 
@@ -69,7 +64,7 @@ class SyntacticVerifier:
 
             # Create package directory structure
             if package_name:
-                package_path = temp_path / package_name.replace('.', '/')
+                package_path = temp_path / package_name.replace(".", "/")
                 package_path.mkdir(parents=True, exist_ok=True)
             else:
                 package_path = temp_path
@@ -86,13 +81,12 @@ class SyntacticVerifier:
                 new_class_file = package_path / f"{new_class_name}.java"
                 original_class_file = package_path / f"{original_class_name}.java"
 
-                new_class_file.write_text(new_class_code, encoding='utf-8')
-                original_class_file.write_text(modified_original_code, encoding='utf-8')
+                new_class_file.write_text(new_class_code, encoding="utf-8")
+                original_class_file.write_text(modified_original_code, encoding="utf-8")
 
                 # Compile both files
                 success, error = self._compile_files(
-                    [new_class_file, original_class_file],
-                    temp_path
+                    [new_class_file, original_class_file], temp_path
                 )
 
                 if success:
@@ -107,7 +101,7 @@ class SyntacticVerifier:
                 self.logger.error(error_msg)
                 return False, error_msg
 
-    def _extract_class_name(self, code: str) -> Optional[str]:
+    def _extract_class_name(self, code: str) -> str | None:
         """
         Extract class name from Java code.
 
@@ -120,7 +114,7 @@ class SyntacticVerifier:
         import re
 
         # Look for class declaration
-        pattern = r'(?:public\s+)?(?:abstract\s+)?class\s+(\w+)'
+        pattern = r"(?:public\s+)?(?:abstract\s+)?class\s+(\w+)"
         match = re.search(pattern, code)
 
         if match:
@@ -128,11 +122,7 @@ class SyntacticVerifier:
 
         return None
 
-    def _compile_files(
-        self,
-        java_files: list,
-        classpath: Path
-    ) -> Tuple[bool, Optional[str]]:
+    def _compile_files(self, java_files: list, classpath: Path) -> tuple[bool, str | None]:
         """
         Compile Java files using Maven/Gradle or javac.
 
@@ -144,19 +134,15 @@ class SyntacticVerifier:
             Tuple of (success: bool, error_message: Optional[str])
         """
         # If Maven/Gradle available, use it for compilation with proper dependencies
-        if self.build_system == 'maven':
+        if self.build_system == "maven":
             return self._compile_with_maven(java_files)
-        elif self.build_system == 'gradle':
+        elif self.build_system == "gradle":
             return self._compile_with_gradle(java_files)
         else:
             # Fallback to javac
             return self._compile_with_javac(java_files, classpath)
 
-    def _compile_with_javac(
-        self,
-        java_files: list,
-        classpath: Path
-    ) -> Tuple[bool, Optional[str]]:
+    def _compile_with_javac(self, java_files: list, classpath: Path) -> tuple[bool, str | None]:
         """
         Compile Java files using javac.
 
@@ -182,29 +168,29 @@ class SyntacticVerifier:
             # Build javac command
             cmd = [
                 self.java_compiler,
-                '-classpath', classpath_str,
-                '-sourcepath', sourcepath_str,
-                '-d', str(classpath)
+                "-classpath",
+                classpath_str,
+                "-sourcepath",
+                sourcepath_str,
+                "-d",
+                str(classpath),
             ] + [str(f) for f in java_files]
 
             # When modules are present, ensure they can read required desktop APIs
             if self.modules:
-                cmd.extend([
-                    '--add-modules', 'java.desktop,java.datatransfer'
-                ])
+                cmd.extend(["--add-modules", "java.desktop,java.datatransfer"])
                 for module in self.modules:
-                    cmd.extend([
-                        '--add-reads', f'{module}=java.desktop,java.datatransfer',
-                        '--add-reads', f'{module}=ALL-UNNAMED'
-                    ])
+                    cmd.extend(
+                        [
+                            "--add-reads",
+                            f"{module}=java.desktop,java.datatransfer",
+                            "--add-reads",
+                            f"{module}=ALL-UNNAMED",
+                        ]
+                    )
 
             # Run compilation
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
             if result.returncode == 0:
                 return True, None
@@ -230,9 +216,9 @@ class SyntacticVerifier:
         candidates = set()
 
         patterns = [
-            '**/src/main/java',
-            '**/src/java',
-            '**/src',
+            "**/src/main/java",
+            "**/src/java",
+            "**/src",
         ]
 
         for pattern in patterns:
@@ -245,7 +231,7 @@ class SyntacticVerifier:
                     for child in resolved.iterdir():
                         if child.is_dir():
                             try:
-                                has_java = next(child.rglob('*.java'), None)
+                                has_java = next(child.rglob("*.java"), None)
                             except StopIteration:
                                 has_java = None
                             if has_java:
@@ -266,19 +252,19 @@ class SyntacticVerifier:
         modules = set()
         repo = Path(self.repo_path)
 
-        for module_file in repo.rglob('module-info.java'):
+        for module_file in repo.rglob("module-info.java"):
             try:
-                text = module_file.read_text(encoding='utf-8')
+                text = module_file.read_text(encoding="utf-8")
             except Exception:
                 continue
 
-            match = re.search(r'\bmodule\s+([a-zA-Z0-9_.]+)\s*\{', text)
+            match = re.search(r"\bmodule\s+([a-zA-Z0-9_.]+)\s*\{", text)
             if match:
                 modules.add(match.group(1))
 
         return sorted(modules)
 
-    def _compile_with_maven(self, java_files: list) -> Tuple[bool, Optional[str]]:
+    def _compile_with_maven(self, java_files: list) -> tuple[bool, str | None]:
         """
         Compile using Maven (runs full project compilation).
 
@@ -293,21 +279,17 @@ class SyntacticVerifier:
 
             # Run Maven compile - use project's own Java version settings
             cmd = [
-                'mvn',
-                '-q',
-                'compile',
-                '-DskipTests',
+                "mvn",
+                "-q",
+                "compile",
+                "-DskipTests",
             ]
 
             if self.modules:
-                cmd.append('-DforceAddModules=java.desktop,java.datatransfer')
+                cmd.append("-DforceAddModules=java.desktop,java.datatransfer")
 
             result = subprocess.run(
-                cmd,
-                cwd=self.repo_path,
-                capture_output=True,
-                text=True,
-                timeout=120
+                cmd, cwd=self.repo_path, capture_output=True, text=True, timeout=120
             )
 
             if result.returncode == 0:
@@ -316,14 +298,18 @@ class SyntacticVerifier:
                 # Extract relevant errors
                 error_msg = result.stderr or result.stdout
                 # If Maven already compiled successfully but produced warnings, treat as success
-                if ('COMPILATION ERROR' not in error_msg and
-                        'BUILD FAILURE' not in error_msg and
-                        'error:' not in error_msg):
-                    self.logger.debug("Maven returned non-zero but without compilation errors; treating as success.")
+                if (
+                    "COMPILATION ERROR" not in error_msg
+                    and "BUILD FAILURE" not in error_msg
+                    and "error:" not in error_msg
+                ):
+                    self.logger.debug(
+                        "Maven returned non-zero but without compilation errors; treating as success."
+                    )
                     return True, None
 
                 # Try to find compilation errors
-                if 'COMPILATION ERROR' in error_msg or 'error:' in error_msg:
+                if "COMPILATION ERROR" in error_msg or "error:" in error_msg:
                     return False, error_msg
                 else:
                     # Other Maven errors (dependencies, etc.)
@@ -336,7 +322,7 @@ class SyntacticVerifier:
         except Exception as e:
             return False, f"Maven error: {str(e)}"
 
-    def _compile_with_gradle(self, java_files: list) -> Tuple[bool, Optional[str]]:
+    def _compile_with_gradle(self, java_files: list) -> tuple[bool, str | None]:
         """
         Compile using Gradle (runs full project compilation).
 
@@ -351,11 +337,15 @@ class SyntacticVerifier:
 
             # Run Gradle compile
             result = subprocess.run(
-                ['./gradlew', 'compileJava', '-q'] if os.path.exists(os.path.join(self.repo_path, 'gradlew')) else ['gradle', 'compileJava', '-q'],
+                (
+                    ["./gradlew", "compileJava", "-q"]
+                    if os.path.exists(os.path.join(self.repo_path, "gradlew"))
+                    else ["gradle", "compileJava", "-q"]
+                ),
                 cwd=self.repo_path,
                 capture_output=True,
                 text=True,
-                timeout=120
+                timeout=120,
             )
 
             if result.returncode == 0:
@@ -371,7 +361,7 @@ class SyntacticVerifier:
         except Exception as e:
             return False, f"Gradle error: {str(e)}"
 
-    def _detect_build_system(self) -> Optional[str]:
+    def _detect_build_system(self) -> str | None:
         """
         Detect build system in repository.
 
@@ -384,12 +374,12 @@ class SyntacticVerifier:
         repo = Path(self.repo_path)
 
         # Check for Maven
-        if (repo / 'pom.xml').exists():
-            return 'maven'
+        if (repo / "pom.xml").exists():
+            return "maven"
 
         # Check for Gradle
-        if (repo / 'build.gradle').exists() or (repo / 'build.gradle.kts').exists():
-            return 'gradle'
+        if (repo / "build.gradle").exists() or (repo / "build.gradle.kts").exists():
+            return "gradle"
 
         return None
 
@@ -402,9 +392,7 @@ class SyntacticVerifier:
         """
         try:
             result = subprocess.run(
-                [self.java_compiler, '-version'],
-                capture_output=True,
-                timeout=5
+                [self.java_compiler, "-version"], capture_output=True, timeout=5
             )
             return result.returncode == 0
         except:
