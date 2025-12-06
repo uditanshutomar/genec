@@ -1,0 +1,197 @@
+{
+  "timestamp": "2025-12-06T00:02:20.008426",
+  "test_case": "OrderManagementSystem",
+  "execution_metrics": {
+    "execution_time_seconds": 33.40361309051514,
+    "clusters_detected": 8,
+    "clusters_after_filtering": 4,
+    "clusters_ranked": 4,
+    "suggestions_generated": 4,
+    "verified_suggestions": 0,
+    "avg_confidence": 0.89,
+    "min_confidence": 0.82,
+    "max_confidence": 0.92,
+    "high_confidence_count": 4
+  },
+  "comparison_results": {
+    "true_positives": 0,
+    "false_positives": 8,
+    "false_negatives": 6,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1_score": 0,
+    "matches": [
+      {
+        "actual": "OrderPriceCalculator",
+        "expected": "NotificationService",
+        "similarity": 0.3,
+        "is_match": false
+      },
+      {
+        "actual": "ShoppingCart",
+        "expected": "OrderItemCollection",
+        "similarity": 0.3866666666666666,
+        "is_match": false
+      },
+      {
+        "actual": "OrderTransactionCoordinator",
+        "expected": "NotificationService",
+        "similarity": 0.39999999999999997,
+        "is_match": false
+      },
+      {
+        "actual": "OrderFulfillment",
+        "expected": "ShippingCalculator",
+        "similarity": 0.31477272727272726,
+        "is_match": false
+      }
+    ],
+    "unmatched_expected": [
+      "OrderItemCollection",
+      "InventoryManager",
+      "PaymentProcessor",
+      "NotificationService",
+      "PriceCalculator",
+      "ShippingCalculator"
+    ],
+    "unmatched_actual": [
+      "OrderTransactionCoordinator",
+      "OrderFulfillment",
+      "OrderPriceCalculator",
+      "ShoppingCart"
+    ]
+  },
+  "flaws_identified": [
+    {
+      "category": "MISSED_EXTRACTIONS",
+      "severity": "HIGH",
+      "description": "Failed to identify 6 expected extractions",
+      "details": [
+        {
+          "class_name": "OrderItemCollection",
+          "priority": "HIGH",
+          "methods_count": 6,
+          "expected_rationale": "Manages the collection of order items. High cohesion - all methods work with items list and itemQuantities map. Core responsibility of maintaining order line items."
+        },
+        {
+          "class_name": "InventoryManager",
+          "priority": "MEDIUM",
+          "methods_count": 5,
+          "expected_rationale": "Manages warehouse stock and inventory reservations. High cohesion around inventory operations. Critical for order fulfillment."
+        },
+        {
+          "class_name": "PaymentProcessor",
+          "priority": "MEDIUM",
+          "methods_count": 5,
+          "expected_rationale": "Manages payment operations. High cohesion around payment lifecycle. Contains temporal coupling with inventory (both must succeed/fail together)."
+        },
+        {
+          "class_name": "NotificationService",
+          "priority": "LOW",
+          "methods_count": 6,
+          "expected_rationale": "Sends email notifications for various order events. High cohesion around communication. Infrastructure concern that could be completely separated."
+        },
+        {
+          "class_name": "PriceCalculator",
+          "priority": "HIGH",
+          "methods_count": 7,
+          "expected_rationale": "Handles all pricing logic including discounts, tax, and total calculation. High cohesion around monetary calculations. Follows Strategy pattern for different calculation strategies."
+        },
+        {
+          "class_name": "ShippingCalculator",
+          "priority": "MEDIUM",
+          "methods_count": 5,
+          "expected_rationale": "Handles shipping cost calculation and delivery estimates. High cohesion around shipping logic. Geographic and weight-based calculations."
+        }
+      ]
+    },
+    {
+      "category": "SPURIOUS_SUGGESTIONS",
+      "severity": "MEDIUM",
+      "description": "Generated 4 suggestions that don't match ground truth",
+      "details": [
+        {
+          "class_name": "OrderTransactionCoordinator",
+          "confidence": 0.9,
+          "methods_count": 10,
+          "rationale": "These methods form a cohesive unit responsible for coordinating the complete order transaction workflow, including payment processing, inventory management, and customer notifications. Extracting them creates a focused class that orchestrates the multi-step transaction process while reducing complexity in the original class."
+        },
+        {
+          "class_name": "OrderFulfillment",
+          "confidence": 0.82,
+          "methods_count": 8,
+          "rationale": "These methods and fields form a cohesive unit responsible for fulfilling orders - from applying discounts and calculating totals to configuring shipping and estimating delivery. Extracting them into OrderFulfillment improves separation of concerns by isolating fulfillment logic from other order operations."
+        },
+        {
+          "class_name": "OrderPriceCalculator",
+          "confidence": 0.92,
+          "methods_count": 6,
+          "rationale": "These methods form a cohesive unit responsible for calculating all monetary aspects of an order including shipping, discounts, taxes, and totals. Extracting them into an OrderPriceCalculator class isolates pricing logic, improves testability, and allows the calculation component to be reused across different order-related contexts."
+        },
+        {
+          "class_name": "ShoppingCart",
+          "confidence": 0.92,
+          "methods_count": 13,
+          "rationale": "These methods and fields form a cohesive shopping cart entity that manages item collections, quantities, and inventory coordination. Extracting them creates a focused domain object that encapsulates cart-specific operations while maintaining clear boundaries with inventory and pricing systems."
+        }
+      ]
+    },
+    {
+      "category": "PARTIAL_MATCHES",
+      "severity": "MEDIUM",
+      "description": "Found 4 partial matches (not quite right)",
+      "details": [
+        {
+          "actual": "OrderPriceCalculator",
+          "expected": "NotificationService",
+          "similarity": 0.3,
+          "is_match": false
+        },
+        {
+          "actual": "ShoppingCart",
+          "expected": "OrderItemCollection",
+          "similarity": 0.3866666666666666,
+          "is_match": false
+        },
+        {
+          "actual": "OrderTransactionCoordinator",
+          "expected": "NotificationService",
+          "similarity": 0.39999999999999997,
+          "is_match": false
+        },
+        {
+          "actual": "OrderFulfillment",
+          "expected": "ShippingCalculator",
+          "similarity": 0.31477272727272726,
+          "is_match": false
+        }
+      ]
+    },
+    {
+      "category": "MISSED_HIGH_PRIORITY",
+      "severity": "CRITICAL",
+      "description": "Missed 2 high-priority extractions",
+      "details": [
+        "OrderItemCollection",
+        "PriceCalculator"
+      ]
+    }
+  ],
+  "recommendations": [
+    {
+      "issue": "Missing expected extractions",
+      "recommendation": "Improve clustering algorithm to better identify cohesive groups. Consider lowering resolution parameter or using different community detection algorithm.",
+      "priority": "HIGH"
+    },
+    {
+      "issue": "Too many incorrect suggestions",
+      "recommendation": "Increase minimum cohesion threshold or improve LLM prompts to be more selective. Consider adding semantic analysis to filter out weak clusters.",
+      "priority": "MEDIUM"
+    },
+    {
+      "issue": "Missed critical high-priority extractions",
+      "recommendation": "Review clustering parameters - may be over-filtering. Ensure graph fusion is not diluting strong structural signals. Consider increasing number of suggestions generated.",
+      "priority": "CRITICAL"
+    }
+  ]
+}

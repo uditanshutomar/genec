@@ -95,8 +95,27 @@ class GenECViewProvider {
                 maxClusterSize: config.get('clustering.maxClusterSize'),
                 minCohesion: config.get('clustering.minCohesion')
             };
-            this._view.webview.postMessage({ type: 'settings', value: settings });
+            this._safePostMessage({ type: 'settings', value: settings });
         });
+    }
+    /**
+     * Safe wrapper for postMessage that handles disposed webview gracefully.
+     * Prevents crashes when user closes sidebar during long-running operations.
+     */
+    _safePostMessage(message) {
+        try {
+            if (this._view && this._view.webview) {
+                this._safePostMessage(message);
+                return true;
+            }
+            console.log('GenEC: Webview not available, skipping message:', message.type);
+            return false;
+        }
+        catch (error) {
+            // Webview may be disposed - this is not an error, just log it
+            console.log('GenEC: Failed to post message (webview may be disposed):', error.message);
+            return false;
+        }
     }
     _saveSettings(settings) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -109,7 +128,7 @@ class GenECViewProvider {
             yield config.update('clustering.minClusterSize', settings.minClusterSize, vscode.ConfigurationTarget.Global);
             yield config.update('clustering.maxClusterSize', settings.maxClusterSize, vscode.ConfigurationTarget.Global);
             yield config.update('clustering.minCohesion', settings.minCohesion, vscode.ConfigurationTarget.Global);
-            this._view.webview.postMessage({ type: 'settings', value: settings, status: 'Settings saved!' });
+            this._safePostMessage({ type: 'settings', value: settings, status: 'Settings saved!' });
         });
     }
     _previewRefactoring(index) {
@@ -123,24 +142,49 @@ class GenECViewProvider {
                 vscode.window.showErrorMessage('Could not preview refactoring: Code not available. Please re-run analysis.');
                 return;
             }
+            // Use OS temp directory to avoid polluting project
+            const os = require('os');
+            const tempDir = os.tmpdir();
+            const tempModifiedPath = path.join(tempDir, `genec_preview_${path.basename(this._targetFilePath)}`);
+            const tempNewClassPath = path.join(tempDir, `genec_preview_${suggestion.name}.java`);
+            // Track temp files for cleanup
+            const tempFiles = [tempModifiedPath, tempNewClassPath];
             try {
                 // Create temp file for modified original
                 const originalUri = vscode.Uri.file(this._targetFilePath);
-                const tempDir = path.dirname(this._targetFilePath); // Or use OS temp dir
-                const tempModifiedPath = path.join(tempDir, `_preview_${path.basename(this._targetFilePath)}`);
                 // Write modified content to temp file
                 fs.writeFileSync(tempModifiedPath, suggestion.modified_original_code, 'utf8');
                 const modifiedUri = vscode.Uri.file(tempModifiedPath);
                 // Open Diff View
                 yield vscode.commands.executeCommand('vscode.diff', originalUri, modifiedUri, `Diff: ${path.basename(this._targetFilePath)} ↔ Modified`);
                 // Open new class in a new tab (read-only if possible, or just a file)
-                const tempNewClassPath = path.join(tempDir, `_preview_${suggestion.name}.java`);
                 fs.writeFileSync(tempNewClassPath, suggestion.new_class_code, 'utf8');
                 const newClassDoc = yield vscode.workspace.openTextDocument(tempNewClassPath);
                 yield vscode.window.showTextDocument(newClassDoc, { viewColumn: vscode.ViewColumn.Beside, preview: true });
+                // Schedule cleanup when tabs are closed (fire and forget)
+                setTimeout(() => {
+                    for (const tempFile of tempFiles) {
+                        try {
+                            if (fs.existsSync(tempFile)) {
+                                fs.unlinkSync(tempFile);
+                                this._outputChannel.appendLine(`[CLEANUP] Removed temp file: ${tempFile}`);
+                            }
+                        }
+                        catch (e) {
+                            // Ignore cleanup errors
+                        }
+                    }
+                }, 60000); // Cleanup after 1 minute
             }
             catch (e) {
                 vscode.window.showErrorMessage(`Failed to preview refactoring: ${e.message}`);
+                // Immediate cleanup on error
+                for (const tempFile of tempFiles) {
+                    try {
+                        fs.unlinkSync(tempFile);
+                    }
+                    catch (e) { /* ignore */ }
+                }
             }
         });
     }
@@ -189,7 +233,7 @@ class GenECViewProvider {
     }
     _undoRefactoring(apiKey) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f;
+            var _a;
             if (!this._targetFilePath) {
                 vscode.window.showErrorMessage('No target file selected.');
                 return;
@@ -197,7 +241,7 @@ class GenECViewProvider {
             const config = vscode.workspace.getConfiguration('genec');
             const pythonPath = config.get('pythonPath') || 'python3';
             const repoPath = ((_a = vscode.workspace.workspaceFolders) === null || _a === void 0 ? void 0 : _a[0].uri.fsPath) || '';
-            (_b = this._view) === null || _b === void 0 ? void 0 : _b.webview.postMessage({ type: 'status', value: 'Undoing last refactoring...' });
+            this._safePostMessage({ type: 'status', value: 'Undoing last refactoring...' });
             try {
                 const args = ['-m', 'genec.cli', '--target', this._targetFilePath, '--repo', repoPath, '--rollback', '--json'];
                 // Pass API key just in case, though rollback doesn't need it
@@ -217,27 +261,45 @@ class GenECViewProvider {
                 const result = this.parseJsonOutput(output);
                 if (result.status === 'success') {
                     vscode.window.showInformationMessage('Undo successful! Restored original file.');
-                    (_c = this._view) === null || _c === void 0 ? void 0 : _c.webview.postMessage({ type: 'status', value: 'Undo successful.' });
-                    (_d = this._view) === null || _d === void 0 ? void 0 : _d.webview.postMessage({ type: 'clear', value: 'Undo successful. Original file restored.' });
+                    this._safePostMessage({ type: 'status', value: 'Undo successful.' });
+                    this._safePostMessage({ type: 'clear', value: 'Undo successful. Original file restored.' });
                 }
                 else {
                     vscode.window.showErrorMessage(`Undo failed: ${result.message || 'Unknown error'}`);
-                    (_e = this._view) === null || _e === void 0 ? void 0 : _e.webview.postMessage({ type: 'error', value: `Undo failed: ${result.message}` });
+                    this._safePostMessage({ type: 'error', value: `Undo failed: ${result.message}` });
                 }
             }
             catch (e) {
                 vscode.window.showErrorMessage(`Undo failed: ${e.message}`);
-                (_f = this._view) === null || _f === void 0 ? void 0 : _f.webview.postMessage({ type: 'error', value: e.message });
+                this._safePostMessage({ type: 'error', value: e.message });
             }
         });
     }
     _stopRefactoring() {
         if (this._currentProcess) {
-            this._currentProcess.kill();
+            this._outputChannel.appendLine('[USER] Stop requested, sending SIGINT...');
+            // Graceful shutdown chain: SIGINT -> SIGTERM -> SIGKILL
+            // SIGINT allows Python to run cleanup handlers
+            this._currentProcess.kill('SIGINT');
+            const process = this._currentProcess;
+            // If still running after 3s, escalate to SIGTERM
+            setTimeout(() => {
+                if (process && !process.killed) {
+                    this._outputChannel.appendLine('[USER] Process still running, sending SIGTERM...');
+                    process.kill('SIGTERM');
+                }
+            }, 3000);
+            // If still running after 6s, force kill
+            setTimeout(() => {
+                if (process && !process.killed) {
+                    this._outputChannel.appendLine('[USER] Force killing process with SIGKILL...');
+                    process.kill('SIGKILL');
+                }
+            }, 6000);
             this._currentProcess = undefined;
             if (this._view) {
-                this._view.webview.postMessage({ type: 'status', value: 'Refactoring stopped by user.' });
-                this._view.webview.postMessage({ type: 'stopped' });
+                this._safePostMessage({ type: 'status', value: 'Refactoring stopped by user.' });
+                this._safePostMessage({ type: 'stopped' });
             }
         }
     }
@@ -288,7 +350,7 @@ class GenECViewProvider {
                 // Clear suggestions to prevent conflicting edits
                 this._currentSuggestions = [];
                 if (this._view) {
-                    this._view.webview.postMessage({
+                    this._safePostMessage({
                         type: 'clear',
                         value: `Applied ${suggestion.name}. The file has changed. Please re-run to find more refactorings.`
                     });
@@ -321,8 +383,8 @@ class GenECViewProvider {
             this._targetFilePath = document.fileName;
             const className = path.basename(this._targetFilePath);
             if (this._view) {
-                this._view.webview.postMessage({ type: 'status', value: 'Initializing GenEC...' });
-                this._view.webview.postMessage({ type: 'clear', value: 'Initializing...' }); // Clear previous results
+                this._safePostMessage({ type: 'status', value: 'Initializing GenEC...' });
+                this._safePostMessage({ type: 'clear', value: 'Initializing...' }); // Clear previous results
             }
             // Get configuration
             const config = vscode.workspace.getConfiguration('genec');
@@ -342,13 +404,17 @@ class GenECViewProvider {
                 }
                 finalApiKey = storedApiKey || ''; // Ensure finalApiKey is set
             }
-            this._view.webview.postMessage({
+            this._safePostMessage({
                 type: 'start',
                 target: className,
                 value: `Running refactoring on ${className}...`
             });
             try {
+                // Find a free port for WebSocket
+                const wsPort = 9876; // Default port, could be dynamic
                 const args = ['-m', 'genec.cli', '--target', this._targetFilePath, '--repo', repoPath, '--json'];
+                // Enable WebSocket progress
+                args.push('--websocket', wsPort.toString());
                 if (autoApply) {
                     args.push('--apply-all');
                 }
@@ -361,6 +427,8 @@ class GenECViewProvider {
                 if (minCohesion !== undefined) {
                     args.push('--min-cohesion', minCohesion.toString());
                 }
+                // Start WebSocket client
+                this._connectWebSocket(wsPort);
                 // Pass API key via environment variable for security (not visible in process list)
                 const env = Object.assign({}, process.env);
                 if (finalApiKey) {
@@ -374,12 +442,29 @@ class GenECViewProvider {
                 this._outputChannel.appendLine('------------------------');
                 const output = yield new Promise((resolve, reject) => {
                     var _a, _b;
+                    // Timeout: 10 minutes max (prevents hanging forever)
+                    const TIMEOUT_MS = 10 * 60 * 1000;
+                    let timeoutId;
                     this._currentProcess = cp.spawn(pythonPath, args, {
                         cwd: repoPath,
                         env: env
                     });
                     let stdout = '';
                     let stderr = '';
+                    // Set up timeout
+                    timeoutId = setTimeout(() => {
+                        if (this._currentProcess) {
+                            this._outputChannel.appendLine('[TIMEOUT] Process exceeded 10 minute limit, terminating...');
+                            this._safePostMessage({ type: 'status', value: 'Timeout: killing process...' });
+                            // Graceful shutdown: SIGTERM first, then SIGKILL after 5s
+                            this._currentProcess.kill('SIGTERM');
+                            setTimeout(() => {
+                                if (this._currentProcess) {
+                                    this._currentProcess.kill('SIGKILL');
+                                }
+                            }, 5000);
+                        }
+                    }, TIMEOUT_MS);
                     (_a = this._currentProcess.stdout) === null || _a === void 0 ? void 0 : _a.on('data', (data) => {
                         const dataStr = data.toString();
                         stdout += dataStr;
@@ -391,16 +476,60 @@ class GenECViewProvider {
                         stderr += dataStr;
                         // Log stderr for debugging
                         this._outputChannel.appendLine(`[STDERR] ${dataStr.trim()}`);
-                        // Parse progress from stderr
-                        const stageMatch = dataStr.match(/\[Stage \d+\/\d+\] .+/);
-                        if (stageMatch && this._view) {
-                            this._view.webview.postMessage({
-                                type: 'status',
-                                value: stageMatch[0].trim()
-                            });
+                        // Parse each line for progress/errors
+                        const lines = dataStr.split('\n');
+                        for (const line of lines) {
+                            const trimmedLine = line.trim();
+                            if (!trimmedLine)
+                                continue;
+                            // Try to parse JSON progress events first
+                            if (trimmedLine.startsWith('{') && trimmedLine.includes('"type":"progress"')) {
+                                try {
+                                    const progressEvent = JSON.parse(trimmedLine);
+                                    if (progressEvent.type === 'progress') {
+                                        this._safePostMessage({
+                                            type: 'status',
+                                            value: `[${progressEvent.stage}/${progressEvent.total}] ${progressEvent.message}`
+                                        });
+                                    }
+                                }
+                                catch (_a) { }
+                            }
+                            // Parse Stage progress from log format
+                            const stageMatch = trimmedLine.match(/\[Stage \d+\/\d+\] .+/);
+                            if (stageMatch) {
+                                this._safePostMessage({
+                                    type: 'status',
+                                    value: stageMatch[0].trim()
+                                });
+                            }
+                            // Show ERROR messages prominently to user
+                            if (trimmedLine.includes('ERROR') || trimmedLine.includes('Error:')) {
+                                const errorMsg = trimmedLine.replace(/^.*?(ERROR|Error:)\s*/, '').trim();
+                                if (errorMsg.length > 10) { // Avoid empty/short errors
+                                    this._safePostMessage({
+                                        type: 'error',
+                                        value: errorMsg
+                                    });
+                                }
+                            }
+                            // Show critical warnings to user
+                            if (trimmedLine.includes('File too large') ||
+                                trimmedLine.includes('CONFLICT DETECTED') ||
+                                trimmedLine.includes('OOM') ||
+                                trimmedLine.includes('out of memory')) {
+                                this._safePostMessage({
+                                    type: 'warning',
+                                    value: trimmedLine.replace(/^.*?WARNING\s*:?\s*/, '').trim()
+                                });
+                            }
                         }
                     });
                     this._currentProcess.on('close', (code) => {
+                        // Clear timeout on close
+                        if (timeoutId) {
+                            clearTimeout(timeoutId);
+                        }
                         this._currentProcess = undefined;
                         this._outputChannel.appendLine(`Process exited with code: ${code}`);
                         if (code === 0) {
@@ -415,12 +544,19 @@ class GenECViewProvider {
                             reject(new Error(stderr || `GenEC failed with code ${code}`));
                         }
                     });
+                    this._currentProcess.on('error', (err) => {
+                        if (timeoutId) {
+                            clearTimeout(timeoutId);
+                        }
+                        this._outputChannel.appendLine(`[ERROR] Process error: ${err.message}`);
+                        reject(new Error(`Failed to start GenEC: ${err.message}`));
+                    });
                 });
                 try {
                     const result = this.parseJsonOutput(output);
                     // Always send graph data if available
                     if (result.graph_data) {
-                        this._view.webview.postMessage({ type: 'graph_data', value: result });
+                        this._safePostMessage({ type: 'graph_data', value: result });
                     }
                     // Check if any refactorings were applied
                     if (result.applied_refactorings && result.applied_refactorings.length > 0) {
@@ -542,18 +678,18 @@ class GenECViewProvider {
                                 }).join('<br>');
                             }
                         }
-                        this._view.webview.postMessage({
+                        this._safePostMessage({
                             type: 'clear',
                             value: message,
                             graph_data: result.graph_data // Include graph data for rendering
                         });
                     }
                     // Send results to frontend
-                    this._view.webview.postMessage({ type: 'results', value: result });
+                    this._safePostMessage({ type: 'results', value: result });
                 }
                 catch (e) {
                     console.error('Failed to parse JSON:', output);
-                    this._view.webview.postMessage({
+                    this._safePostMessage({
                         type: 'error',
                         value: 'Failed to parse GenEC output. Output length: ' + output.length + '. First 100 chars: ' + output.substring(0, 100)
                     });
@@ -562,7 +698,7 @@ class GenECViewProvider {
             catch (e) {
                 if (e.message !== 'Process terminated') {
                     const msg = e.message.trim();
-                    this._view.webview.postMessage({ type: 'error', value: msg });
+                    this._safePostMessage({ type: 'error', value: msg });
                 }
             }
         });
@@ -577,7 +713,7 @@ class GenECViewProvider {
                     message += `<br><br>Clustering:<br>• Total clusters: ${total}<br>• Clusters with 3+ members: ${viable}`;
                 }
             }
-            this._view.webview.postMessage({
+            this._safePostMessage({
                 type: 'clear',
                 value: message,
                 graph_data: result.graph_data
@@ -829,7 +965,7 @@ class GenECViewProvider {
                     if (data.summary) {
                         resultsDiv.innerHTML = data.summary;
                         resultsDiv.innerHTML += '<hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--vscode-widget-border);">';
-                        
+
                         // Add click handlers for file links in the summary
                         resultsDiv.querySelectorAll('.file-link').forEach(link => {
                             link.addEventListener('click', (e) => {
@@ -854,7 +990,7 @@ class GenECViewProvider {
                                     // Handle both full path and basename just in case, usually suggestion.name is simple class name
                                     return filePath.split(/[/\\]/).pop().replace('.java', '');
                                 }));
-                            
+
                             suggestions = suggestions.filter(s => !appliedNames.has(s.name));
                         }
 
@@ -862,23 +998,23 @@ class GenECViewProvider {
                         const shouldSuggestions = suggestions.filter(s => s.quality_tier === 'should');
                         const couldSuggestions = suggestions.filter(s => s.quality_tier === 'could');
                         const potentialSuggestions = suggestions.filter(s => s.quality_tier === 'potential');
-                        
+
                         // Helper function to create tier section
                         const createTierSection = (title, emoji, suggestions, tierClass) => {
                             if (suggestions.length === 0) return;
-                            
+
                             const sectionHeader = document.createElement('h3');
                             sectionHeader.style.marginTop = '20px';
                             sectionHeader.style.marginBottom = '10px';
                             // Removed emoji from display as requested
                             sectionHeader.innerHTML = title + ' (' + suggestions.length + ')';
                             resultsDiv.appendChild(sectionHeader);
-                            
+
                             suggestions.forEach((suggestion, index) => {
                                 const div = document.createElement('div');
                                 div.className = 'result-item ' + tierClass;
-                                div.style.borderLeft = tierClass === 'tier-should' ? '4px solid #4CAF50' : 
-                                                       tierClass === 'tier-could' ? '4px solid #FF9800' : 
+                                div.style.borderLeft = tierClass === 'tier-should' ? '4px solid #4CAF50' :
+                                                       tierClass === 'tier-could' ? '4px solid #FF9800' :
                                                        '4px solid #9E9E9E';
                                 div.style.paddingLeft = '12px';
 
@@ -888,11 +1024,11 @@ class GenECViewProvider {
                                 nameDiv.style.display = 'flex';
                                 nameDiv.style.alignItems = 'center';
                                 nameDiv.style.gap = '10px';
-                                
+
                                 const nameSpan = document.createElement('span');
                                 nameSpan.textContent = suggestion.name;
                                 nameDiv.appendChild(nameSpan);
-                                
+
                                 // Quality score badge
                                 if (suggestion.quality_score !== undefined) {
                                     const scoreBadge = document.createElement('span');
@@ -900,14 +1036,14 @@ class GenECViewProvider {
                                     scoreBadge.style.borderRadius = '12px';
                                     scoreBadge.style.fontSize = '11px';
                                     scoreBadge.style.fontWeight = 'bold';
-                                    scoreBadge.style.background = tierClass === 'tier-should' ? '#4CAF50' : 
-                                                                   tierClass === 'tier-could' ? '#FF9800' : 
+                                    scoreBadge.style.background = tierClass === 'tier-should' ? '#4CAF50' :
+                                                                   tierClass === 'tier-could' ? '#FF9800' :
                                                                    '#9E9E9E';
                                     scoreBadge.style.color = 'white';
                                     scoreBadge.textContent = Math.round(suggestion.quality_score) + '/100';
                                     nameDiv.appendChild(scoreBadge);
                                 }
-                                
+
                                 if (suggestion.verified) {
                                     const verifiedSpan = document.createElement('span');
                                     verifiedSpan.className = 'verified';
@@ -961,7 +1097,7 @@ class GenECViewProvider {
                                 resultsDiv.appendChild(div);
                             });
                         };
-                        
+
                         // Display suggestions by tier with descriptions
                         if (shouldSuggestions.length > 0) {
                             const shouldDesc = document.createElement('p');
@@ -973,7 +1109,7 @@ class GenECViewProvider {
                             resultsDiv.appendChild(shouldDesc);
                         }
                         createTierSection('SHOULD Refactor (Auto-Applied)', '', shouldSuggestions, 'tier-should');
-                        
+
                         if (couldSuggestions.length > 0) {
                             const couldDesc = document.createElement('p');
                             couldDesc.style.fontSize = '12px';
@@ -984,7 +1120,7 @@ class GenECViewProvider {
                             resultsDiv.appendChild(couldDesc);
                         }
                         createTierSection('COULD Refactor', '', couldSuggestions, 'tier-could');
-                        
+
                         if (potentialSuggestions.length > 0) {
                             const potentialDesc = document.createElement('p');
                             potentialDesc.style.fontSize = '12px';
@@ -995,7 +1131,7 @@ class GenECViewProvider {
                             resultsDiv.appendChild(potentialDesc);
                         }
                         createTierSection('POTENTIAL Refactoring', '', potentialSuggestions, 'tier-potential');
-                        
+
                     } else {
                         // Fallback: Show detected clusters if no suggestions
                         if (data.clusters && data.clusters.length > 0) {
@@ -1196,6 +1332,54 @@ class GenECViewProvider {
         // Fallback to workspace folder
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(startPath));
         return workspaceFolder ? workspaceFolder.uri.fsPath : path.dirname(startPath);
+    }
+    _connectWebSocket(port) {
+        // WebSocket is available in VS Code extension host environment (Node.js)
+        const WebSocket = require('ws');
+        // Wait a bit for server to start
+        setTimeout(() => {
+            try {
+                const ws = new WebSocket(`ws://localhost:${port}`);
+                ws.on('open', () => {
+                    this._outputChannel.appendLine(`WebSocket connected on port ${port}`);
+                });
+                ws.on('message', (data) => {
+                    try {
+                        const message = JSON.parse(data.toString());
+                        if (message.type === 'progress') {
+                            this._safePostMessage({
+                                type: 'progress',
+                                stage: message.stage,
+                                total: message.total,
+                                percent: message.percent,
+                                message: message.message
+                            });
+                        }
+                        else if (message.type === 'error') {
+                            this._outputChannel.appendLine(`WebSocket Error: ${message.message}`);
+                        }
+                    }
+                    catch (e) {
+                        // Ignore parse errors
+                    }
+                });
+                ws.on('error', (error) => {
+                    this._outputChannel.appendLine(`WebSocket connection error: ${error.message}`);
+                });
+                // Close when process ends
+                if (this._currentProcess) {
+                    this._currentProcess.on('exit', () => {
+                        try {
+                            ws.close();
+                        }
+                        catch (e) { }
+                    });
+                }
+            }
+            catch (e) {
+                this._outputChannel.appendLine(`Failed to create WebSocket: ${e}`);
+            }
+        }, 1000); // 1s delay to let Python server start
     }
 }
 exports.GenECViewProvider = GenECViewProvider;

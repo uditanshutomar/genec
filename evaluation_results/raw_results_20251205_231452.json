@@ -1,0 +1,162 @@
+{
+  "clusters_all": [
+    {
+      "id": 5,
+      "methods": [
+        "addItem(String,String,BigDecimal,int)",
+        "calculateShippingCost()",
+        "checkInventoryAvailability()",
+        "clearItems()",
+        "generateOrderId()",
+        "getCustomerId()",
+        "getItemCount()",
+        "getItems()",
+        "getItemsByCategory(String)",
+        "getLowStockItems(int)",
+        "recalculateSubtotal()",
+        "releaseInventory()",
+        "removeItem(String)",
+        "reserveInventory()",
+        "updateItemQuantity(String,int)",
+        "updateWarehouseStock(String,int)",
+        "<init>(String,String,String)",
+        "logAudit(String)",
+        "calculateTotalAmount()",
+        "getShippingMethodMultiplier()"
+      ],
+      "fields": [
+        "customerId",
+        "items",
+        "itemQuantities",
+        "packageWeight",
+        "warehouseStock",
+        "reservedItems"
+      ],
+      "cohesion": 0.6705882352941173,
+      "coupling": 1.0,
+      "quality_score": 25.0
+    },
+    {
+      "id": 1,
+      "methods": [
+        "applyDiscount(BigDecimal)",
+        "applyTierDiscount()",
+        "getAuditLog()",
+        "logAudit(String)",
+        "setCustomerTier(String)",
+        "calculateTotalAmount()",
+        "calculateShippingCost()",
+        "getShippingMethodMultiplier()"
+      ],
+      "fields": [
+        "customerTier",
+        "discountPercentage",
+        "auditLog",
+        "lastModified"
+      ],
+      "cohesion": 0.8181818181818182,
+      "coupling": 1.0,
+      "quality_score": 40.0
+    },
+    {
+      "id": 0,
+      "methods": [
+        "buildOrderConfirmationEmailBody()",
+        "getCustomerEmail()",
+        "getOrderDate()",
+        "getOrderId()",
+        "getTotalAmount()",
+        "sendEmail(String,String,String)",
+        "sendOrderConfirmationEmail()",
+        "sendPaymentConfirmationEmail()",
+        "sendRefundNotificationEmail()",
+        "sendShippingNotificationEmail(String)",
+        "logAudit(String)"
+      ],
+      "fields": [
+        "customerEmail",
+        "customerName",
+        "orderId",
+        "orderDate",
+        "totalAmount"
+      ],
+      "cohesion": 0.7291666666666666,
+      "coupling": 0.9371428571428569,
+      "quality_score": 35.0
+    },
+    {
+      "id": 3,
+      "methods": [
+        "calculateTotalAmount()",
+        "estimateDeliveryDate()",
+        "getDiscountAmount()",
+        "getPriceBreakdown()",
+        "getShippingMethodMultiplier()",
+        "getTaxAmount()",
+        "setShippingAddress(String,String,String,String)",
+        "setShippingMethod(String)",
+        "logAudit(String)",
+        "calculateShippingCost()"
+      ],
+      "fields": [
+        "subtotal",
+        "taxRate",
+        "shippingCost",
+        "shippingAddress",
+        "shippingCity",
+        "shippingZipCode",
+        "shippingCountry",
+        "shippingMethod"
+      ],
+      "cohesion": 0.8066666666666668,
+      "coupling": 0.9065082644628099,
+      "quality_score": 35.0
+    },
+    {
+      "id": 2,
+      "methods": [
+        "generateTransactionId()",
+        "getOrderStatus()",
+        "processPayment(String,String)",
+        "refundPayment()",
+        "simulatePaymentGateway(String,String,BigDecimal)",
+        "sendRefundNotificationEmail()",
+        "releaseInventory()",
+        "logAudit(String)",
+        "reserveInventory()",
+        "sendPaymentConfirmationEmail()",
+        "sendEmail(String,String,String)"
+      ],
+      "fields": [
+        "orderStatus",
+        "paymentMethod",
+        "paymentStatus",
+        "transactionId"
+      ],
+      "cohesion": 0.8153846153846154,
+      "coupling": 0.94240317775571,
+      "quality_score": 40.0
+    },
+    {
+      "id": 4,
+      "methods": [
+        "validatePaymentDetails(String,String)"
+      ],
+      "fields": [],
+      "cohesion": 0.0,
+      "coupling": 0.0,
+      "quality_score": 20.0
+    },
+    {
+      "id": 6,
+      "methods": [
+        "<init>(String,String,BigDecimal,int)"
+      ],
+      "fields": [],
+      "cohesion": 0.0,
+      "coupling": 0.0,
+      "quality_score": 20.0
+    }
+  ],
+  "suggestions": []
+}

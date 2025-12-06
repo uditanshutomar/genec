@@ -1,0 +1,340 @@
+{
+  "test_case": "OrderManagementSystem",
+  "description": "Realistic e-commerce god class with 6 distinct responsibilities",
+  "file_path": "test_cases/OrderManagementSystem.java",
+  "metrics": {
+    "loc": 627,
+    "methods": 47,
+    "fields": 24,
+    "expected_wmcComplexity": 65,
+    "expected_lcom5": 0.75,
+    "expected_tcc": 0.25
+  },
+  "expected_extractions": [
+    {
+      "priority": "HIGH",
+      "class_name": "OrderItemCollection",
+      "rationale": "Manages the collection of order items. High cohesion - all methods work with items list and itemQuantities map. Core responsibility of maintaining order line items.",
+      "responsibility": "Manage order items (add, remove, update, query)",
+      "pattern": "Collection/Container pattern",
+      "methods": [
+        "addItem(String, String, BigDecimal, int)",
+        "removeItem(String)",
+        "updateItemQuantity(String, int)",
+        "getItemCount()",
+        "getItemsByCategory(String)",
+        "clearItems()"
+      ],
+      "fields": [
+        "items",
+        "itemQuantities"
+      ],
+      "dependencies_on_original": [
+        "logAudit",
+        "recalculateSubtotal"
+      ],
+      "metrics": {
+        "expected_cohesion": 0.85,
+        "expected_coupling_to_original": "medium",
+        "methods_count": 6,
+        "fields_count": 2
+      },
+      "design_notes": "After extraction, original class should delegate to OrderItemCollection. The recalculateSubtotal callback creates coupling that could be addressed with Observer pattern or by returning items for calculation."
+    },
+    {
+      "priority": "HIGH",
+      "class_name": "PriceCalculator",
+      "rationale": "Handles all pricing logic including discounts, tax, and total calculation. High cohesion around monetary calculations. Follows Strategy pattern for different calculation strategies.",
+      "responsibility": "Calculate prices, discounts, taxes, and totals",
+      "pattern": "Calculator/Strategy pattern",
+      "methods": [
+        "recalculateSubtotal()",
+        "applyDiscount(BigDecimal)",
+        "applyTierDiscount()",
+        "getDiscountAmount()",
+        "getTaxAmount()",
+        "calculateTotalAmount()",
+        "getPriceBreakdown()"
+      ],
+      "fields": [
+        "subtotal",
+        "taxRate",
+        "discountPercentage",
+        "totalAmount"
+      ],
+      "dependencies_on_original": [
+        "items",
+        "customerTier",
+        "calculateShippingCost"
+      ],
+      "metrics": {
+        "expected_cohesion": 0.90,
+        "expected_coupling_to_original": "medium",
+        "methods_count": 7,
+        "fields_count": 4
+      },
+      "design_notes": "Dependencies on items and shippingCost create coupling. Could pass items as parameter and inject ShippingCalculator. Consider making this a pure calculator that takes inputs and returns results."
+    },
+    {
+      "priority": "MEDIUM",
+      "class_name": "PaymentProcessor",
+      "rationale": "Manages payment operations. High cohesion around payment lifecycle. Contains temporal coupling with inventory (both must succeed/fail together).",
+      "responsibility": "Process payments, refunds, and validate payment details",
+      "pattern": "Service pattern with Transaction Script",
+      "methods": [
+        "processPayment(String, String)",
+        "simulatePaymentGateway(String, String, BigDecimal)",
+        "refundPayment()",
+        "validatePaymentDetails(String, String)",
+        "generateTransactionId()"
+      ],
+      "fields": [
+        "paymentMethod",
+        "paymentStatus",
+        "transactionId"
+      ],
+      "dependencies_on_original": [
+        "totalAmount",
+        "orderStatus",
+        "reserveInventory",
+        "releaseInventory",
+        "sendPaymentConfirmationEmail",
+        "sendRefundNotificationEmail",
+        "logAudit"
+      ],
+      "metrics": {
+        "expected_cohesion": 0.80,
+        "expected_coupling_to_original": "high",
+        "methods_count": 5,
+        "fields_count": 3
+      },
+      "design_notes": "High coupling due to workflow dependencies (payment → inventory → notification). This is legitimate domain coupling. Consider using events/messaging to decouple or implement Saga pattern for distributed transactions."
+    },
+    {
+      "priority": "MEDIUM",
+      "class_name": "InventoryManager",
+      "rationale": "Manages warehouse stock and inventory reservations. High cohesion around inventory operations. Critical for order fulfillment.",
+      "responsibility": "Check availability, reserve, and release inventory",
+      "pattern": "Resource Manager pattern",
+      "methods": [
+        "checkInventoryAvailability()",
+        "reserveInventory()",
+        "releaseInventory()",
+        "updateWarehouseStock(String, int)",
+        "getLowStockItems(int)"
+      ],
+      "fields": [
+        "warehouseStock",
+        "reservedItems"
+      ],
+      "dependencies_on_original": [
+        "items",
+        "orderId",
+        "logAudit"
+      ],
+      "metrics": {
+        "expected_cohesion": 0.85,
+        "expected_coupling_to_original": "medium",
+        "methods_count": 5,
+        "fields_count": 2
+      },
+      "design_notes": "Depends on items collection. After extraction, should either receive items as parameter or subscribe to item changes. Could be made more generic by not coupling to OrderItem type."
+    },
+    {
+      "priority": "MEDIUM",
+      "class_name": "ShippingCalculator",
+      "rationale": "Handles shipping cost calculation and delivery estimates. High cohesion around shipping logic. Geographic and weight-based calculations.",
+      "responsibility": "Calculate shipping costs and estimate delivery dates",
+      "pattern": "Calculator/Strategy pattern",
+      "methods": [
+        "setShippingAddress(String, String, String, String)",
+        "calculateShippingCost()",
+        "getShippingMethodMultiplier()",
+        "estimateDeliveryDate()",
+        "setShippingMethod(String)"
+      ],
+      "fields": [
+        "shippingAddress",
+        "shippingCity",
+        "shippingZipCode",
+        "shippingCountry",
+        "packageWeight",
+        "shippingMethod",
+        "shippingCost"
+      ],
+      "dependencies_on_original": [
+        "items",
+        "calculateTotalAmount",
+        "logAudit"
+      ],
+      "metrics": {
+        "expected_cohesion": 0.90,
+        "expected_coupling_to_original": "low",
+        "methods_count": 5,
+        "fields_count": 7
+      },
+      "design_notes": "Relatively independent. Needs items for weight calculation. After extraction, could be made pure by passing items/weight as parameter. The calculateTotalAmount callback creates coupling - consider returning shipping cost instead of setting it."
+    },
+    {
+      "priority": "LOW",
+      "class_name": "NotificationService",
+      "rationale": "Sends email notifications for various order events. High cohesion around communication. Infrastructure concern that could be completely separated.",
+      "responsibility": "Send email notifications for order events",
+      "pattern": "Service pattern / Observer pattern",
+      "methods": [
+        "sendOrderConfirmationEmail()",
+        "sendPaymentConfirmationEmail()",
+        "sendShippingNotificationEmail(String)",
+        "sendRefundNotificationEmail()",
+        "buildOrderConfirmationEmailBody()",
+        "sendEmail(String, String, String)"
+      ],
+      "fields": [],
+      "dependencies_on_original": [
+        "customerEmail",
+        "customerName",
+        "orderId",
+        "totalAmount",
+        "transactionId",
+        "items",
+        "orderDate",
+        "estimateDeliveryDate",
+        "logAudit"
+      ],
+      "metrics": {
+        "expected_cohesion": 0.75,
+        "expected_coupling_to_original": "high",
+        "methods_count": 6,
+        "fields_count": 0
+      },
+      "design_notes": "Depends on many fields from original class for email content. This is Feature Envy - accessing lots of external data. After extraction, should receive a DTO/notification object instead of depending on entire order. Could use Observer/Event pattern to decouple completely."
+    }
+  ],
+  "ambiguous_methods": [
+    {
+      "method": "generateOrderId()",
+      "reason": "Utility function - could stay in original, go to factory, or be static utility",
+      "recommended_placement": "Keep in original or extract to OrderIdGenerator if needed elsewhere"
+    },
+    {
+      "method": "generateTransactionId()",
+      "reason": "Payment-specific ID generation - could be in PaymentProcessor or utility",
+      "recommended_placement": "Extract to PaymentProcessor"
+    },
+    {
+      "method": "logAudit(String)",
+      "reason": "Cross-cutting concern (logging) - used by all groups",
+      "recommended_placement": "Keep in original as infrastructure or extract to separate AuditLogger (low priority)"
+    }
+  ],
+  "shared_dependencies": {
+    "description": "These fields/methods are used by multiple extraction candidates, creating coupling challenges",
+    "items": [
+      {
+        "name": "items",
+        "used_by": ["OrderItemCollection", "PriceCalculator", "InventoryManager", "ShippingCalculator", "NotificationService"],
+        "resolution": "OrderItemCollection owns it, others should receive as parameter or subscribe to changes"
+      },
+      {
+        "name": "customerId, customerEmail, customerName, customerTier",
+        "used_by": ["PriceCalculator", "NotificationService"],
+        "resolution": "Keep in original - represents Order's customer context"
+      },
+      {
+        "name": "orderId, orderDate, orderStatus",
+        "used_by": ["Multiple classes for logging/notifications"],
+        "resolution": "Keep in original - represents Order identity"
+      },
+      {
+        "name": "logAudit()",
+        "used_by": ["All classes"],
+        "resolution": "Keep in original and pass reference, or extract to AuditLogger and inject"
+      }
+    ]
+  },
+  "extraction_challenges": {
+    "temporal_coupling": {
+      "description": "Payment and inventory operations must be atomic",
+      "affected_methods": ["processPayment", "reserveInventory", "releaseInventory"],
+      "resolution": "Use Transaction pattern, Saga pattern, or keep these in same class/aggregate"
+    },
+    "callback_coupling": {
+      "description": "Methods trigger recalculations in other components",
+      "examples": [
+        "addItem() → recalculateSubtotal()",
+        "setShippingAddress() → calculateTotalAmount()",
+        "applyDiscount() → calculateTotalAmount()"
+      ],
+      "resolution": "Replace callbacks with return values or use Observer pattern"
+    },
+    "data_dependency": {
+      "description": "Extracted classes need data from original class",
+      "resolution": "Pass as parameters, use DTOs, or implement Repository pattern"
+    },
+    "feature_envy": {
+      "description": "NotificationService accesses lots of Order data",
+      "resolution": "Create OrderNotificationDTO or use Builder pattern for email content"
+    }
+  },
+  "evaluation_criteria": {
+    "minimum_acceptable": {
+      "extractions_found": 4,
+      "precision": 0.60,
+      "recall": 0.60,
+      "description": "Should find at least the 4 high-priority extractions with reasonable accuracy"
+    },
+    "good_performance": {
+      "extractions_found": 5,
+      "precision": 0.75,
+      "recall": 0.75,
+      "description": "Finds 5 extractions including medium priority, good naming"
+    },
+    "excellent_performance": {
+      "extractions_found": 6,
+      "precision": 0.85,
+      "recall": 0.85,
+      "description": "Finds all extractions, handles ambiguous cases well, high-quality naming"
+    }
+  },
+  "quality_indicators": {
+    "good_extraction_signs": [
+      "Class name reflects domain concept (not generic like Helper, Manager)",
+      "LCOM5 < 0.3 for extracted class",
+      "TCC > 0.7 for extracted class",
+      "Low coupling between extracted classes",
+      "Each extraction has single, clear responsibility",
+      "Rationale mentions cohesion, coupling, or design principles"
+    ],
+    "bad_extraction_signs": [
+      "Generic class names (Utils, Helper, Manager without context)",
+      "LCOM5 > 0.7 for extracted class",
+      "High coupling between extractions",
+      "Extracted class too small (<30 LOC) or too large (>500 LOC)",
+      "Breaks existing method call chains",
+      "No clear single responsibility"
+    ]
+  },
+  "expected_tool_behavior": {
+    "clustering": {
+      "expected_clusters": 6,
+      "minimum_clusters": 4,
+      "cluster_quality": "Each cluster should have high internal cohesion (TCC > 0.7)"
+    },
+    "naming": {
+      "expected_names": ["OrderItemCollection", "PriceCalculator", "PaymentProcessor", "InventoryManager", "ShippingCalculator", "NotificationService"],
+      "acceptable_variations": {
+        "OrderItemCollection": ["ItemManager", "OrderItems", "CartItemCollection"],
+        "PriceCalculator": ["PricingEngine", "PricingService", "OrderPricing"],
+        "PaymentProcessor": ["PaymentService", "PaymentHandler", "PaymentManager"],
+        "InventoryManager": ["StockManager", "InventoryService", "WarehouseManager"],
+        "ShippingCalculator": ["ShippingService", "DeliveryCalculator", "ShippingCostCalculator"],
+        "NotificationService": ["EmailService", "OrderNotifications", "CustomerNotifier"]
+      },
+      "unacceptable_names": ["Helper", "Utils", "Misc", "Extra", "OrderHelper", "OrderUtils"]
+    },
+    "rationale_quality": {
+      "should_mention": ["cohesion", "coupling", "single responsibility", "domain concept"],
+      "should_not_be": ["too vague", "just listing methods", "no design justification"]
+    }
+  }
+}

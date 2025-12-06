@@ -8,19 +8,19 @@
 2025-12-03 20:22:55,997 - GenEC - INFO - ================================================================================
 2025-12-03 20:22:55,997 - GenEC - INFO - Running GenEC pipeline on /Users/uditanshutomar/commons-io/src/main/java/org/apache/commons/io/IOUtils.java
 2025-12-03 20:22:55,997 - GenEC - INFO - ================================================================================
-2025-12-03 20:22:56,021 - GenEC - INFO - 
+2025-12-03 20:22:56,021 - GenEC - INFO -
 [Stage 1/6] Analyzing static dependencies...
 2025-12-03 20:22:59,397 - GenEC - INFO - Original metrics: {'lcom5': 1.0, 'tcc': 0.05491329479768786, 'cbo': 37, 'num_methods': 173, 'num_fields': 11}
-2025-12-03 20:22:59,397 - GenEC - INFO - 
+2025-12-03 20:22:59,397 - GenEC - INFO -
 [Stage 2/6] Mining evolutionary coupling from Git history...
-2025-12-03 20:22:59,432 - GenEC - INFO - 
+2025-12-03 20:22:59,432 - GenEC - INFO -
 [Stage 3/6] Building and fusing dependency graphs...
 2025-12-03 20:22:59,490 - GenEC - INFO - Calculated 4 centrality metrics
 2025-12-03 20:22:59,493 - GenEC - INFO - Graph metrics: {'num_nodes': 184, 'num_edges': 825, 'density': 0.049002138275124736, 'num_components': 31, 'avg_clustering': 0.7188024110891934, 'avg_degree': 8.967391304347826}
-2025-12-03 20:22:59,493 - GenEC - INFO - 
+2025-12-03 20:22:59,493 - GenEC - INFO -
 [Stage 4/6] Detecting and ranking clusters...
 2025-12-03 20:22:59,536 - GenEC - INFO - Clusters: 35 detected, 24 filtered, 24 ranked
-2025-12-03 20:22:59,536 - GenEC - INFO - 
+2025-12-03 20:22:59,536 - GenEC - INFO -
 [Stage 5/6] Generating refactoring suggestions (top 5)...
 2025-12-03 20:22:59,536 - GenEC.LLMInterface - INFO - Generating refactoring suggestion for cluster 11
 2025-12-03 20:22:59,536 - GenEC.LLMInterface - INFO - Using hybrid mode: LLM for naming, JDT for code

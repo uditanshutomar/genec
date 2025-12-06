@@ -1,0 +1,265 @@
+{
+  "clusters_all": [
+    {
+      "id": 0,
+      "methods": [
+        "generateOrderId()",
+        "getAuditLog()",
+        "getCustomerEmail()",
+        "getCustomerId()",
+        "getOrderDate()",
+        "getOrderId()",
+        "sendOrderConfirmationEmail()",
+        "sendShippingNotificationEmail(String)",
+        "<init>(String,String,String)"
+      ],
+      "fields": [
+        "customerId",
+        "customerEmail",
+        "customerName",
+        "orderId",
+        "orderDate",
+        "reservedItems",
+        "auditLog",
+        "lastModified"
+      ],
+      "cohesion": 0.7290322580645164,
+      "coupling": 0.9359708485163972,
+      "quality_score": 35.0
+    },
+    {
+      "id": 1,
+      "methods": [
+        "applyDiscount(BigDecimal)",
+        "applyTierDiscount()",
+        "calculateTotalAmount()",
+        "estimateDeliveryDate()",
+        "setCustomerTier(String)",
+        "setShippingAddress(String,String,String,String)",
+        "setShippingMethod(String)",
+        "logAudit(String)"
+      ],
+      "fields": [
+        "discountCalculator",
+        "shippingAddress",
+        "shippingCity",
+        "shippingZipCode",
+        "shippingCountry",
+        "shippingMethod"
+      ],
+      "cohesion": 0.7454545454545456,
+      "coupling": 1.0,
+      "quality_score": 35.0
+    },
+    {
+      "id": 2,
+      "methods": [
+        "addItem(String,String,BigDecimal,int)",
+        "buildOrderConfirmationEmailBody()",
+        "checkInventoryAvailability()",
+        "clearItems()",
+        "getItemCount()",
+        "getItems()",
+        "getItemsByCategory(String)",
+        "recalculateSubtotal()",
+        "removeItem(String)",
+        "updateItemQuantity(String,int)",
+        "logAudit(String)",
+        "calculateTotalAmount()"
+      ],
+      "fields": [
+        "items",
+        "itemQuantities",
+        "totalAmount"
+      ],
+      "cohesion": 0.6766666666666669,
+      "coupling": 1.0,
+      "quality_score": 25.0
+    },
+    {
+      "id": 3,
+      "methods": [
+        "generateTransactionId()",
+        "getOrderStatus()",
+        "processPayment(String,String)",
+        "refundPayment()",
+        "releaseInventory()",
+        "reserveInventory()",
+        "sendEmail(String,String,String)",
+        "sendPaymentConfirmationEmail()",
+        "sendRefundNotificationEmail()",
+        "simulatePaymentGateway(String,String,BigDecimal)"
+      ],
+      "fields": [
+        "orderProcessor"
+      ],
+      "cohesion": 0.6363636363636365,
+      "coupling": 1.0,
+      "quality_score": 25.0
+    },
+    {
+      "id": 4,
+      "methods": [
+        "calculateShippingCost()",
+        "getDiscountAmount()",
+        "getPriceBreakdown()",
+        "getShippingMethodMultiplier()",
+        "getTaxAmount()",
+        "getTotalAmount()"
+      ],
+      "fields": [
+        "orderPriceCalculator"
+      ],
+      "cohesion": 0.657142857142857,
+      "coupling": 0.9565217391304346,
+      "quality_score": 30.0
+    },
+    {
+      "id": 5,
+      "methods": [
+        "getLowStockItems(int)",
+        "logAudit(String)",
+        "updateWarehouseStock(String,int)"
+      ],
+      "fields": [
+        "warehouseInventoryTracker"
+      ],
+      "cohesion": 0.7000000000000001,
+      "coupling": 1.0,
+      "quality_score": 40.0
+    },
+    {
+      "id": 6,
+      "methods": [
+        "validatePaymentDetails(String,String)"
+      ],
+      "fields": [],
+      "cohesion": 0.0,
+      "coupling": 0.0,
+      "quality_score": 20.0
+    },
+    {
+      "id": 7,
+      "methods": [
+        "<init>(String,String,BigDecimal,int)"
+      ],
+      "fields": [],
+      "cohesion": 0.0,
+      "coupling": 0.0,
+      "quality_score": 20.0
+    },
+    {
+      "id": 8,
+      "methods": [],
+      "fields": [
+        "packageWeight"
+      ],
+      "cohesion": 0.0,
+      "coupling": 0.0,
+      "quality_score": 20.0
+    }
+  ],
+  "suggestions": [
+    {
+      "class_name": "OrderPriceCalculator",
+      "rationale": "These methods form a cohesive unit responsible for calculating all financial aspects of an order including shipping, discounts, taxes, and totals. Extracting them into an OrderPriceCalculator class isolates pricing logic, improves testability, and creates a reusable component that can handle order financial calculations independently.",
+      "confidence": 0.92,
+      "reasoning": "\nStep 1: Primary Responsibility Analysis\nThese methods share the primary responsibility of performing financial calculations for an order. They calculate various monetary components (shipping costs, discounts, taxes) and provide breakdowns and totals. All methods are focused on computing and retrieving different aspects of order pricing.\n\nStep 2: Shared Concept/Domain\nThese members represent the \"Order Pricing\" domain concept. They form a cohesive calculation engine that handles all monetary computations related to an order, including base pricing, shipping, discounts, taxes, and final totals. The orderPriceCalculator field likely serves as a dependency for these calculations.\n\nStep 3: Extraction Benefits\n- Single Responsibility Principle: Isolates all pricing logic into one focused class\n- Code reusability: Pricing calculations can be reused across different order contexts\n- Complexity reduction: Removes financial calculation complexity from the original class\n- Testability: Pricing logic can be unit tested independently with various scenarios\n\nStep 4: Design Justification\nThis follows the Extract Class refactoring pattern to separate financial calculation concerns. It creates a specialized calculator that encapsulates order pricing logic, following the principle of high cohesion (all methods relate to price calculation) and enabling low coupling with the original class.\n",
+      "methods": [
+        "calculateShippingCost()",
+        "getDiscountAmount()",
+        "getPriceBreakdown()",
+        "getShippingMethodMultiplier()",
+        "getTaxAmount()",
+        "getTotalAmount()"
+      ],
+      "fields": [
+        "orderPriceCalculator"
+      ]
+    },
+    {
+      "class_name": "ShoppingCart",
+      "rationale": "These methods and fields form a cohesive shopping cart entity that manages item collections, quantities, and cart-related calculations. Extracting them creates a reusable domain object with clear boundaries and single responsibility for cart operations. The resulting class encapsulates cart state and behavior, improving both maintainability and testability.",
+      "confidence": 0.92,
+      "reasoning": "\nStep 1: Primary Responsibility Analysis\nThese methods collectively manage a collection of items with their quantities and handle calculations related to those items. The core responsibility is maintaining an item collection state - adding, removing, updating quantities, and performing calculations based on the current item state. Methods like addItem, removeItem, updateItemQuantity manage the collection, while recalculateSubtotal and calculateTotalAmount perform computations on the collection.\n\nStep 2: Shared Concept/Domain\nThese members represent a \"Shopping Cart\" or \"Order Basket\" domain concept. They encapsulate the behavior of a container that holds items with quantities, tracks inventory, and calculates totals. The items and itemQuantities fields store the cart state, while the methods provide cart operations. Even the email body building and audit logging are cart-specific operations.\n\nStep 3: Extraction Benefits\n- Single Responsibility Principle: Isolates cart management from other business logic\n- Code Reusability: Cart logic can be reused across different order contexts (web, mobile, API)\n- Complexity Reduction: Original class becomes simpler by removing cart state management\n- Testability: Cart operations can be tested independently with focused unit tests\n- Encapsulation: Cart state (items, quantities) is properly encapsulated with its operations\n\nStep 4: Design Justification\nThis follows the Extract Class refactoring pattern to create a cohesive domain object. The extracted class represents a classic \"Shopping Cart\" entity that maintains its own state and provides operations to manipulate that state. This aligns with Domain-Driven Design principles by creating a clear domain concept with high cohesion.\n",
+      "methods": [
+        "addItem(String,String,BigDecimal,int)",
+        "buildOrderConfirmationEmailBody()",
+        "checkInventoryAvailability()",
+        "clearItems()",
+        "getItemCount()",
+        "getItems()",
+        "getItemsByCategory(String)",
+        "recalculateSubtotal()",
+        "removeItem(String)",
+        "updateItemQuantity(String,int)",
+        "logAudit(String)",
+        "calculateTotalAmount()"
+      ],
+      "fields": [
+        "items",
+        "itemQuantities",
+        "totalAmount"
+      ]
+    },
+    {
+      "class_name": "WarehouseInventoryTracker",
+      "rationale": "These methods form a cohesive inventory management unit that tracks warehouse stock levels, identifies low-stock situations, and maintains audit trails. Extracting them creates a focused class responsible solely for warehouse inventory operations, improving separation of concerns and enabling reuse across different warehouse management scenarios.",
+      "confidence": 0.9,
+      "reasoning": "\nStep 1: Primary Responsibility Analysis\nThese methods collectively manage warehouse inventory operations. getLowStockItems(int) identifies items below a threshold, updateWarehouseStock(String,int) modifies inventory quantities, and logAudit(String) records inventory-related activities. The warehouseInventoryTracker field supports these operations by maintaining inventory state.\n\nStep 2: Shared Concept/Domain\nAll members belong to the \"warehouse inventory management\" domain. They represent a cohesive subsystem focused on tracking, updating, and monitoring stock levels in a warehouse context. This is a clear business domain concept with well-defined boundaries.\n\nStep 3: Extraction Benefits\n- Single Responsibility Principle: Isolates inventory management logic from other business concerns\n- Code reusability: Inventory operations can be reused across different parts of the application\n- Complexity reduction: Removes warehouse-specific logic from the original class\n- Testability: Inventory operations can be unit tested in isolation with mock data\n\nStep 4: Design Justification\nThis follows the Extract Class refactoring pattern to separate inventory management concerns. The extraction creates a cohesive unit with high internal cohesion (all methods work with inventory data) and low coupling to external systems (minimal dependencies beyond basic data types).\n",
+      "methods": [
+        "getLowStockItems(int)",
+        "logAudit(String)",
+        "updateWarehouseStock(String,int)"
+      ],
+      "fields": [
+        "warehouseInventoryTracker"
+      ]
+    },
+    {
+      "class_name": "OrderTransactionWorkflow",
+      "rationale": "These methods form a cohesive workflow that orchestrates the complete order transaction process, coordinating payment processing, inventory management, and customer notifications. Extracting them creates a focused class responsible for managing the complex sequence of operations required to successfully complete an order transaction.",
+      "confidence": 0.88,
+      "reasoning": "\nStep 1: Primary Responsibility Analysis\nThese methods collectively handle the complete lifecycle of order transactions - from payment processing and inventory management to customer notifications. They manage the orchestration of multiple business operations that must happen together to complete an order transaction successfully.\n\nStep 2: Shared Concept/Domain\nAll members belong to the \"order transaction\" domain concept. They represent the coordinated workflow that occurs when processing an order: handling payments (process/refund), managing inventory (reserve/release), generating transaction identifiers, tracking order status, and notifying customers via email. This is a cohesive business process that requires these operations to work together.\n\nStep 3: Extraction Benefits\n- Single Responsibility Principle: Isolates complex transaction orchestration logic from other concerns\n- Code reusability: Transaction workflow can be reused across different order types or contexts\n- Complexity reduction: Removes intricate business process logic from the original class\n- Testability: Transaction scenarios can be tested in isolation with better control over dependencies\n\nStep 4: Design Justification\nThis follows the Extract Class refactoring pattern to create a Facade or Workflow object that encapsulates a complex business process. The extraction creates a cohesive unit that manages the coordination of multiple subsystems (payment, inventory, notifications) required for order transaction completion.\n",
+      "methods": [
+        "generateTransactionId()",
+        "getOrderStatus()",
+        "processPayment(String,String)",
+        "refundPayment()",
+        "releaseInventory()",
+        "reserveInventory()",
+        "sendEmail(String,String,String)",
+        "sendPaymentConfirmationEmail()",
+        "sendRefundNotificationEmail()",
+        "simulatePaymentGateway(String,String,BigDecimal)"
+      ],
+      "fields": [
+        "orderProcessor"
+      ]
+    },
+    {
+      "class_name": "OrderFulfillment",
+      "rationale": "These methods and fields form a cohesive unit responsible for order fulfillment operations including discount application, total calculation, shipping configuration, and delivery estimation. Extracting them creates a focused class that encapsulates the complete fulfillment workflow while reducing complexity in the original order class.",
+      "confidence": 0.88,
+      "reasoning": "\nStep 1: Primary Responsibility Analysis\nThese methods collectively handle order fulfillment operations - they manage discounts, calculate totals, determine delivery dates, and handle shipping logistics. The primary responsibility is orchestrating the fulfillment process from pricing through delivery estimation.\n\nStep 2: Shared Concept/Domain\nThese members represent the \"Order Fulfillment\" domain concept. They work together to transform an order from its initial state through pricing calculations, shipping configuration, and delivery planning. The shipping address fields form a cohesive data structure, while methods like applyDiscount, calculateTotalAmount, and estimateDeliveryDate represent the fulfillment workflow.\n\nStep 3: Extraction Benefits\n- Single Responsibility Principle: Isolates fulfillment logic from other order concerns (creation, payment, etc.)\n- Code Reusability: Fulfillment logic can be reused across different order types or contexts\n- Complexity Reduction: Original class becomes simpler by removing fulfillment-specific calculations and shipping logic\n- Testability: Fulfillment scenarios can be tested in isolation with mock data\n\nStep 4: Design Justification\nThis follows the Extract Class refactoring pattern to separate fulfillment concerns. The methods exhibit high cohesion as they all contribute to the fulfillment process, and the extraction creates low coupling by encapsulating fulfillment-specific data and operations.\n",
+      "methods": [
+        "applyDiscount(BigDecimal)",
+        "applyTierDiscount()",
+        "calculateTotalAmount()",
+        "estimateDeliveryDate()",
+        "setCustomerTier(String)",
+        "setShippingAddress(String,String,String,String)",
+        "setShippingMethod(String)",
+        "logAudit(String)"
+      ],
+      "fields": [
+        "discountCalculator",
+        "shippingAddress",
+        "shippingCity",
+        "shippingZipCode",
+        "shippingCountry",
+        "shippingMethod"
+      ]
+    }
+  ]
+}

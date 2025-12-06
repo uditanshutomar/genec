@@ -8,19 +8,19 @@
 2025-12-03 20:20:52,610 - GenEC - INFO - ================================================================================
 2025-12-03 20:20:52,610 - GenEC - INFO - Running GenEC pipeline on /Users/uditanshutomar/commons-io/src/main/java/org/apache/commons/io/IOUtils.java
 2025-12-03 20:20:52,610 - GenEC - INFO - ================================================================================
-2025-12-03 20:20:52,629 - GenEC - INFO - 
+2025-12-03 20:20:52,629 - GenEC - INFO -
 [Stage 1/6] Analyzing static dependencies...
 2025-12-03 20:20:56,111 - GenEC - INFO - Original metrics: {'lcom5': 0.9937015503875969, 'tcc': 0.07964780212394139, 'cbo': 37, 'num_methods': 173, 'num_fields': 12}
-2025-12-03 20:20:56,111 - GenEC - INFO - 
+2025-12-03 20:20:56,111 - GenEC - INFO -
 [Stage 2/6] Mining evolutionary coupling from Git history...
-2025-12-03 20:20:56,147 - GenEC - INFO - 
+2025-12-03 20:20:56,147 - GenEC - INFO -
 [Stage 3/6] Building and fusing dependency graphs...
 2025-12-03 20:20:56,252 - GenEC - INFO - Calculated 4 centrality metrics
 2025-12-03 20:20:56,256 - GenEC - INFO - Graph metrics: {'num_nodes': 185, 'num_edges': 1210, 'density': 0.07109283196239718, 'num_components': 25, 'avg_clustering': 0.6053118313282114, 'avg_degree': 13.08108108108108}
-2025-12-03 20:20:56,256 - GenEC - INFO - 
+2025-12-03 20:20:56,256 - GenEC - INFO -
 [Stage 4/6] Detecting and ranking clusters...
 2025-12-03 20:20:56,297 - GenEC - INFO - Clusters: 30 detected, 18 filtered, 18 ranked
-2025-12-03 20:20:56,297 - GenEC - INFO - 
+2025-12-03 20:20:56,297 - GenEC - INFO -
 [Stage 5/6] Generating refactoring suggestions (top 5)...
 2025-12-03 20:20:56,297 - GenEC.LLMInterface - INFO - Generating refactoring suggestion for cluster 18
 2025-12-03 20:20:56,297 - GenEC.LLMInterface - INFO - Using hybrid mode: LLM for naming, JDT for code
@@ -43,7 +43,7 @@
 2025-12-03 20:21:58,927 - GenEC.LLMInterface - INFO - LLM suggested name: ByteArrayConverter
 2025-12-03 20:22:00,576 - GenEC.LLMInterface - INFO - JDT code generation successful
 2025-12-03 20:22:02,188 - GenEC - INFO - Generated 5 suggestions
-2025-12-03 20:22:02,188 - GenEC - INFO - 
+2025-12-03 20:22:02,188 - GenEC - INFO -
 [Stage 6/6] Verifying refactoring suggestions...
 2025-12-03 20:22:02,188 - GenEC - INFO - Verifying 5 suggestions in parallel (max_workers=4)
 2025-12-03 20:22:02,190 - GenEC - INFO - Verifying suggestion: LineIteratorFactory

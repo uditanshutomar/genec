@@ -25,20 +25,20 @@ def mock_generate_suggestion(cluster, *args, **kwargs):
 
 def test_parallel_execution():
     logger.info("Testing parallel execution...")
-    
+
     # Create mock clusters
     clusters = [Cluster(id=i, member_names=[]) for i in range(5)]
-    
+
     # Initialize LLMInterface
     llm = LLMInterface(api_key="mock_key")
     # Mock availability
     llm._available = True
-    
+
     # Mock the single suggestion generation method
     llm.generate_refactoring_suggestion = MagicMock(side_effect=mock_generate_suggestion)
-    
+
     start_time = time.time()
-    
+
     # Run batch generation
     suggestions = llm.generate_batch_suggestions(
         clusters=clusters,
@@ -47,13 +47,13 @@ def test_parallel_execution():
         max_suggestions=5,
         max_workers=5
     )
-    
+
     end_time = time.time()
     duration = end_time - start_time
-    
+
     logger.info(f"Total duration: {duration:.2f} seconds")
     logger.info(f"Generated {len(suggestions)} suggestions")
-    
+
     # Verification
     if duration < 3.0:
         logger.info("✅ PASSED: Execution was parallel (took < 3s for 5 tasks of 2s each)")
