@@ -1,15 +1,27 @@
 {
     "name": "genec-vscode",
     "displayName": "GenEC Refactoring",
-    "description": "AI-powered Extract Class refactoring for Java with 7-layer verification",
-    "version": "0.0.52",
+    "description": "AI-powered Extract Class refactoring for Java with intelligent verification",
+    "version": "1.0.0",
+    "publisher": "genec",
     "engines": {
         "vscode": "^1.80.0"
     },
     "categories": [
+        "Programming Languages",
+        "Linters",
         "Other"
     ],
-    "activationEvents": [],
+    "keywords": [
+        "java",
+        "refactoring",
+        "extract class",
+        "code quality",
+        "AI"
+    ],
+    "activationEvents": [
+        "onLanguage:java"
+    ],
     "main": "./out/extension.js",
     "contributes": {
         "viewsContainers": {
@@ -24,61 +36,178 @@
         "views": {
             "genec-sidebar": [
                 {
-                    "type": "webview",
-                    "id": "genec.refactorView",
-                    "name": "Refactoring",
-                    "icon": "resources/genec-icon.svg",
-                    "contextualTitle": "GenEC Refactoring"
+                    "id": "genec.suggestions",
+                    "name": "Suggestions",
+                    "icon": "$(beaker)",
+                    "contextualTitle": "Refactoring Suggestions"
+                },
+                {
+                    "id": "genec.history",
+                    "name": "History",
+                    "icon": "$(history)",
+                    "contextualTitle": "Refactoring History"
+                },
+                {
+                    "id": "genec.settings",
+                    "name": "Settings",
+                    "icon": "$(gear)",
+                    "contextualTitle": "GenEC Settings"
                 }
             ]
         },
+        "viewsWelcome": [
+            {
+                "view": "genec.suggestions",
+                "contents": "No suggestions yet.\n[Analyze Current Class](command:genec.analyzeClass)\nOpen a Java file and click the button above to find refactoring opportunities."
+            },
+            {
+                "view": "genec.history",
+                "contents": "No refactoring history.\nApplied refactorings will appear here."
+            },
+            {
+                "view": "genec.settings",
+                "contents": "[Set API Key](command:genec.setApiKey)\nConfigure your Anthropic API key to enable LLM-powered suggestions."
+            }
+        ],
         "commands": [
             {
-                "command": "genec.refactorClass",
-                "title": "GenEC: Refactor Current Class"
+                "command": "genec.analyzeClass",
+                "title": "Analyze Class",
+                "category": "GenEC",
+                "icon": "$(beaker)"
+            },
+            {
+                "command": "genec.applySuggestion",
+                "title": "Apply Refactoring",
+                "category": "GenEC",
+                "icon": "$(check)"
+            },
+            {
+                "command": "genec.previewSuggestion",
+                "title": "Preview Diff",
+                "category": "GenEC",
+                "icon": "$(diff)"
+            },
+            {
+                "command": "genec.undoLast",
+                "title": "Undo Refactoring",
+                "category": "GenEC",
+                "icon": "$(discard)"
+            },
+            {
+                "command": "genec.showGraph",
+                "title": "Show Method Graph",
+                "category": "GenEC",
+                "icon": "$(type-hierarchy)"
+            },
+            {
+                "command": "genec.showOutput",
+                "title": "Show Output",
+                "category": "GenEC",
+                "icon": "$(output)"
+            },
+            {
+                "command": "genec.cancel",
+                "title": "Cancel Analysis",
+                "category": "GenEC",
+                "icon": "$(close)"
+            },
+            {
+                "command": "genec.configure",
+                "title": "Settings",
+                "category": "GenEC",
+                "icon": "$(gear)"
+            },
+            {
+                "command": "genec.setApiKey",
+                "title": "Set API Key",
+                "category": "GenEC",
+                "icon": "$(key)"
+            },
+            {
+                "command": "genec.focusSuggestions",
+                "title": "Focus Suggestions",
+                "category": "GenEC"
             }
         ],
         "menus": {
             "editor/context": [
                 {
-                    "command": "genec.refactorClass",
-                    "group": "refactor",
+                    "command": "genec.analyzeClass",
+                    "group": "genec@1",
                     "when": "resourceLangId == java"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "genec.analyzeClass",
+                    "when": "view == genec.suggestions",
+                    "group": "navigation"
+                },
+                {
+                    "command": "genec.showGraph",
+                    "when": "view == genec.suggestions",
+                    "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "genec.applySuggestion",
+                    "when": "view == genec.suggestions && viewItem == suggestion",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "genec.previewSuggestion",
+                    "when": "view == genec.suggestions && viewItem == suggestion",
+                    "group": "inline@2"
+                },
+                {
+                    "command": "genec.undoLast",
+                    "when": "view == genec.history && viewItem == historyItem",
+                    "group": "inline"
                 }
             ]
         },
+        "keybindings": [
+            {
+                "command": "genec.analyzeClass",
+                "key": "ctrl+shift+g",
+                "mac": "cmd+shift+g",
+                "when": "editorLangId == java"
+            }
+        ],
         "configuration": {
             "title": "GenEC",
             "properties": {
                 "genec.pythonPath": {
                     "type": "string",
                     "default": "python3",
-                    "description": "Path to Python interpreter with genec installed"
+                    "description": "Path to Python interpreter with GenEC installed"
                 },
                 "genec.apiKey": {
                     "type": "string",
                     "default": "",
-                    "description": "Anthropic API Key (optional - can also use .env file in workspace root)"
+                    "description": "Anthropic API Key for LLM-based suggestions"
                 },
                 "genec.autoApply": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Automatically apply the best refactoring suggestion"
+                    "description": "Automatically apply SHOULD-tier suggestions"
                 },
                 "genec.clustering.minClusterSize": {
                     "type": "number",
-                    "default": 2,
-                    "description": "Minimum number of methods in a cluster"
+                    "default": 3,
+                    "description": "Minimum methods in a cluster"
                 },
                 "genec.clustering.maxClusterSize": {
                     "type": "number",
-                    "default": 20,
-                    "description": "Maximum number of methods in a cluster"
+                    "default": 30,
+                    "description": "Maximum methods in a cluster"
                 },
                 "genec.clustering.minCohesion": {
                     "type": "number",
-                    "default": 0.1,
-                    "description": "Minimum cohesion score for a cluster"
+                    "default": 0.35,
+                    "description": "Minimum cohesion score (0.0-1.0)"
                 }
             }
         }
@@ -86,15 +215,18 @@
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./"
+        "watch": "tsc -watch -p ./",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js"
     },
     "devDependencies": {
         "@types/node": "18.x",
         "@types/vscode": "^1.80.0",
+        "@types/ws": "^8.5.10",
         "typescript": "^5.1.3"
     },
     "dependencies": {
-        "vis-network": "^10.0.2",
+        "vis-network": "^9.1.9",
         "ws": "^8.16.0"
     }
 }

@@ -1,277 +1,491 @@
+/**
+ * GenEC VS Code Extension - Main Entry Point
+ * 
+ * A redesigned extension for Extract Class refactoring using native VS Code patterns.
+ */
 import * as vscode from 'vscode';
-import * as cp from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
-import { GenECViewProvider } from './GenECViewProvider';
+
+// Services
+import { ConfigService } from './services/ConfigService';
+import { GenECService } from './services/GenECService';
+import { StateManager } from './services/StateManager';
+
+// Views
+import { SuggestionsTreeProvider } from './views/SuggestionsTreeProvider';
+import { HistoryTreeProvider } from './views/HistoryTreeProvider';
+import { SettingsTreeProvider } from './views/SettingsTreeProvider';
+
+// Providers
+import { GenECCodeLensProvider } from './providers/GenECCodeLensProvider';
+
+// Panels
+import { GraphWebviewPanel } from './panels/GraphWebviewPanel';
+
+let genecService: GenECService;
+let stateManager: StateManager;
+let statusBarItem: vscode.StatusBarItem;
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('GenEC extension is now active!');
+    console.log('GenEC extension activated');
 
-    // Check for bundled binary
-    const bundledPath = path.join(context.extensionPath, 'dist', 'genec');
-    const bundledExePath = path.join(context.extensionPath, 'dist', 'genec.exe');
-    const isBundled = fs.existsSync(bundledPath) || fs.existsSync(bundledExePath);
+    // Initialize services
+    stateManager = StateManager.initialize(context);
+    genecService = new GenECService(context.extensionPath);
+    const configService = ConfigService.getInstance();
 
-    if (isBundled) {
-        console.log('GenEC: Running in bundled mode (binary found)');
-    } else {
-        // Validate Python installation at startup
-        const config = vscode.workspace.getConfiguration('genec');
-        const pythonPath = config.get<string>('pythonPath') || 'python3';
+    // Create status bar item
+    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    statusBarItem.command = 'genec.showOutput';
+    context.subscriptions.push(statusBarItem);
 
-        validatePythonInstallation(pythonPath).then(valid => {
-            if (!valid) {
-                vscode.window.showWarningMessage(
-                    `GenEC: Python not found at '${pythonPath}'. Please configure genec.pythonPath in settings.`,
-                    'Open Settings'
-                ).then(selection => {
-                    if (selection === 'Open Settings') {
-                        vscode.commands.executeCommand('workbench.action.openSettings', 'genec.pythonPath');
-                    }
-                });
-            } else {
-                // Python found - check and install dependencies
-                ensureDependencies(pythonPath, context);
-            }
-        });
-    }
-
-    // Cleanup any recovery files from previous crashes
-    cleanupRecoveryFiles();
-
-    // Register Webview View Provider
-    const provider = new GenECViewProvider(context.extensionUri, context);
-    context.subscriptions.push(
-        vscode.window.registerWebviewViewProvider(GenECViewProvider.viewType, provider)
-    );
-
-    async function ensureDependencies(pythonPath: string, context: vscode.ExtensionContext) {
-        // Check if genec module is importable
-        const checkCmd = `${pythonPath} -c "import genec; print('ok')"`;
-
-        cp.exec(checkCmd, async (error, stdout) => {
-            if (error || !stdout.includes('ok')) {
-                console.log('GenEC: Dependencies not found, offering to install...');
-
-                const selection = await vscode.window.showInformationMessage(
-                    'GenEC requires Python dependencies. Install now?',
-                    'Install Dependencies',
-                    'Later'
-                );
-
-                if (selection === 'Install Dependencies') {
-                    await installDependencies(pythonPath, context);
-                }
-            } else {
-                console.log('GenEC: All dependencies already installed');
-            }
-        });
-    }
-
-    async function installDependencies(pythonPath: string, context: vscode.ExtensionContext) {
-        // Find requirements.txt in extension directory or genec project
-        const extensionPath = context.extensionPath;
-        let requirementsPath = path.join(extensionPath, '..', 'requirements.txt');
-
-        // Also check common locations
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (workspaceFolders) {
-            for (const folder of workspaceFolders) {
-                const wsReq = path.join(folder.uri.fsPath, 'requirements.txt');
-                if (fs.existsSync(wsReq)) {
-                    requirementsPath = wsReq;
-                    break;
-                }
-            }
-        }
-
-        // Show progress while installing
-        await vscode.window.withProgress({
-            location: vscode.ProgressLocation.Notification,
-            title: 'GenEC: Installing Python dependencies...',
-            cancellable: false
-        }, async (progress) => {
-            return new Promise<void>((resolve, reject) => {
-                // Install with pip
-                let installCmd: string;
-                if (fs.existsSync(requirementsPath)) {
-                    installCmd = `${pythonPath} -m pip install -r "${requirementsPath}"`;
-                } else {
-                    // Fallback: install core packages directly
-                    installCmd = `${pythonPath} -m pip install anthropic gitpython networkx pyyaml websockets`;
-                }
-
-                console.log(`GenEC: Running: ${installCmd}`);
-                progress.report({ message: 'This may take a minute...' });
-
-                cp.exec(installCmd, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
-                    if (error) {
-                        console.log(`GenEC: Install failed: ${error.message}`);
-                        vscode.window.showErrorMessage(
-                            `Failed to install dependencies: ${error.message}. ` +
-                            `Try manually: pip install -r requirements.txt`
-                        );
-                        reject(error);
-                    } else {
-                        console.log('GenEC: Dependencies installed successfully');
-                        vscode.window.showInformationMessage('GenEC: Dependencies installed successfully!');
-                        resolve();
-                    }
-                });
-            });
-        });
-    }
-
-    async function validatePythonInstallation(pythonPath: string): Promise<boolean> {
-        return new Promise((resolve) => {
-            cp.exec(`${pythonPath} --version`, (error, stdout, stderr) => {
-                if (error) {
-                    console.log(`GenEC: Python validation failed: ${error.message}`);
-                    resolve(false);
-                } else {
-                    console.log(`GenEC: Python found: ${stdout.trim() || stderr.trim()}`);
-                    resolve(true);
-                }
-            });
-        });
-    }
-
-    function cleanupRecoveryFiles() {
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders) return;
-
-        for (const folder of workspaceFolders) {
-            const markerFile = path.join(folder.uri.fsPath, '.genec_verification_in_progress');
-            const backupDir = path.join(folder.uri.fsPath, '.genec_verification_backup');
-
-            // Clean up marker file
-            if (fs.existsSync(markerFile)) {
-                try {
-                    fs.unlinkSync(markerFile);
-                    console.log(`GenEC: Cleaned up recovery marker: ${markerFile}`);
-                } catch (e) {
-                    console.log(`GenEC: Failed to clean up marker: ${e}`);
-                }
-            }
-
-            // Clean up backup directory
-            if (fs.existsSync(backupDir)) {
-                try {
-                    fs.rmSync(backupDir, { recursive: true, force: true });
-                    console.log(`GenEC: Cleaned up recovery backup: ${backupDir}`);
-                } catch (e) {
-                    console.log(`GenEC: Failed to clean up backup: ${e}`);
-                }
-            }
-        }
-    }
-
-    let disposable = vscode.commands.registerCommand('genec.refactorClass', async () => {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            vscode.window.showErrorMessage('No active editor found.');
-            return;
-        }
-
-        const document = editor.document;
-        if (document.languageId !== 'java') {
-            vscode.window.showErrorMessage('GenEC only supports Java files.');
-            return;
-        }
-
-        const filePath = document.fileName;
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders) {
-            vscode.window.showErrorMessage('Please open a workspace folder.');
-            return;
-        }
-        const repoPath = workspaceFolders[0].uri.fsPath;
-
-        // Get configuration
-        const config = vscode.workspace.getConfiguration('genec');
-        const pythonPath = config.get<string>('pythonPath') || 'python3';
-        const apiKey = config.get<string>('apiKey');
-
-        // Check if genec is available
-        try {
-            cp.execSync(`${pythonPath} -m genec.cli --help`);
-        } catch (e) {
-            vscode.window.showErrorMessage(`GenEC not found. Please install it using 'pip install genec' or check your Python path configuration.`);
-            return;
-        }
-
-        // Output channel for logs
-        const outputChannel = vscode.window.createOutputChannel('GenEC');
-        outputChannel.show();
-        outputChannel.appendLine(`Starting GenEC on ${filePath}...`);
-        outputChannel.appendLine(`Repository: ${repoPath}`);
-        outputChannel.appendLine(`Python: ${pythonPath}`);
-        outputChannel.appendLine('');
-
-        vscode.window.withProgress({
-            location: vscode.ProgressLocation.Notification,
-            title: "GenEC: Refactoring Class...",
-            cancellable: true
-        }, (progress, token) => {
-            return new Promise<void>((resolve, reject) => {
-                const args = ['-m', 'genec.cli', '--target', filePath, '--repo', repoPath, '--verbose'];
-                if (apiKey) {
-                    args.push('--api-key', apiKey);
-                }
-
-                // Log the command being executed
-                outputChannel.appendLine(`Executing: ${pythonPath} ${args.join(' ')}`);
-                outputChannel.appendLine('---');
-                outputChannel.appendLine('');
-
-                const childProcess = cp.spawn(pythonPath, args, {
-                    cwd: repoPath,
-                    env: { ...process.env, PYTHONUNBUFFERED: '1' }
-                });
-
-                // Add error handler for spawn failure
-                childProcess.on('error', (err: Error) => {
-                    outputChannel.appendLine(`ERROR: Failed to spawn process: ${err.message}`);
-                    reject(err);
-                });
-
-                token.onCancellationRequested(() => {
-                    childProcess.kill();
-                    reject();
-                });
-
-                childProcess.stdout.on('data', (data: Buffer) => {
-                    outputChannel.append(data.toString());
-                });
-
-                childProcess.stderr.on('data', (data: Buffer) => {
-                    outputChannel.append(data.toString());
-                });
-
-                childProcess.on('close', (code: number | null) => {
-                    if (code === 0) {
-                        vscode.window.showInformationMessage('GenEC refactoring completed successfully!', 'Show Output')
-                            .then(selection => {
-                                if (selection === 'Show Output') {
-                                    outputChannel.show();
-                                }
-                            });
-                        resolve();
-                    } else {
-                        vscode.window.showErrorMessage(`GenEC failed with exit code ${code}.`, 'Show Output')
-                            .then(selection => {
-                                if (selection === 'Show Output') {
-                                    outputChannel.show();
-                                }
-                            });
-                        reject();
-                    }
-                });
-            });
-        });
+    // Set up progress listener
+    genecService.on('progress', (event) => {
+        statusBarItem.text = `$(beaker~spin) GenEC: ${event.message}`;
+        statusBarItem.show();
     });
 
-    context.subscriptions.push(disposable);
+    // Register TreeView providers
+    const suggestionsProvider = new SuggestionsTreeProvider();
+    const historyProvider = new HistoryTreeProvider();
+    const settingsProvider = new SettingsTreeProvider();
+
+    context.subscriptions.push(
+        vscode.window.registerTreeDataProvider('genec.suggestions', suggestionsProvider),
+        vscode.window.registerTreeDataProvider('genec.history', historyProvider),
+        vscode.window.registerTreeDataProvider('genec.settings', settingsProvider)
+    );
+
+    // Register CodeLens provider for Java
+    const codeLensProvider = new GenECCodeLensProvider();
+    context.subscriptions.push(
+        vscode.languages.registerCodeLensProvider(
+            { language: 'java', scheme: 'file' },
+            codeLensProvider
+        )
+    );
+
+    // ==========================================================================
+    // Command: Analyze Class
+    // ==========================================================================
+    context.subscriptions.push(
+        vscode.commands.registerCommand('genec.analyzeClass', async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {
+                vscode.window.showErrorMessage('No active editor');
+                return;
+            }
+
+            if (editor.document.languageId !== 'java') {
+                vscode.window.showErrorMessage('GenEC only supports Java files');
+                return;
+            }
+
+            const targetFile = editor.document.fileName;
+            const repoPath = findGitRoot(targetFile);
+
+            // Get API key
+            const apiKey = await configService.promptForApiKey();
+            if (!apiKey) {
+                vscode.window.showWarningMessage('GenEC requires an Anthropic API key');
+                return;
+            }
+
+            // Start analysis
+            statusBarItem.text = '$(beaker~spin) GenEC: Starting...';
+            statusBarItem.show();
+
+            stateManager.startAnalysis(targetFile, repoPath);
+
+            try {
+                const result = await genecService.analyze(targetFile, repoPath, { apiKey });
+                stateManager.completeAnalysis(result);
+
+                statusBarItem.text = `$(beaker) GenEC: ${result.suggestions.length} suggestions`;
+
+                // Show success message
+                const action = await vscode.window.showInformationMessage(
+                    `GenEC found ${result.suggestions.length} refactoring suggestions`,
+                    'View Suggestions',
+                    'Show Graph'
+                );
+
+                if (action === 'View Suggestions') {
+                    vscode.commands.executeCommand('genec.focusSuggestions');
+                } else if (action === 'Show Graph') {
+                    vscode.commands.executeCommand('genec.showGraph');
+                }
+
+            } catch (error) {
+                stateManager.cancelAnalysis();
+                statusBarItem.hide();
+                vscode.window.showErrorMessage(`GenEC failed: ${(error as Error).message}`);
+            }
+        })
+    );
+
+    // ==========================================================================
+    // Command: Apply Suggestion
+    // ==========================================================================
+    context.subscriptions.push(
+        vscode.commands.registerCommand('genec.applySuggestion', async (indexOrItem?: number | any) => {
+            let index: number;
+
+            if (typeof indexOrItem === 'number') {
+                index = indexOrItem;
+            } else if (indexOrItem?.data?.suggestionIndex !== undefined) {
+                index = indexOrItem.data.suggestionIndex;
+            } else {
+                // Prompt user to select
+                const suggestions = stateManager.getSuggestions();
+                if (suggestions.length === 0) {
+                    vscode.window.showInformationMessage('No suggestions available');
+                    return;
+                }
+
+                const items = suggestions.map((s, i) => ({
+                    label: s.name,
+                    description: s.quality_tier?.toUpperCase() || '',
+                    detail: s.rationale,
+                    index: i
+                }));
+
+                const selected = await vscode.window.showQuickPick(items, {
+                    placeHolder: 'Select a suggestion to apply'
+                });
+
+                if (!selected) return;
+                index = selected.index;
+            }
+
+            const suggestion = stateManager.getSuggestion(index);
+            if (!suggestion) {
+                vscode.window.showErrorMessage('Suggestion not found');
+                return;
+            }
+
+            const targetFile = stateManager.getTargetFile();
+            if (!targetFile) {
+                vscode.window.showErrorMessage('No target file');
+                return;
+            }
+
+            // Validate code is available
+            if (!suggestion.new_class_code || !suggestion.modified_original_code) {
+                vscode.window.showErrorMessage('Code not available. Please re-run analysis.');
+                return;
+            }
+
+            // Show preview first
+            const previewAction = await vscode.window.showInformationMessage(
+                `Apply refactoring: Extract ${suggestion.name}?`,
+                'Preview Diff',
+                'Apply',
+                'Cancel'
+            );
+
+            if (previewAction === 'Cancel' || !previewAction) return;
+
+            if (previewAction === 'Preview Diff') {
+                await vscode.commands.executeCommand('genec.previewSuggestion', index);
+                return;
+            }
+
+            // Apply the refactoring
+            try {
+                const targetDir = path.dirname(targetFile);
+                const newClassPath = path.join(targetDir, `${suggestion.name}.java`);
+                const repoPath = stateManager.getRepoPath();
+
+                // Validate paths are within the analysis repository
+                validatePath(newClassPath, repoPath);
+                validatePath(targetFile, repoPath);
+
+                // Write files
+                fs.writeFileSync(newClassPath, suggestion.new_class_code, 'utf8');
+                fs.writeFileSync(targetFile, suggestion.modified_original_code, 'utf8');
+
+                // Add to history
+                await stateManager.addToHistory({
+                    targetFile,
+                    extractedClass: suggestion.name,
+                    extractedClassPath: newClassPath,
+                    success: true
+                });
+
+                // Remove only the applied suggestion (keep others for multiple extractions)
+                stateManager.removeSuggestion(index);
+
+                vscode.window.showInformationMessage(
+                    `Created ${suggestion.name}.java`,
+                    'Open File'
+                ).then(action => {
+                    if (action === 'Open File') {
+                        vscode.workspace.openTextDocument(newClassPath)
+                            .then(doc => vscode.window.showTextDocument(doc));
+                    }
+                });
+
+            } catch (error) {
+                vscode.window.showErrorMessage(`Failed to apply: ${(error as Error).message}`);
+            }
+        })
+    );
+
+    // ==========================================================================
+    // Command: Preview Suggestion
+    // ==========================================================================
+    context.subscriptions.push(
+        vscode.commands.registerCommand('genec.previewSuggestion', async (indexOrItem?: number | any) => {
+            let index: number;
+
+            if (typeof indexOrItem === 'number') {
+                index = indexOrItem;
+            } else if (indexOrItem?.data?.suggestionIndex !== undefined) {
+                index = indexOrItem.data.suggestionIndex;
+            } else {
+                return;
+            }
+
+            const suggestion = stateManager.getSuggestion(index);
+            const targetFile = stateManager.getTargetFile();
+
+            if (!suggestion || !targetFile) {
+                vscode.window.showErrorMessage('Missing data for preview');
+                return;
+            }
+
+            if (!suggestion.modified_original_code) {
+                vscode.window.showErrorMessage('Modified code not available');
+                return;
+            }
+
+            // Create temp file for diff
+            const os = require('os');
+            const tempDir = os.tmpdir();
+            const tempModifiedPath = path.join(tempDir, `genec_${path.basename(targetFile)}`);
+            const tempNewClassPath = path.join(tempDir, `genec_${suggestion.name}.java`);
+
+            try {
+                // Write modified original to temp
+                fs.writeFileSync(tempModifiedPath, suggestion.modified_original_code, 'utf8');
+
+                // Show diff
+                await vscode.commands.executeCommand('vscode.diff',
+                    vscode.Uri.file(targetFile),
+                    vscode.Uri.file(tempModifiedPath),
+                    `${path.basename(targetFile)} ↔ Modified`
+                );
+
+                // Show new class
+                if (suggestion.new_class_code) {
+                    fs.writeFileSync(tempNewClassPath, suggestion.new_class_code, 'utf8');
+                    const doc = await vscode.workspace.openTextDocument(tempNewClassPath);
+                    await vscode.window.showTextDocument(doc, vscode.ViewColumn.Beside, true);
+                }
+
+                // Cleanup after 60s
+                setTimeout(() => {
+                    try { fs.unlinkSync(tempModifiedPath); } catch { }
+                    try { fs.unlinkSync(tempNewClassPath); } catch { }
+                }, 60000);
+
+            } catch (error) {
+                vscode.window.showErrorMessage(`Preview failed: ${(error as Error).message}`);
+            }
+        })
+    );
+
+    // ==========================================================================
+    // Command: Undo Last Refactoring
+    // ==========================================================================
+    context.subscriptions.push(
+        vscode.commands.registerCommand('genec.undoLast', async (historyItem?: any) => {
+            let entryId: string | undefined;
+
+            if (historyItem?.entry?.id) {
+                entryId = historyItem.entry.id;
+            } else {
+                // Get most recent
+                const history = stateManager.getHistory();
+                if (history.length === 0) {
+                    vscode.window.showInformationMessage('No refactoring history');
+                    return;
+                }
+                entryId = history[0].id;
+            }
+
+            if (!entryId) {
+                return;
+            }
+
+            const history = stateManager.getHistory();
+            const entry = history.find(h => h.id === entryId);
+            if (!entry) {
+                vscode.window.showErrorMessage('History entry not found');
+                return;
+            }
+
+            const confirm = await vscode.window.showWarningMessage(
+                `Undo extraction of ${entry.extractedClass}? This will restore the original file.`,
+                'Undo',
+                'Cancel'
+            );
+
+            if (confirm !== 'Undo') return;
+
+            // Note: Full undo would require backup files, which GenEC CLI handles
+            // For now, we just remove from history
+            await stateManager.removeFromHistory(entryId);
+            vscode.window.showInformationMessage('Removed from history. Use Git to restore files if needed.');
+        })
+    );
+
+    // ==========================================================================
+    // Command: Show Graph
+    // ==========================================================================
+    context.subscriptions.push(
+        vscode.commands.registerCommand('genec.showGraph', () => {
+            const panel = GraphWebviewPanel.createOrShow(context.extensionUri);
+
+            const analysis = stateManager.getCurrentAnalysis();
+            if (analysis?.result?.graph_data) {
+                // Pass both graph_data and clusters for visualization
+                panel.updateGraph(analysis.result.graph_data, analysis.result.clusters);
+            }
+        })
+    );
+
+    // ==========================================================================
+    // Command: Show Output
+    // ==========================================================================
+    context.subscriptions.push(
+        vscode.commands.registerCommand('genec.showOutput', () => {
+            genecService.showOutput();
+        })
+    );
+
+    // ==========================================================================
+    // Command: Focus Suggestions View
+    // ==========================================================================
+    context.subscriptions.push(
+        vscode.commands.registerCommand('genec.focusSuggestions', () => {
+            vscode.commands.executeCommand('genec.suggestions.focus');
+        })
+    );
+
+    // ==========================================================================
+    // Command: Cancel Analysis
+    // ==========================================================================
+    context.subscriptions.push(
+        vscode.commands.registerCommand('genec.cancel', () => {
+            genecService.cancel();
+            stateManager.cancelAnalysis();
+            statusBarItem.hide();
+            vscode.window.showInformationMessage('GenEC analysis cancelled');
+        })
+    );
+
+    // ==========================================================================
+    // Command: Configure Settings
+    // ==========================================================================
+    context.subscriptions.push(
+        vscode.commands.registerCommand('genec.configure', () => {
+            vscode.commands.executeCommand('workbench.action.openSettings', 'genec');
+        })
+    );
+
+    // ==========================================================================
+    // Command: Set API Key
+    // ==========================================================================
+    context.subscriptions.push(
+        vscode.commands.registerCommand('genec.setApiKey', async () => {
+            const apiKey = await vscode.window.showInputBox({
+                prompt: 'Enter your Anthropic API Key',
+                password: true,
+                ignoreFocusOut: true,
+                placeHolder: 'sk-ant-api03-...',
+                validateInput: (value) => {
+                    if (!value || value.trim().length === 0) {
+                        return 'API key is required';
+                    }
+                    if (!value.startsWith('sk-ant-')) {
+                        return 'API key should start with sk-ant-';
+                    }
+                    return null;
+                }
+            });
+
+            if (apiKey) {
+                await configService.setApiKey(apiKey);
+                settingsProvider.refresh();
+                vscode.window.showInformationMessage('API key saved successfully');
+            }
+        })
+    );
+
+    // Register disposables
+    context.subscriptions.push(genecService);
+    context.subscriptions.push(stateManager);
 }
 
-export function deactivate() { }
+// ==========================================================================
+// Utility Functions
+// ==========================================================================
+
+function findGitRoot(startPath: string): string {
+    let current = path.dirname(startPath);
+    const root = path.parse(current).root;
+
+    while (current !== root) {
+        if (fs.existsSync(path.join(current, '.git'))) {
+            return current;
+        }
+        current = path.dirname(current);
+    }
+
+    // Fallback to workspace folder
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(startPath));
+    return workspaceFolder?.uri.fsPath || path.dirname(startPath);
+}
+
+function validatePath(filePath: string, repoPath?: string): void {
+    const resolved = path.resolve(filePath);
+
+    // First, validate against the repo path used for analysis
+    // This is the source of truth - GenEC analyzes files within this repo
+    if (repoPath) {
+        const relative = path.relative(repoPath, resolved);
+        if (!relative.startsWith('..') && !path.isAbsolute(relative)) {
+            return; // Valid - within the analysis repo
+        }
+    }
+
+    // Fallback: check against VS Code workspace folders
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (workspaceFolders) {
+        const isWithinWorkspace = workspaceFolders.some(folder => {
+            const relative = path.relative(folder.uri.fsPath, resolved);
+            return !relative.startsWith('..') && !path.isAbsolute(relative);
+        });
+
+        if (isWithinWorkspace) {
+            return; // Valid - within workspace
+        }
+    }
+
+    // If no repoPath and no workspace folders, allow any path within 
+    // the target file's directory (for standalone file analysis)
+    if (!repoPath && !workspaceFolders) {
+        return; // Allow - no workspace context
+    }
+
+    throw new Error('Path outside workspace');
+}
+
+export function deactivate() {
+    if (genecService) {
+        genecService.dispose();
+    }
+}

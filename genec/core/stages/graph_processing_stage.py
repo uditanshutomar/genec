@@ -44,7 +44,17 @@ class GraphProcessingStage(PipelineStage):
         self.logger.info(f"Graph metrics: {graph_metrics}")
 
         # Generate graph data for JSON output
-        context.results["graph_data"] = json_graph.node_link_data(G_fused, edges="links")
+        # NetworkX 3.x uses 'link' parameter instead of 'edges'
+        try:
+            # NetworkX 3.x API
+            context.results["graph_data"] = json_graph.node_link_data(G_fused, link="links")
+        except TypeError:
+            # Fallback for older NetworkX versions (< 3.0)
+            try:
+                context.results["graph_data"] = json_graph.node_link_data(G_fused, edges="links")
+            except TypeError:
+                # Last resort - use default parameters
+                context.results["graph_data"] = json_graph.node_link_data(G_fused)
 
         # Export graph if requested
         export_config = fusion_config.get("export", {})

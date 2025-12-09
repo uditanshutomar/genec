@@ -30,8 +30,8 @@ evolution:
 clustering:
   algorithm: leiden               # Changed from louvain - more robust clustering
   min_cluster_size: 3
-  max_cluster_size: 15            # Reduced from 50 to get smaller, focused clusters
-  min_cohesion: 0.5               # Increased from 0.3 for stricter filtering
+  max_cluster_size: 30            # Increased for real-world use (allows larger extractions)
+  min_cohesion: 0.35              # Lowered for real-world use (less aggressive filtering)
   resolution: 0.5                 # Base resolution (used as fallback)
   
   # Field-based clustering boost (new)
@@ -82,7 +82,7 @@ llm:
 
 naming:
   # Confidence-based filtering and sorting
-  min_confidence_threshold: 0.7  # Filter out suggestions below this threshold (0.0 = disabled)
+  min_confidence_threshold: 0.5  # Lowered for real-world use (0.0 = disabled)
   sort_by_confidence: true        # Sort suggestions by confidence (highest first)
 code_generation:
   engine: eclipse_jdt
@@ -117,7 +117,7 @@ refactoring_application:
   create_backups: true    # Create backups before modifying files
   backup_dir: .genec_backups  # Directory for backups
   dry_run: false          # If true, only simulate (don't actually write files)
-  min_verification_confidence: 0.5  # Skip verification for suggestions below this confidence (0.0 = disabled)
+  min_verification_confidence: 0.0  # Disabled for real-world use - verify ALL suggestions
 logging:
   level: INFO
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

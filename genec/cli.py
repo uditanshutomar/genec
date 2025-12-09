@@ -244,6 +244,15 @@ def main():
                     for r in results.applied_refactorings
                 ],
                 "graph_data": results.graph_data,
+                "clusters": [
+                    {
+                        "name": f"Cluster_{i}",
+                        "members": c.member_names,
+                        "quality_tier": c.quality_tier.value if c.quality_tier else 'potential',
+                        "cohesion_score": getattr(c, 'internal_cohesion', 0),
+                    }
+                    for i, c in enumerate(results.ranked_clusters)
+                ],
             }
             print(json.dumps(output, indent=2))
         else:
