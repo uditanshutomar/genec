@@ -272,7 +272,9 @@ class GenECPipeline:
     def _initialize_components(self):
         """Initialize all pipeline components."""
         # Dependency analyzer - Use hybrid (Spoon + JavaParser fallback)
-        self.dependency_analyzer = HybridDependencyAnalyzer()
+        analysis_config = self.config.get("analysis", {})
+        use_spoon = analysis_config.get("use_spoon", False)
+        self.dependency_analyzer = HybridDependencyAnalyzer(use_spoon=use_spoon)
 
         # Evolutionary miner - Configure from config
         evolution_config = self.config.get("evolution", {})
@@ -299,6 +301,7 @@ class GenECPipeline:
             resolution=cluster_config.get("resolution", 1.0),
             algorithm=cluster_config.get("algorithm", "leiden"),
             config=self.config,  # Pass full config for advanced features
+            seed=cluster_config.get("seed", 42),
         )
 
         # LLM interface

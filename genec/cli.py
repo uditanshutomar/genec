@@ -76,6 +76,12 @@ def create_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Use cached LLM responses if available",
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Random seed for reproducible clustering (default: 42 from config)",
+    )
     return parser
 
 
@@ -237,6 +243,11 @@ def _build_config_overrides(args) -> dict:
 
     if args.no_build:
         config_overrides["auto_build_dependencies"] = False
+
+    if args.seed is not None:
+        if "clustering" not in config_overrides:
+            config_overrides["clustering"] = {}
+        config_overrides["clustering"]["seed"] = args.seed
 
     if args.cache_dir or args.use_cache:
         if "llm" not in config_overrides:

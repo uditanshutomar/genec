@@ -216,6 +216,22 @@ class JDTCodeGenerator:
                 sorted(set(methods) - original_method_set),
             )
 
+        # Post-augmentation size guard: reject if augmentation bloated the
+        # cluster beyond a hard cap (40 methods) AND it represents >50% of
+        # the original class.  This prevents creating another God Class.
+        max_extraction_methods = 40
+        total_class_methods = len(class_deps.methods) if class_deps and class_deps.methods else 0
+        if len(methods) > max_extraction_methods:
+            pct = (len(methods) / total_class_methods * 100) if total_class_methods > 0 else 100
+            if total_class_methods == 0 or len(methods) / total_class_methods > 0.5:
+                raise CodeGenerationError(
+                    f"Post-augmentation cluster too large: {len(methods)} methods "
+                    f"({pct:.0f}% of class) exceeds hard cap of {max_extraction_methods}. "
+                    f"Original cluster had {len(original_method_set)} methods; "
+                    f"augmentation added {len(methods) - len(original_method_set)} helpers. "
+                    f"Consider splitting the cluster further."
+                )
+
         # Infer fields if not explicitly in cluster
         fields = list(cluster.get_fields())
         if not fields:

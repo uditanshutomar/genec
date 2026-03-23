@@ -156,6 +156,7 @@ class ClusterDetector:
         resolution: float = 1.0,
         algorithm: str = "leiden",
         config: dict | None = None,
+        seed: int | None = 42,
     ):
         """
         Initialize cluster detector.
@@ -167,6 +168,7 @@ class ClusterDetector:
             resolution: Resolution parameter (higher = more smaller clusters)
             algorithm: 'louvain' or 'leiden' (leiden recommended)
             config: Full configuration dictionary
+            seed: Random seed for reproducible clustering (None for non-deterministic)
         """
         self.min_cluster_size = min_cluster_size
         self.max_cluster_size = max_cluster_size
@@ -174,6 +176,7 @@ class ClusterDetector:
         self.resolution = resolution
         self.algorithm = algorithm.lower()
         self.config = config or {}
+        self.seed = seed
         self.logger = get_logger(self.__class__.__name__)
 
         # Extract clustering config
@@ -465,7 +468,7 @@ class ClusterDetector:
     def _detect_communities_louvain(self, G: nx.Graph, resolution: float) -> tuple[dict, float]:
         """Run Louvain community detection."""
         partition = community_louvain.best_partition(
-            G, weight="weight", resolution=resolution, random_state=42
+            G, weight="weight", resolution=resolution, random_state=self.seed
         )
         modularity = community_louvain.modularity(partition, G, weight="weight")
         return partition, modularity
@@ -481,7 +484,7 @@ class ClusterDetector:
             leidenalg.RBConfigurationVertexPartition,
             weights="weight",
             resolution_parameter=resolution,
-            seed=42,
+            seed=self.seed if self.seed is not None else 0,
         )
 
         # Convert back to node -> community mapping

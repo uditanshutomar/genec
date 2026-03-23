@@ -74,39 +74,44 @@ class HybridDependencyAnalyzer:
         self.logger.info(analyzer.metrics.get_summary())
     """
 
-    def __init__(self, spoon_wrapper_jar: str | None = None, prefer_spoon: bool = True):
+    def __init__(self, spoon_wrapper_jar: str | None = None, prefer_spoon: bool = True, use_spoon: bool = False):
         """
         Initialize hybrid dependency analyzer.
 
         Args:
             spoon_wrapper_jar: Path to Spoon wrapper JAR (None = auto-detect)
             prefer_spoon: If True, use Spoon when available (default: True)
+            use_spoon: If False (default), skip Spoon entirely (no warnings).
+                       Only try Spoon when explicitly set to True via config.
         """
         self.logger = get_logger(self.__class__.__name__)
-        self.prefer_spoon = prefer_spoon
+        self.prefer_spoon = prefer_spoon and use_spoon
         self.metrics = AnalysisMetrics()
 
-        # Initialize Spoon parser (may fail if JAR not available)
+        # Initialize Spoon parser only if explicitly enabled via config
         self.spoon_parser = None
-        if prefer_spoon:
+        if self.prefer_spoon:
             try:
                 self.spoon_parser = SpoonParser(spoon_wrapper_jar)
                 if self.spoon_parser.is_available():
                     self.logger.info("Spoon parser initialized successfully")
                 else:
-                    self.logger.warning("Spoon parser not available, using fallback only")
+                    self.logger.info("Spoon parser not available, using javalang only")
                     self.spoon_parser = None
             except Exception as e:
-                self.logger.warning(f"Failed to initialize Spoon parser: {e}")
+                self.logger.info(f"Spoon parser unavailable: {e}")
                 self.spoon_parser = None
 
         # Initialize fallback parser (always available)
         self.fallback_analyzer = DependencyAnalyzer()
-        self.logger.info(
-            f"Hybrid analyzer initialized: "
-            f"Spoon={'available' if self.spoon_parser else 'unavailable'}, "
-            f"Fallback=available"
-        )
+        if not use_spoon:
+            self.logger.debug("Spoon disabled (use_spoon=false), using javalang only")
+        else:
+            self.logger.info(
+                f"Hybrid analyzer initialized: "
+                f"Spoon={'available' if self.spoon_parser else 'unavailable'}, "
+                f"Fallback=available"
+            )
 
     def analyze_class(self, class_file: str) -> ClassDependencies | None:
         """

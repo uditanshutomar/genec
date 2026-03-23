@@ -66,6 +66,9 @@ class ClusteringConfig(BaseModel):
         ge=0.0,
         description="Resolution parameter for Louvain algorithm. Higher = more clusters.",
     )
+    seed: int | None = Field(
+        default=42, description="Random seed for reproducible clustering (None for non-deterministic)."
+    )
 
     @field_validator("algorithm")
     @classmethod
@@ -283,9 +286,20 @@ class CacheConfig(BaseModel):
     ttl_days: int = Field(default=7, ge=1, description="Time-to-live for cache entries in days.")
 
 
+class AnalysisConfig(BaseModel):
+    """Configuration for dependency analysis."""
+
+    use_spoon: bool = Field(
+        default=False,
+        description="Use Spoon for dependency analysis (requires working Spoon JAR). "
+        "Default is False (javalang only). Set to True if you have a working Spoon setup.",
+    )
+
+
 class GenECConfig(BaseModel):
     """Main GenEC configuration."""
 
+    analysis: AnalysisConfig = Field(default_factory=AnalysisConfig)
     fusion: FusionConfig = Field(default_factory=FusionConfig)
     evolution: EvolutionConfig = Field(default_factory=EvolutionConfig)
     clustering: ClusteringConfig = Field(default_factory=ClusteringConfig)
