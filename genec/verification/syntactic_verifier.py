@@ -45,7 +45,12 @@ class SyntacticVerifier:
         self.modules = self._discover_modules() if repo_path else []
 
     def verify(
-        self, new_class_code: str, modified_original_code: str, package_name: str = ""
+        self,
+        new_class_code: str,
+        modified_original_code: str,
+        package_name: str = "",
+        original_class_file: str | None = None,
+        new_class_name: str | None = None,
     ) -> tuple[bool, str | None]:
         """
         Verify that refactored code compiles successfully.
@@ -54,11 +59,28 @@ class SyntacticVerifier:
             new_class_code: Code for new extracted class
             modified_original_code: Code for modified original class
             package_name: Package name for classes
+            original_class_file: Path to the original .java file in the repo (for build-system verification)
+            new_class_name: Name of the new extracted class (for build-system verification)
 
         Returns:
             Tuple of (success: bool, error_message: Optional[str])
         """
         self.logger.info("Running syntactic verification")
+
+        # Tier 1: Try build-system compilation (Maven/Gradle) in the actual repo
+        if self.build_system and self.repo_path and original_class_file:
+            success, error = self._verify_with_build_system(
+                new_class_code,
+                modified_original_code,
+                package_name,
+                original_class_file,
+                new_class_name or self._extract_class_name(new_class_code),
+            )
+            if success is not None:  # None means build system failed to run, fall through to javac
+                return success, error
+            self.logger.info("Build system verification failed to run; falling back to javac")
+
+        # Tier 2: Fallback - javac in temp directory (existing code)
 
         # Create temporary directory
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -215,6 +237,76 @@ public class {class_name} {{
             stubs[class_name] = stub_code
         
         return stubs
+
+    def _verify_with_build_system(
+        self,
+        new_class_code: str,
+        modified_original_code: str,
+        package_name: str,
+        original_class_file: str,
+        new_class_name: str,
+    ) -> tuple[bool | None, str | None]:
+        """
+        Verify compilation using the project's build system (Maven/Gradle).
+
+        Writes extracted code into the actual repo, runs build, then restores.
+        Returns (None, None) if the build system couldn't be used (caller should
+        fall through to the javac fallback).
+        """
+        import shutil
+
+        repo = Path(self.repo_path)
+        original_path = (
+            Path(original_class_file)
+            if Path(original_class_file).is_absolute()
+            else repo / original_class_file
+        )
+
+        if not original_path.exists():
+            self.logger.warning(f"Original class file not found: {original_path}")
+            return None, None
+
+        # Compute new class file path (same directory as original)
+        new_class_path = original_path.parent / f"{new_class_name}.java"
+
+        # Backup original file
+        backup_content = original_path.read_text(encoding="utf-8")
+        new_class_existed = new_class_path.exists()
+        new_class_backup = new_class_path.read_text(encoding="utf-8") if new_class_existed else None
+
+        try:
+            # Write refactored code into repo
+            original_path.write_text(modified_original_code, encoding="utf-8")
+            new_class_path.write_text(new_class_code, encoding="utf-8")
+
+            # Run build system
+            if self.build_system == "maven":
+                success, error = self._compile_with_maven([new_class_path, original_path])
+            elif self.build_system == "gradle":
+                success, error = self._compile_with_gradle([new_class_path, original_path])
+            else:
+                return None, None
+
+            return success, error
+
+        except Exception as e:
+            self.logger.warning(f"Build system verification error: {e}")
+            return None, None
+
+        finally:
+            # ALWAYS restore original files
+            try:
+                original_path.write_text(backup_content, encoding="utf-8")
+            except Exception as e:
+                self.logger.error(f"CRITICAL: Failed to restore {original_path}: {e}")
+
+            try:
+                if new_class_existed and new_class_backup is not None:
+                    new_class_path.write_text(new_class_backup, encoding="utf-8")
+                elif new_class_path.exists() and not new_class_existed:
+                    new_class_path.unlink()
+            except Exception as e:
+                self.logger.error(f"Failed to clean up {new_class_path}: {e}")
 
     def _extract_class_name(self, code: str) -> str | None:
         """
@@ -384,9 +476,7 @@ public class {class_name} {{
         """
         Compile using Maven (runs full project compilation).
 
-        TODO: This method is not currently called. It is reserved for future use
-        when full-project compilation via Maven is needed (e.g., when classpath
-        resolution from the build system is available). Not dead code.
+        Called by _verify_with_build_system when Maven is the detected build system.
 
         Args:
             java_files: List of Java file paths (logged for info)
@@ -446,9 +536,7 @@ public class {class_name} {{
         """
         Compile using Gradle (runs full project compilation).
 
-        TODO: This method is not currently called. It is reserved for future use
-        when full-project compilation via Gradle is needed (e.g., when classpath
-        resolution from the build system is available). Not dead code.
+        Called by _verify_with_build_system when Gradle is the detected build system.
 
         Args:
             java_files: List of Java file paths (logged for info)

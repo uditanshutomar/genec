@@ -116,6 +116,7 @@ class VerificationEngine:
         suggestion: RefactoringSuggestion,
         class_deps: ClassDependencies,
         result: VerificationResult,
+        original_class_file: str = "",
     ) -> None:
         """Layer 1: Syntactic verification."""
         if not self.enable_syntactic:
@@ -129,6 +130,8 @@ class VerificationEngine:
             suggestion.new_class_code,
             suggestion.modified_original_code,
             class_deps.package_name,
+            original_class_file=original_class_file or None,
+            new_class_name=suggestion.proposed_class_name,
         )
 
         result.syntactic_pass = syntactic_pass
@@ -334,7 +337,7 @@ class VerificationEngine:
         if result.status.startswith("FAILED"):
             return result
 
-        self._run_syntactic_check(suggestion, class_deps, result)
+        self._run_syntactic_check(suggestion, class_deps, result, original_class_file)
         if result.status.startswith("FAILED"):
             return result
 
