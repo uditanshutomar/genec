@@ -90,20 +90,7 @@ class RefactoringStage(PipelineStage):
                     suggestion.verification_status = "skipped_missing_code"
                     continue
 
-            if should_apply:
-                application_result = self.applicator.apply_refactoring(
-                    suggestion,
-                    original_class_file=context.class_file,
-                    repo_path=context.repo_path,
-                    dry_run=dry_run,
-                )
-                if not application_result.success:
-                    self.logger.warning(
-                        f"Failed to apply suggestion {suggestion.proposed_class_name}"
-                    )
-                    continue
-
-            # Verify
+            # Step 1: ALWAYS verify first (before applying)
             class_deps = context.get("class_deps")
             try:
                 with open(context.class_file, encoding="utf-8") as f:
@@ -112,7 +99,7 @@ class RefactoringStage(PipelineStage):
                 self.logger.error(f"Failed to read original file: {e}")
                 suggestion.verification_status = "skipped_read_error"
                 continue
-            
+
             verification_result = self.verification_engine.verify_refactoring(
                 suggestion=suggestion,
                 original_code=original_code,
@@ -128,16 +115,22 @@ class RefactoringStage(PipelineStage):
                 verified_suggestions.append(suggestion)
                 suggestion.verification_status = "verified"
 
-                if should_apply and not auto_apply:
-                    # Revert if not auto-applying (just checking verification)
-                    self.logger.info("Reverting changes (auto-apply disabled)...")
-                    self.applicator.revert_changes()
+                # Step 2: Apply ONLY if verified and application is enabled
+                if should_apply and auto_apply:
+                    application_result = self.applicator.apply_refactoring(
+                        suggestion,
+                        original_class_file=context.class_file,
+                        repo_path=context.repo_path,
+                        dry_run=dry_run,
+                    )
+                    if not application_result.success:
+                        self.logger.warning(
+                            f"Verified but failed to apply {suggestion.proposed_class_name}: "
+                            f"{application_result.message}"
+                        )
             else:
                 self.logger.warning(f"Suggestion {suggestion.proposed_class_name} failed verification")
                 suggestion.verification_status = "failed"
-                # Always revert failed suggestions
-                if should_apply:
-                    self.applicator.revert_changes()
 
         rejected_suggestions = [s for s in suggestions if getattr(s, 'verification_status', None) == "failed"]
         context.results["rejected_suggestions"] = rejected_suggestions

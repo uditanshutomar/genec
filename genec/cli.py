@@ -230,6 +230,11 @@ def _build_config_overrides(args) -> dict:
             clustering_overrides["min_cohesion"] = args.min_cohesion
         config_overrides["clustering"] = clustering_overrides
 
+    if args.dry_run:
+        if "refactoring_application" not in config_overrides:
+            config_overrides["refactoring_application"] = {}
+        config_overrides["refactoring_application"]["dry_run"] = True
+
     if args.no_build:
         config_overrides["auto_build_dependencies"] = False
 
