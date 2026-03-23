@@ -121,11 +121,17 @@ class GraphBuilder:
         edge_threshold: float = 0.1,
         hotspot_data: list[dict] | None = None,
         adaptive_fusion: bool = False,
+        G_conceptual: nx.Graph | None = None,
+        beta: float = 0.0,
     ) -> nx.Graph:
         """
-        Fuse static and evolutionary graphs.
+        Fuse static and evolutionary graphs, optionally with conceptual similarity.
 
-        Combined weight = alpha * static_weight + (1 - alpha) * evolutionary_weight
+        When beta == 0 (default):
+            Combined weight = alpha * static_weight + (1 - alpha) * evolutionary_weight
+
+        When beta > 0 and G_conceptual is provided:
+            Combined weight = alpha * static + (1 - alpha - beta) * evo + beta * conceptual
 
         With adaptive fusion enabled, alpha is adjusted per-edge based on hotspot data:
         - Hotspot methods (high change frequency + coupling) get higher evolutionary weight
@@ -138,24 +144,42 @@ class GraphBuilder:
             edge_threshold: Minimum weight to keep an edge
             hotspot_data: Optional list of hotspot dictionaries from Stage 2
             adaptive_fusion: Enable adaptive fusion based on hotspots
+            G_conceptual: Optional conceptual similarity graph
+            beta: Weight for conceptual similarity (0.0 = disabled). alpha + beta must be <= 1.0
 
         Returns:
             Fused graph with node centrality metrics
         """
         self.logger.info(
-            f"Fusing graphs with alpha={alpha}, threshold={edge_threshold}, "
+            f"Fusing graphs with alpha={alpha}, beta={beta}, threshold={edge_threshold}, "
             f"adaptive={adaptive_fusion}"
         )
 
+        # Validate beta
+        use_conceptual = beta > 0 and G_conceptual is not None and G_conceptual.number_of_edges() > 0
+        if beta > 0 and G_conceptual is None:
+            self.logger.warning("beta > 0 but no conceptual graph provided; ignoring beta")
+            use_conceptual = False
+        if use_conceptual and alpha + beta > 1.0:
+            self.logger.warning(
+                f"alpha ({alpha}) + beta ({beta}) > 1.0; clamping beta to {1.0 - alpha}"
+            )
+            beta = 1.0 - alpha
+
         G_fused = nx.Graph()
 
-        # Add all nodes from both graphs
+        # Add all nodes from all graphs
         for node, data in G_static.nodes(data=True):
             G_fused.add_node(node, **data)
 
         for node, data in G_evo.nodes(data=True):
             if node not in G_fused:
                 G_fused.add_node(node, **data)
+
+        if use_conceptual:
+            for node, data in G_conceptual.nodes(data=True):
+                if node not in G_fused:
+                    G_fused.add_node(node, **data)
 
         # Build hotspot lookup for adaptive fusion
         hotspot_scores = {}
@@ -179,6 +203,11 @@ class GraphBuilder:
         max_static = max(static_weights) if static_weights else 1.0
         max_evo = max(evo_weights) if evo_weights else 1.0
 
+        max_conceptual = 1.0
+        if use_conceptual:
+            conceptual_weights = [d["weight"] for u, v, d in G_conceptual.edges(data=True)]
+            max_conceptual = max(conceptual_weights) if conceptual_weights else 1.0
+
         # Combine edges
         all_edges = set()
 
@@ -190,16 +219,25 @@ class GraphBuilder:
         for u, v, _data in G_evo.edges(data=True):
             all_edges.add((u, v))
 
+        # Process conceptual edges
+        if use_conceptual:
+            for u, v, _data in G_conceptual.edges(data=True):
+                all_edges.add((u, v))
+
         # Add fused edges
         for u, v in all_edges:
             static_weight = 0.0
             evo_weight = 0.0
+            conceptual_weight = 0.0
 
             if G_static.has_edge(u, v):
                 static_weight = G_static[u][v]["weight"] / max_static
 
             if G_evo.has_edge(u, v):
                 evo_weight = G_evo[u][v]["weight"] / max_evo
+
+            if use_conceptual and G_conceptual.has_edge(u, v):
+                conceptual_weight = G_conceptual[u][v]["weight"] / max_conceptual
 
             # Adaptive fusion: adjust alpha based on hotspot scores
             edge_alpha = alpha
@@ -208,25 +246,35 @@ class GraphBuilder:
                 v_score = hotspot_scores.get(v, 0.0)
                 avg_hotspot = (u_score + v_score) / 2.0
 
-                # Higher hotspot score → lower alpha (more evolutionary weight)
+                # Higher hotspot score -> lower alpha (more evolutionary weight)
                 # Hotspot score range: [0, 1], alpha range: [0.2, 0.8]
-                # High hotspot (1.0) → alpha = 0.2 (80% evolutionary)
-                # Low hotspot (0.0) → alpha = 0.8 (80% static)
+                # High hotspot (1.0) -> alpha = 0.2 (80% evolutionary)
+                # Low hotspot (0.0) -> alpha = 0.8 (80% static)
                 edge_alpha = 0.8 - (0.6 * avg_hotspot)
 
             # Fuse weights
-            fused_weight = edge_alpha * static_weight + (1 - edge_alpha) * evo_weight
+            if use_conceptual:
+                evo_portion = 1.0 - edge_alpha - beta
+                fused_weight = (
+                    edge_alpha * static_weight
+                    + evo_portion * evo_weight
+                    + beta * conceptual_weight
+                )
+            else:
+                fused_weight = edge_alpha * static_weight + (1 - edge_alpha) * evo_weight
 
             # Only add edge if above threshold
             if fused_weight >= edge_threshold:
-                G_fused.add_edge(
-                    u,
-                    v,
-                    weight=fused_weight,
-                    static_weight=static_weight,
-                    evo_weight=evo_weight,
-                    alpha=edge_alpha if adaptive_fusion else alpha,
-                )
+                edge_data = {
+                    "weight": fused_weight,
+                    "static_weight": static_weight,
+                    "evo_weight": evo_weight,
+                    "alpha": edge_alpha if adaptive_fusion else alpha,
+                }
+                if use_conceptual:
+                    edge_data["conceptual_weight"] = conceptual_weight
+                    edge_data["beta"] = beta
+                G_fused.add_edge(u, v, **edge_data)
 
         self.logger.info(
             f"Fused graph: {G_fused.number_of_nodes()} nodes, " f"{G_fused.number_of_edges()} edges"

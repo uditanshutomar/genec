@@ -181,6 +181,64 @@ Your 2-3 sentence explanation here.
 """
 
 # ==============================================================================
+# 3b. DIVERSITY PROMPT TEMPLATES (for prompt-diversity naming)
+# ==============================================================================
+
+RESPONSIBILITY_PROMPT_TEMPLATE = """Analyze these methods from class '{class_name}' and suggest a name for the extracted class based on its PRIMARY RESPONSIBILITY.
+
+Focus on: What single responsibility do these methods share? Name the class after that responsibility.
+
+Methods to extract:
+{methods_section}
+
+**Naming Constraints:**
+- Use UpperCamelCase, valid Java identifier
+- AVOID bare generic names: Helper, Util, Manager, Handler, Service
+- PREFER specific names: Calculator, Validator, Formatter, Parser, Builder, Converter
+
+Respond with:
+<class_name>YourProposedName</class_name>
+<rationale>Why this name reflects the primary responsibility</rationale>
+<confidence>0.0-1.0</confidence>
+"""
+
+DOMAIN_ENTITY_PROMPT_TEMPLATE = """Analyze these methods from class '{class_name}' and suggest a name for the extracted class based on the DOMAIN ENTITY it represents.
+
+Focus on: What real-world concept or domain object do these methods operate on? Name the class after that domain entity.
+
+Methods to extract:
+{methods_section}
+
+**Naming Constraints:**
+- Use UpperCamelCase, valid Java identifier
+- AVOID bare generic names: Helper, Util, Manager, Handler, Service
+- PREFER specific names: Calculator, Validator, Formatter, Parser, Builder, Converter
+
+Respond with:
+<class_name>YourProposedName</class_name>
+<rationale>Why this name reflects the domain entity</rationale>
+<confidence>0.0-1.0</confidence>
+"""
+
+DESIGN_PATTERN_PROMPT_TEMPLATE = """Analyze these methods from class '{class_name}' and suggest a name for the extracted class based on the DESIGN PATTERN it follows.
+
+Focus on: Do these methods follow a recognizable pattern (Helper, Handler, Processor, Factory, Builder, Validator, etc.)? Name the class to reflect its architectural role.
+
+Methods to extract:
+{methods_section}
+
+**Naming Constraints:**
+- Use UpperCamelCase, valid Java identifier
+- AVOID bare generic names: Helper, Util, Manager, Handler, Service
+- PREFER specific names: Calculator, Validator, Formatter, Parser, Builder, Converter
+
+Respond with:
+<class_name>YourProposedName</class_name>
+<rationale>Why this name reflects the design pattern</rationale>
+<confidence>0.0-1.0</confidence>
+"""
+
+# ==============================================================================
 # 4. CRITIQUE PROMPT
 # ==============================================================================
 CRITIQUE_PROMPT_TEMPLATE = """Review this Extract Class refactoring suggestion:

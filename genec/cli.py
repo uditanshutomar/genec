@@ -67,6 +67,15 @@ def create_parser() -> argparse.ArgumentParser:
         "--report-dir",
         help="Directory to save pipeline reports (default: .genec/reports in repo)",
     )
+    parser.add_argument(
+        "--cache-dir",
+        help="Directory for LLM response cache (reproducibility)",
+    )
+    parser.add_argument(
+        "--use-cache",
+        action="store_true",
+        help="Use cached LLM responses if available",
+    )
     return parser
 
 
@@ -235,6 +244,14 @@ def main():
 
     if args.no_build:
         config_overrides["auto_build_dependencies"] = False
+
+    if args.cache_dir or args.use_cache:
+        if "llm" not in config_overrides:
+            config_overrides["llm"] = {}
+        if args.cache_dir:
+            config_overrides["llm"]["cache_dir"] = args.cache_dir
+        if args.use_cache:
+            config_overrides["llm"]["use_cache"] = True
 
     # Initialize pipeline
     try:

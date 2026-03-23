@@ -102,6 +102,25 @@ class AnalysisStage(PipelineStage):
                 self.logger.warning(f"Failed to calculate hotspots: {e}")
                 hotspot_data = None
 
+        # Build conceptual similarity graph if beta > 0
+        G_conceptual = None
+        beta = fusion_config.get("beta", 0.0)
+        if beta > 0:
+            try:
+                from genec.core.conceptual_analyzer import build_conceptual_graph
+                conceptual_min_sim = fusion_config.get("conceptual_min_similarity", 0.1)
+                G_conceptual = build_conceptual_graph(
+                    class_deps.get_all_methods(),
+                    min_similarity=conceptual_min_sim,
+                )
+                self.logger.info(
+                    f"Conceptual graph: {G_conceptual.number_of_nodes()} nodes, "
+                    f"{G_conceptual.number_of_edges()} edges"
+                )
+            except Exception as e:
+                self.logger.warning(f"Failed to build conceptual graph: {e}")
+                G_conceptual = None
+
         G_fused = self.graph_builder.fuse_graphs(
             G_static,
             G_evo,
@@ -109,6 +128,8 @@ class AnalysisStage(PipelineStage):
             edge_threshold=fusion_config.get("edge_threshold", 0.1),
             hotspot_data=hotspot_data,
             adaptive_fusion=adaptive_fusion,
+            G_conceptual=G_conceptual,
+            beta=beta,
         )
 
         context.set("G_fused", G_fused)

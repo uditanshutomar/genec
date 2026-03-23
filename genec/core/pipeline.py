@@ -309,6 +309,7 @@ class GenECPipeline:
             timeout=llm_config.get("timeout", 120),
             use_chunking=chunking_config.get("enabled", True),
             enable_refinement=llm_config.get("enable_refinement", False),
+            use_prompt_diversity=llm_config.get("use_prompt_diversity", False),
         )
 
         # Code Generator - Eclipse JDT or String Manipulation

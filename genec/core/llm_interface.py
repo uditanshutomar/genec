@@ -1,9 +1,12 @@
 """LLM interface for generating refactoring suggestions using Claude API."""
 
+import hashlib
+import json
 import re
 import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional
 
 from genec.core.cluster_context_builder import ClusterContextBuilder
@@ -59,7 +62,10 @@ class LLMInterface:
         use_hybrid_mode: bool = True,  # NEW: Use JDT for code generation
         enable_confidence_scoring: bool = True,  # NEW: Ask LLM for confidence
         enable_refinement: bool = False,  # NEW: Multi-shot refinement
+        use_prompt_diversity: bool = False,  # NEW: 3 diverse prompt framings + voting
         jdt_code_generator: Optional["JDTCodeGenerator"] = None,  # NEW: Injected JDT
+        cache_dir: str | None = None,  # Reproducibility cache directory
+        use_cache: bool = False,  # Replay cached responses instead of calling API
     ):
         """
         Initialize LLM interface.
@@ -75,6 +81,8 @@ class LLMInterface:
             enable_confidence_scoring: Request confidence scores from LLM
             enable_refinement: Use multi-shot refinement loop
             jdt_code_generator: JDT generator instance (created if None and hybrid mode enabled)
+            cache_dir: Directory for reproducibility cache (saves full request/response pairs)
+            use_cache: If True and cache_dir is set, replay cached responses instead of calling API
         """
         self.logger = get_logger(f"GenEC.{self.__class__.__name__}")
         self.model = model
@@ -85,6 +93,17 @@ class LLMInterface:
         self.use_hybrid_mode = use_hybrid_mode
         self.enable_confidence_scoring = enable_confidence_scoring
         self.enable_refinement = enable_refinement
+        self.use_prompt_diversity = use_prompt_diversity
+
+        # Reproducibility cache settings
+        self._repro_cache_dir = Path(cache_dir) if cache_dir else None
+        self._use_repro_cache = use_cache
+        if self._repro_cache_dir:
+            self._repro_cache_dir.mkdir(parents=True, exist_ok=True)
+            self.logger.info(
+                f"Reproducibility cache dir: {self._repro_cache_dir} "
+                f"(replay={'on' if self._use_repro_cache else 'off'})"
+            )
 
         # Initialize context builder for chunking
         if self.use_chunking:
@@ -204,6 +223,10 @@ class LLMInterface:
         max_retries: int,
     ) -> RefactoringSuggestion | None:
         """Standard single-shot generation (Priority 1 approach)."""
+        # Use prompt diversity if enabled
+        if self.use_prompt_diversity:
+            return self._generate_with_diversity(cluster, original_code, class_deps, evo_data)
+
         # Build prompt
         prompt = self._build_prompt(cluster, original_code, class_deps, evo_data)
 
@@ -369,6 +392,133 @@ class LLMInterface:
         self.logger.info(f"Keeping original suggestion: {suggestion_v1.proposed_class_name}")
         return suggestion_v1
 
+    def _generate_with_diversity(
+        self,
+        cluster: Cluster,
+        original_code: str,
+        class_deps: ClassDependencies,
+        evo_data: EvolutionaryData | None,
+    ) -> RefactoringSuggestion | None:
+        """
+        Generate naming suggestion using 3 diverse prompt framings and majority vote.
+
+        Instead of making identical LLM calls (useless at low temperature), uses
+        three different prompt perspectives (responsibility, domain entity, design
+        pattern) and votes on the best name.
+        """
+        from genec.core.prompts import (
+            DESIGN_PATTERN_PROMPT_TEMPLATE,
+            DOMAIN_ENTITY_PROMPT_TEMPLATE,
+            RESPONSIBILITY_PROMPT_TEMPLATE,
+        )
+
+        self.logger.info("Using prompt diversity naming (3 framings + vote)")
+
+        prompts = [
+            ("responsibility", RESPONSIBILITY_PROMPT_TEMPLATE),
+            ("domain_entity", DOMAIN_ENTITY_PROMPT_TEMPLATE),
+            ("design_pattern", DESIGN_PATTERN_PROMPT_TEMPLATE),
+        ]
+
+        # Build methods section using the same logic as _build_prompt
+        methods_section = self._build_methods_section(cluster, original_code)
+
+        votes: list[dict] = []
+
+        for framing, template in prompts:
+            prompt_text = template.format(
+                class_name=class_deps.class_name,
+                methods_section=methods_section,
+            )
+            try:
+                response = self.llm.send_message(
+                    prompt_text,
+                    model=self.model,
+                    max_tokens=500,
+                    temperature=self.temperature,
+                )
+                name = self._extract_xml_tag(response, "class_name")
+                confidence = self._extract_xml_tag(response, "confidence")
+                rationale = self._extract_xml_tag(response, "rationale")
+
+                if name and self._validate_class_name(name.strip()):
+                    try:
+                        conf_val = float(confidence) if confidence else 0.5
+                    except (ValueError, TypeError):
+                        conf_val = 0.5
+                    votes.append({
+                        "framing": framing,
+                        "name": name.strip(),
+                        "confidence": max(0.0, min(1.0, conf_val)),
+                        "rationale": rationale.strip() if rationale else "",
+                    })
+                    self.logger.info(
+                        f"Diversity framing '{framing}' -> {name.strip()} (confidence={conf_val:.2f})"
+                    )
+                else:
+                    self.logger.warning(f"Diversity framing '{framing}' returned invalid name: {name}")
+            except (LLMServiceUnavailable, LLMRequestFailed) as e:
+                self.logger.warning(f"Diversity prompt '{framing}' failed: {e}")
+            except Exception as e:
+                self.logger.warning(f"Diversity prompt '{framing}' unexpected error: {e}")
+
+        if not votes:
+            self.logger.error("All diversity prompts failed; no votes collected")
+            return None
+
+        # Majority vote: count occurrences of each name
+        name_counts: dict[str, int] = {}
+        for v in votes:
+            name_counts[v["name"]] = name_counts.get(v["name"], 0) + 1
+
+        # Best name: most common, ties broken by highest confidence
+        best_vote = max(votes, key=lambda v: (name_counts[v["name"]], v["confidence"]))
+
+        agreement = name_counts[best_vote["name"]] / len(votes)
+        self.logger.info(
+            f"Diversity vote result: '{best_vote['name']}' "
+            f"(agreement={agreement:.0%}, {len(votes)} votes)"
+        )
+
+        suggestion = RefactoringSuggestion(
+            cluster_id=cluster.id,
+            proposed_class_name=best_vote["name"],
+            rationale=best_vote["rationale"],
+            new_class_code="",
+            modified_original_code="",
+            cluster=cluster,
+            confidence_score=best_vote["confidence"],
+            reasoning=f"Prompt diversity vote ({len(votes)} framings, {agreement:.0%} agreement)",
+        )
+        # Attach vote metadata for downstream analysis
+        suggestion.naming_votes = votes  # type: ignore[attr-defined]
+        suggestion.naming_agreement = agreement  # type: ignore[attr-defined]
+
+        return suggestion
+
+    def _build_methods_section(self, cluster: Cluster, original_code: str) -> str:
+        """Build a text representation of cluster methods and fields for diversity prompts."""
+        methods = cluster.get_methods()
+        fields = cluster.get_fields()
+        parts: list[str] = []
+
+        if methods:
+            parts.append("Methods:")
+            for m in methods:
+                javadoc = self._extract_javadoc_summary(m, original_code)
+                if javadoc:
+                    parts.append(f"  - {m}")
+                    parts.append(f"    Description: {javadoc}")
+                else:
+                    parts.append(f"  - {m}")
+
+        if fields:
+            parts.append("Fields:")
+            for f_name in fields:
+                parts.append(f"  - {f_name}")
+
+        return "\n".join(parts)
+
     def _build_prompt(
         self,
         cluster: Cluster,
@@ -424,26 +574,80 @@ class LLMInterface:
 
         return full_prompt
 
-    def _call_claude(self, prompt: str) -> str | None:
+    # --- Reproducibility cache methods ---
+
+    def _get_reproducibility_cache_path(self, cache_dir: Path, prompt: str, cluster_key: str) -> Path:
+        """Get cache file path for a specific prompt+cluster combination."""
+        key = hashlib.md5(f"{self.model}:{prompt}:{cluster_key}".encode()).hexdigest()
+        return cache_dir / f"{key}.json"
+
+    def _load_from_reproducibility_cache(self, cache_path: Path) -> str | None:
+        """Load cached LLM response if available."""
+        if cache_path.exists():
+            try:
+                data = json.loads(cache_path.read_text())
+                self.logger.info(f"Cache hit: {cache_path.name}")
+                return data.get("response")
+            except Exception:
+                return None
+        return None
+
+    def _save_to_reproducibility_cache(self, cache_path: Path, prompt: str, response: str):
+        """Save LLM request/response pair for reproducibility."""
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        data = {
+            "model": self.model,
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "prompt_hash": hashlib.md5(prompt.encode()).hexdigest(),
+            "prompt_length": len(prompt),
+            "response": response,
+        }
+        cache_path.write_text(json.dumps(data, indent=2))
+
+    # --- End reproducibility cache methods ---
+
+    def _call_claude(self, prompt: str, cluster_key: str = "") -> str | None:
         """
-        Call Claude API with the prompt.
+        Call Claude API with the prompt, with optional reproducibility caching.
 
         Args:
             prompt: Formatted prompt
+            cluster_key: Optional key identifying the cluster (for cache keying)
 
         Returns:
             Response text or None
         """
+        if not self._available and not (self._repro_cache_dir and self._use_repro_cache):
+            return None
+
+        # Check reproducibility cache first
+        if self._repro_cache_dir and self._use_repro_cache:
+            cache_path = self._get_reproducibility_cache_path(
+                self._repro_cache_dir, prompt, cluster_key
+            )
+            cached = self._load_from_reproducibility_cache(cache_path)
+            if cached is not None:
+                return cached
+
         if not self._available:
             return None
 
         try:
-            return self.llm.send_message(
+            response = self.llm.send_message(
                 prompt,
                 model=self.model,
                 max_tokens=self.max_tokens,
                 temperature=self.temperature,
             )
+
+            # Save to reproducibility cache if configured
+            if response and self._repro_cache_dir:
+                cache_path = self._get_reproducibility_cache_path(
+                    self._repro_cache_dir, prompt, cluster_key
+                )
+                self._save_to_reproducibility_cache(cache_path, prompt, response)
+
+            return response
         except (LLMServiceUnavailable, LLMRequestFailed):
             raise
 

@@ -15,13 +15,25 @@ class FusionConfig(BaseModel):
     """Configuration for graph fusion."""
 
     alpha: float = Field(
-        default=0.5,
+        default=0.6,
         ge=0.0,
         le=1.0,
         description="Weight for static dependencies (0-1). Higher values favor static over evolutionary coupling.",
     )
     edge_threshold: float = Field(
-        default=0.1, ge=0.0, le=1.0, description="Minimum edge weight to keep in fused graph (0-1)."
+        default=0.05, ge=0.0, le=1.0, description="Minimum edge weight to keep in fused graph (0-1)."
+    )
+    beta: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="Weight for conceptual similarity (0=disabled). alpha+beta must be <= 1.0",
+    )
+    conceptual_min_similarity: float = Field(
+        default=0.1,
+        ge=0.0,
+        le=1.0,
+        description="Minimum similarity threshold for conceptual edges.",
     )
 
 
@@ -39,7 +51,7 @@ class EvolutionConfig(BaseModel):
 class ClusteringConfig(BaseModel):
     """Configuration for cluster detection."""
 
-    algorithm: str = Field(default="louvain", description="Clustering algorithm to use.")
+    algorithm: str = Field(default="leiden", description="Clustering algorithm to use.")
     min_cluster_size: int = Field(
         default=3, ge=2, description="Minimum number of members in a cluster."
     )
@@ -100,6 +112,26 @@ class LLMConfig(BaseModel):
     api_key: str | None = Field(
         default=None,
         description="API key for LLM provider. If not set, uses ANTHROPIC_API_KEY env var.",
+    )
+    enable_refinement: bool = Field(
+        default=False,
+        description="Enable critique-refine loop for LLM naming suggestions.",
+    )
+    use_prompt_diversity: bool = Field(
+        default=False,
+        description="Use 3 diverse prompt framings with voting for naming instead of identical calls.",
+    )
+    enabled: bool = Field(
+        default=True,
+        description="Enable LLM-based naming. Set to false for ablation studies.",
+    )
+    cache_dir: str | None = Field(
+        default=None,
+        description="Directory for reproducibility cache.",
+    )
+    use_cache: bool = Field(
+        default=False,
+        description="Use cached responses if available.",
     )
 
     @field_validator("provider")
@@ -269,7 +301,7 @@ class GenECConfig(BaseModel):
     cache: CacheConfig = Field(default_factory=CacheConfig)
 
     model_config = {
-        "extra": "forbid",  # Raise error on unknown fields
+        "extra": "ignore",  # Allow unknown fields for forward compatibility
         "validate_assignment": True,  # Validate on attribute assignment
     }
 
