@@ -98,6 +98,9 @@ def analyze(
         suggestions = data.get("genec", {}).get("suggestions", [])
         class_suggestions[cname] = suggestions
 
+    # Track which (class_key, suggestion_index) pairs matched a ground truth entry
+    matched_suggestion_keys: set[tuple[str, int]] = set()
+
     for gt in ground_truth_entries:
         source_class = gt.get("source_class", "")
         extracted_class = gt.get("extracted_class", "")
@@ -130,16 +133,22 @@ def analyze(
         # Find best matching suggestion
         best_suggestion = None
         best_jaccard = 0.0
+        best_suggestion_idx = -1
 
-        for s in suggestions:
+        for s_idx, s in enumerate(suggestions):
             s_members = set(s.get("members", []))
             j = _jaccard(gt_members, s_members)
             if j > best_jaccard:
                 best_jaccard = j
                 best_suggestion = s
+                best_suggestion_idx = s_idx
 
         # Threshold hits
         threshold_hits = {str(t): best_jaccard >= t for t in thresholds}
+
+        # Track matched suggestion for FP calculation (match at lowest threshold)
+        if best_suggestion is not None and best_jaccard >= thresholds[0] and matching_key is not None:
+            matched_suggestion_keys.add((matching_key, best_suggestion_idx))
 
         # Classify mismatch
         if best_suggestion is not None:
@@ -181,11 +190,12 @@ def analyze(
     for t in thresholds:
         tp = sum(1 for c in per_case_results if c["thresholds"].get(str(t), False))
         fn = len(per_case_results) - tp
-        # Per-class FP calculation
+        # Per-class FP calculation: count suggestions not matched to any ground truth
         fp = 0
         for cls, suggestions in class_suggestions.items():
-            cls_tp = sum(1 for s in suggestions if s.get("matched", False))
-            fp += len(suggestions) - cls_tp
+            for idx, _s in enumerate(suggestions):
+                if (cls, idx) not in matched_suggestion_keys:
+                    fp += 1
 
         prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
         rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0

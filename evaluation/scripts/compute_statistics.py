@@ -217,12 +217,14 @@ def main():
         genec_clusters.append(g.get("num_clusters", 0))
         baseline_clusters.append(b.get("num_clusters", 0))
 
-        # Compare cluster quality, not original metrics
-        g_cohesion = g.get("avg_cluster_cohesion", 0.0)
-        b_cohesion = b.get("avg_cluster_cohesion", 0.0)
+        # Compute avg cluster cohesion from the clusters array
+        g_clusters = g.get("clusters", [])
+        b_clusters = b.get("clusters", [])
+        g_cohesion = sum(c.get("cohesion", 0.0) for c in g_clusters) / max(len(g_clusters), 1) if g_clusters else 0.0
+        b_cohesion = sum(c.get("cohesion", 0.0) for c in b_clusters) / max(len(b_clusters), 1) if b_clusters else 0.0
         genec_cohesion.append(float(g_cohesion))
         baseline_cohesion.append(float(b_cohesion))
-        improvement_cohesion.append(float(g_cohesion) - float(b_cohesion))
+        improvement_cohesion.append(g_cohesion - b_cohesion)
 
     comparisons = {}
     comparisons["clusters"] = {

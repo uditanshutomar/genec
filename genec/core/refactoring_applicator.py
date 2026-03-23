@@ -6,6 +6,7 @@ creating backups, and managing the refactoring application process.
 """
 
 import os
+import re
 import shutil
 from dataclasses import dataclass
 from datetime import datetime
@@ -164,6 +165,10 @@ class RefactoringApplicator:
                     error_message="modified_original_code is empty or None",
                 )
 
+            # Validate generated code before writing to disk
+            self._validate_code_safety(suggestion.new_class_code, "new class code")
+            self._validate_code_safety(suggestion.modified_original_code, "modified original code")
+
             # Write new class file
             new_class_path.parent.mkdir(parents=True, exist_ok=True)
             self._write_file(new_class_path, suggestion.new_class_code)
@@ -265,12 +270,54 @@ class RefactoringApplicator:
 
         Returns:
             Path for new class file
+
+        Raises:
+            ValueError: If class name is not a valid Java identifier or the
+                        resolved path escapes the repository root.
         """
+        # Validate class name is a safe Java identifier (no path separators)
+        if not new_class_name or not re.match(r'^[A-Za-z_$][A-Za-z0-9_$]*$', new_class_name):
+            raise ValueError(f"Invalid Java class name: {new_class_name!r}")
+
         # Place new class in same directory as original
         new_file_name = f"{new_class_name}.java"
         new_path = original_path.parent / new_file_name
 
+        # Verify path stays within repo to prevent path traversal
+        if repo_path:
+            repo_resolved = Path(repo_path).resolve()
+            new_resolved = new_path.resolve()
+            if not str(new_resolved).startswith(str(repo_resolved)):
+                raise ValueError(
+                    f"Generated path {new_resolved} escapes repo {repo_resolved}"
+                )
+
         return new_path
+
+    def _validate_code_safety(self, code: str, label: str) -> None:
+        """Basic safety check on generated code before writing to disk.
+
+        Logs warnings for suspicious patterns that could indicate
+        injected or unintended code from the LLM.  This is advisory
+        only -- it does not block the write.
+
+        Args:
+            code: The generated Java source code.
+            label: Human-readable label for log messages (e.g. "new class code").
+        """
+        dangerous_patterns = [
+            'Runtime.getRuntime().exec',
+            'ProcessBuilder',
+            'System.exit',
+            'java.lang.reflect',
+            'java.net.URL',
+            'java.io.File("/',  # Absolute path access
+        ]
+        for pattern in dangerous_patterns:
+            if pattern in code:
+                self.logger.warning(
+                    f"Suspicious pattern '{pattern}' found in {label}"
+                )
 
     def _create_backup(self, file_path: Path) -> str:
         """

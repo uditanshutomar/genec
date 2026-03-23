@@ -2,6 +2,7 @@
 
 import re
 import xml.etree.ElementTree as ET
+from types import SimpleNamespace
 
 from genec.core.llm_interface import RefactoringSuggestion
 from genec.llm import AnthropicClientWrapper, LLMConfig, LLMRequestFailed, LLMServiceUnavailable
@@ -85,6 +86,13 @@ class LLMOnlyBaseline:
                 if not class_name or not methods:
                     continue
 
+                member_list = methods + fields
+                cluster = SimpleNamespace(
+                    id=idx,
+                    member_names=member_list,
+                    method_signatures=methods,
+                    get_methods=lambda ml=member_list: ml,
+                )
                 suggestions.append(
                     RefactoringSuggestion(
                         cluster_id=idx,
@@ -92,7 +100,7 @@ class LLMOnlyBaseline:
                         rationale=rationale,
                         new_class_code="",
                         modified_original_code="",
-                        cluster=None,
+                        cluster=cluster,
                     )
                 )
             except Exception as e:

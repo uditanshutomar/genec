@@ -177,6 +177,16 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
+            // Guard: warn if the user switched files since the analysis
+            const currentFile = vscode.window.activeTextEditor?.document.uri.fsPath;
+            const analysisFile = targetFile;
+            if (currentFile && analysisFile && currentFile !== analysisFile) {
+                vscode.window.showWarningMessage(
+                    `Analysis was run on ${path.basename(analysisFile)}, but you're viewing ${path.basename(currentFile)}. Switch to the analyzed file first.`
+                );
+                return;
+            }
+
             // Validate code is available
             if (!suggestion.new_class_code || !suggestion.modified_original_code) {
                 vscode.window.showErrorMessage('Code not available. Please re-run analysis.');
@@ -293,6 +303,15 @@ export function activate(context: vscode.ExtensionContext) {
 
             if (!suggestion || !targetFile) {
                 vscode.window.showErrorMessage('Missing data for preview');
+                return;
+            }
+
+            // Guard: warn if the user switched files since the analysis
+            const currentFile = vscode.window.activeTextEditor?.document.uri.fsPath;
+            if (currentFile && targetFile && currentFile !== targetFile) {
+                vscode.window.showWarningMessage(
+                    `Analysis was run on ${path.basename(targetFile)}, but you're viewing ${path.basename(currentFile)}. Switch to the analyzed file first.`
+                );
                 return;
             }
 

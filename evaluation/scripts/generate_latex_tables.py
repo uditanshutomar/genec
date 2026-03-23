@@ -103,7 +103,7 @@ def generate_table_ablation(results_dir: Path) -> str:
         r"\label{tab:ablation}",
         r"\begin{tabular}{lrrrrr}",
         r"\toprule",
-        r"Variant & Clusters & Avg LCOM5 & Avg Coupling & Verified\% & Time (s) \\",
+        r"Variant & Clusters & Avg Cohesion & Avg Coupling & Verified\% & Time (s) \\",
         r"\midrule",
     ]
 
@@ -122,7 +122,7 @@ def generate_table_ablation(results_dir: Path) -> str:
         row = (
             f"{label} & "
             f"{_f(agg.get('clusters_found', {}).get('mean'), '.1f')} & "
-            f"{_f(agg.get('avg_lcom5', {}).get('mean'), '.4f')} & "
+            f"{_f(agg.get('avg_cohesion', {}).get('mean'), '.4f')} & "
             f"{_f(agg.get('avg_coupling', {}).get('mean'), '.4f')} & "
             f"{_f(agg.get('verified_pct', {}).get('mean'), '.1f')} & "
             f"{_f(agg.get('execution_time', {}).get('mean'), '.1f')} \\\\"

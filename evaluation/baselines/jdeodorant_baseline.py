@@ -1,5 +1,7 @@
 """JDeodorant-style baseline: field-based agglomerative clustering."""
 
+from types import SimpleNamespace
+
 from genec.core.dependency_analyzer import ClassDependencies, DependencyAnalyzer
 from genec.core.llm_interface import RefactoringSuggestion
 from genec.utils.logging_utils import get_logger
@@ -113,15 +115,20 @@ class JDeodorantBaseline:
                 f"fields {', '.join(fields_list)}."
             )
 
+            cluster_obj = SimpleNamespace(
+                id=idx,
+                member_names=members,
+                method_signatures=methods_list,
+                get_methods=lambda ml=members: ml,
+            )
             suggestion = RefactoringSuggestion(
                 cluster_id=idx,
                 proposed_class_name=proposed_name,
                 rationale=rationale,
                 new_class_code="",
                 modified_original_code="",
-                cluster=None,
+                cluster=cluster_obj,
             )
-            suggestion.methods = members  # type: ignore[attr-defined]
             suggestions.append(suggestion)
 
         self.logger.info(

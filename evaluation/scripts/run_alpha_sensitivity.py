@@ -38,7 +38,7 @@ def run_alpha_sensitivity(benchmark_file: str, output_dir: str, max_classes: int
         overrides = {"fusion": {"alpha": alpha}}
 
         for i, cls in enumerate(classes):
-            class_file = cls.get("file_path", "")
+            class_file = cls.get("class_file", "")
             repo_path = cls.get("repo_path", "")
             class_name = cls.get("class_name", f"class_{i}")
 

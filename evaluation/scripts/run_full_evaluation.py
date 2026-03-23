@@ -70,7 +70,7 @@ def run_baseline(class_file: str, repo_path: str, config_overrides: dict | None 
     overrides = {
         "evolution": {"window_months": 0},
         "clustering": {"algorithm": "louvain"},
-        "llm": {"api_key": "__DISABLED__"},
+        "llm": {"api_key": ""},
         "verification": {
             "enable_syntactic": False,
             "enable_semantic": False,
@@ -83,20 +83,23 @@ def run_baseline(class_file: str, repo_path: str, config_overrides: dict | None 
     try:
         pipeline = GenECPipeline(config_overrides=overrides)
         result = pipeline.run_full_pipeline(class_file, repo_path)
+        clusters_data = [
+            {
+                "id": c.id,
+                "size": len(c.member_names),
+                "cohesion": _safe_float(c.internal_cohesion),
+                "coupling": _safe_float(c.external_coupling),
+                "members": c.member_names,
+            }
+            for c in result.all_clusters
+        ]
+        cluster_cohesions = [c.get("cohesion", 0.0) for c in clusters_data]
         return {
             "num_clusters": len(result.all_clusters),
-            "clusters": [
-                {
-                    "id": c.id,
-                    "size": len(c.member_names),
-                    "cohesion": _safe_float(c.internal_cohesion),
-                    "coupling": _safe_float(c.external_coupling),
-                    "members": c.member_names,
-                }
-                for c in result.all_clusters
-            ],
+            "clusters": clusters_data,
             "original_metrics": _serialize(result.original_metrics),
             "execution_time": result.execution_time,
+            "avg_cluster_cohesion": sum(cluster_cohesions) / max(len(cluster_cohesions), 1),
         }
     except Exception as e:
         logger.error("Baseline failed for %s: %s", class_file, e, exc_info=True)
@@ -149,6 +152,10 @@ def run_genec(class_file: str, repo_path: str, config_file: str | None = None):
                 }
                 for c in result.all_clusters
             ],
+            "avg_cluster_cohesion": (
+                sum(_safe_float(c.internal_cohesion) for c in result.all_clusters)
+                / max(len(result.all_clusters), 1)
+            ),
         }
     except Exception as e:
         logger.error("GenEC pipeline failed for %s: %s", class_file, e, exc_info=True)

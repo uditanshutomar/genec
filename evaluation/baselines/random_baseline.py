@@ -1,6 +1,7 @@
 """Random baseline: randomly partitions methods into groups."""
 
 import random
+from types import SimpleNamespace
 
 from genec.core.dependency_analyzer import DependencyAnalyzer
 from genec.core.llm_interface import RefactoringSuggestion
@@ -47,15 +48,21 @@ class RandomBaseline:
 
         suggestions: list[RefactoringSuggestion] = []
         for idx, group in enumerate(groups):
+            method_list = list(group)
+            cluster_obj = SimpleNamespace(
+                id=idx,
+                member_names=method_list,
+                method_signatures=method_list,
+                get_methods=lambda ml=method_list: ml,
+            )
             suggestion = RefactoringSuggestion(
                 cluster_id=idx,
                 proposed_class_name=f"RandomGroup{idx + 1}",
                 rationale=f"Random partition of {len(group)} methods.",
                 new_class_code="",
                 modified_original_code="",
-                cluster=None,
+                cluster=cluster_obj,
             )
-            suggestion.methods = list(group)  # type: ignore[attr-defined]
             suggestions.append(suggestion)
 
         self.logger.info("Random baseline produced %d suggestions", len(suggestions))
