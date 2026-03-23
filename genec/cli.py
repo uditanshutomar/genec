@@ -125,58 +125,50 @@ def validate_api_key_for_llm_features() -> bool:
     return True
 
 import signal
+import time
 
 from dotenv import load_dotenv
 
 
-def main():
-    # Load .env file
-    load_dotenv()
+def _setup_logging(args) -> logging.Logger:
+    """Configure logging based on CLI arguments.
 
-    # Track if we're in a cancellable state
-    _cancellation_requested = False
-
-    def handle_sigint(signum, frame):
-        """Handle SIGINT (Ctrl+C) gracefully."""
-        nonlocal _cancellation_requested
-        if _cancellation_requested:
-            # Second Ctrl+C, force exit
-            sys.exit(130)
-        _cancellation_requested = True
-        raise KeyboardInterrupt("Cancellation requested")
-
-    # Install signal handler (allow graceful cancellation)
-    signal.signal(signal.SIGINT, handle_sigint)
-    signal.signal(signal.SIGTERM, handle_sigint)
-
-    parser = create_parser()
-    args = parser.parse_args()
-
-    # Setup logging
+    Returns the configured logger instance.
+    """
     log_level = "DEBUG" if args.verbose else "INFO"
 
-    # If JSON output is requested, ensure logs go to stderr so they don't corrupt stdout
     if args.json:
-        # Configure root logger to write to stderr
+        # Ensure logs go to stderr so they don't corrupt stdout JSON
         logging.basicConfig(stream=sys.stderr, level=getattr(logging, log_level))
-        # Also setup our custom logger
         setup_logger("genec", level=log_level)
-        # Ensure our custom logger's handlers are also stderr
-        logger = logging.getLogger("genec")
-        for handler in logger.handlers:
+        _logger = logging.getLogger("genec")
+        for handler in _logger.handlers:
             if isinstance(handler, logging.StreamHandler):
                 handler.stream = sys.stderr
     else:
         setup_logger("genec", level=log_level)
-        logger = logging.getLogger("genec")
+        _logger = logging.getLogger("genec")
+
+    return _logger
+
+
+def _validate_inputs(args) -> tuple[Path, Path, Path]:
+    """Validate target file, repo path, and config path.
+
+    Returns:
+        (target_path, repo_path, config_path) as resolved Path objects.
+
+    Raises:
+        SystemExit on validation failure (prints JSON or logs error first).
+    """
+    _logger = logging.getLogger("genec")
 
     # Setup API key
     if args.api_key:
         os.environ["ANTHROPIC_API_KEY"] = args.api_key
 
-    # Validate API key for LLM features
     if not validate_api_key_for_llm_features():
-        logger.warning(
+        _logger.warning(
             "No valid API key found (checked args, env, and .env). "
             "LLM-based naming and validation will be disabled. "
             "Set ANTHROPIC_API_KEY environment variable or pass --api-key."
@@ -185,19 +177,12 @@ def main():
     # Validate target file
     try:
         target_path = validate_target_file(args.target)
-    except FileNotFoundError as e:
+    except (FileNotFoundError, ValueError) as e:
         error_msg = str(e)
         if args.json:
             print(json.dumps({"status": "error", "error": error_msg}))
         else:
-            logger.error(error_msg)
-        sys.exit(1)
-    except ValueError as e:
-        error_msg = str(e)
-        if args.json:
-            print(json.dumps({"status": "error", "error": error_msg}))
-        else:
-            logger.error(error_msg)
+            _logger.error(error_msg)
         sys.exit(1)
 
     # Validate repository path
@@ -209,10 +194,14 @@ def main():
         if args.json:
             print(json.dumps({"status": "error", "error": error_msg}))
         else:
-            logger.error(error_msg)
+            _logger.error(error_msg)
         sys.exit(1)
 
-    # Construct config overrides
+    return target_path, repo_path, config_path
+
+
+def _build_config_overrides(args) -> dict:
+    """Build pipeline config overrides from CLI arguments."""
     config_overrides = {}
 
     if args.apply_all:
@@ -222,7 +211,6 @@ def main():
             "dry_run": False,
         }
 
-    # Pass coverage check flag to verification config
     if args.check_coverage:
         if "verification" not in config_overrides:
             config_overrides["verification"] = {}
@@ -253,175 +241,220 @@ def main():
         if args.use_cache:
             config_overrides["llm"]["use_cache"] = True
 
-    # Initialize pipeline
+    return config_overrides
+
+
+def _run_pipeline(args, target_path: Path, repo_path: Path, config_path: Path, config_overrides: dict):
+    """Execute the GenEC pipeline and return (results, runtime_str).
+
+    Also handles WebSocket server lifecycle and report saving.
+    """
+    _logger = logging.getLogger("genec")
+
+    pipeline = GenECPipeline(
+        config_file=str(config_path) if config_path.exists() else None,
+        config_overrides=config_overrides,
+    )
+
+    if not args.json:
+        _logger.info(f"Running GenEC on {target_path}...")
+
+    # Start WebSocket progress server if requested
+    progress_server = None
+    if args.websocket:
+        try:
+            from genec.utils.progress_server import get_progress_server
+
+            progress_server = get_progress_server(args.websocket)
+            progress_server.start()
+            _logger.info(f"WebSocket progress server started on port {args.websocket}")
+        except Exception as e:
+            _logger.warning(f"Failed to start WebSocket server: {e}")
+
+    start_time = time.time()
+
+    results = pipeline.run_full_pipeline(
+        class_file=str(target_path),
+        repo_path=str(repo_path),
+        max_suggestions=args.max_suggestions,
+    )
+
+    # Save report to custom directory if specified
+    if args.report_dir:
+        report_dir = Path(args.report_dir)
+        report_dir.mkdir(parents=True, exist_ok=True)
+        report_path = report_dir / f"{Path(args.target).stem}_report.json"
+        report_path.write_text(json.dumps(results.pipeline_report, indent=2, default=str))
+        _logger.info(f"Pipeline report saved to {report_path}")
+
+    # Stop WebSocket server
+    if progress_server:
+        progress_server.emit_complete(
+            {
+                "suggestions": (
+                    len(results.verified_suggestions) if results.verified_suggestions else 0
+                )
+            }
+        )
+        progress_server.stop()
+
+    total_runtime = time.time() - start_time
+    runtime_str = f"{total_runtime:.1f}s" if total_runtime < 60 else f"{total_runtime/60:.1f}m"
+
+    return results, runtime_str
+
+
+def _format_json_output(results, runtime_str: str) -> str:
+    """Format pipeline results as a JSON string for machine consumption."""
+    if not results.suggestions:
+        message = (
+            "No refactoring suggestions found. Possible reasons: class is already "
+            "well-factored, no cohesive method clusters detected, or class is too small."
+        )
+    elif not results.verified_suggestions:
+        message = (
+            f"Generated {len(results.suggestions)} suggestions but none passed "
+            "verification. Check verification logs for details."
+        )
+    else:
+        message = f"Successfully generated {len(results.verified_suggestions)} verified suggestions."
+
+    output = {
+        "status": "success",
+        "message": message,
+        "runtime": runtime_str,
+        "original_metrics": results.original_metrics,
+        "suggestions": [
+            {
+                "name": s.proposed_class_name,
+                "verified": s in results.verified_suggestions,
+                "new_class_code": s.new_class_code or "",
+                "modified_original_code": s.modified_original_code or "",
+                "rationale": getattr(s, "rationale", None),
+                "reasoning": getattr(s, "reasoning", None),
+                "confidence_score": getattr(s, "confidence_score", None),
+                "quality_score": (
+                    s.cluster.quality_score if getattr(s, "cluster", None) else getattr(s, "quality_score", None)
+                ),
+                "quality_tier": (
+                    s.cluster.quality_tier.value
+                    if getattr(s, "cluster", None) and s.cluster.quality_tier
+                    else getattr(s, "quality_tier", None)
+                ),
+                "quality_reasons": (
+                    s.cluster.quality_reasons if getattr(s, "cluster", None) else getattr(s, "quality_reasons", None)
+                ),
+                "verification_status": getattr(s, "verification_status", None),
+                "methods": s.cluster.get_methods() if getattr(s, "cluster", None) else None,
+                "fields": s.cluster.get_fields() if getattr(s, "cluster", None) else None,
+            }
+            for s in results.suggestions
+        ],
+        "applied_refactorings": [
+            {
+                "success": r.success,
+                "new_class_path": r.new_class_path,
+                "original_class_path": r.original_class_path,
+                "error_message": r.error_message,
+                "commit_hash": r.commit_hash,
+            }
+            for r in results.applied_refactorings
+        ],
+        "graph_data": results.graph_data,
+        "clusters": [
+            {
+                "name": f"Cluster_{i}",
+                "members": c.member_names,
+                "quality_tier": c.quality_tier.value if c.quality_tier else 'potential',
+                "cohesion_score": getattr(c, 'internal_cohesion', 0),
+            }
+            for i, c in enumerate(results.ranked_clusters)
+        ],
+    }
+    return json.dumps(output, indent=2)
+
+
+def _format_text_output(results, runtime_str: str, args, target_path: Path) -> None:
+    """Print human-readable pipeline results to stdout."""
+    # Dry-run mode: show detailed summary of what WOULD be applied
+    if args.dry_run and results.verified_suggestions:
+        print("\n" + "=" * 60)
+        print("DRY-RUN SUMMARY - No changes will be made")
+        print("=" * 60)
+        print(f"\nFile: {target_path.name}")
+        print(f"Total verified suggestions: {len(results.verified_suggestions)}")
+        print("\nChanges that WOULD be applied:\n")
+
+        for i, s in enumerate(results.verified_suggestions, 1):
+            methods = s.cluster.get_methods() if hasattr(s, 'cluster') and s.cluster else []
+            method_count = len(methods) if methods else "unknown"
+
+            confidence_str = f" (confidence: {s.confidence_score:.2f})" if s.confidence_score is not None else ""
+            print(f"  {i}. Extract class: {s.proposed_class_name}{confidence_str}")
+            print(f"     Methods to move: {method_count}")
+            if methods:
+                for m in methods[:5]:
+                    print(f"       - {m}")
+                if len(methods) > 5:
+                    print(f"       ... and {len(methods) - 5} more")
+            reasoning = getattr(s, "reasoning", None)
+            if reasoning:
+                print(f"     Reason: {reasoning[:100]}...")
+            print()
+
+        print("-" * 60)
+        print("To apply these changes, run without --dry-run flag")
+        print("=" * 60)
+
+    print("\n" + "=" * 50)
+    print(f"Refactoring Completed Successfully (Runtime: {runtime_str})")
+    print("=" * 50)
+    print(f"Original Metrics: {results.original_metrics}")
+    print(f"Suggestions Generated: {len(results.suggestions)}")
+    print(f"Verified Suggestions: {len(results.verified_suggestions)}")
+
+    if results.avg_confidence > 0:
+        print(f"Confidence Metrics: avg={results.avg_confidence:.2f}, "
+              f"min={results.min_confidence:.2f}, max={results.max_confidence:.2f}, "
+              f"high(>=0.8)={results.high_confidence_count}")
+
+    print(f"Total Runtime: {runtime_str}")
+
+    if results.verified_suggestions:
+        print("\nVerified Suggestions:")
+        for i, s in enumerate(results.verified_suggestions, 1):
+            confidence_str = f" (confidence: {s.confidence_score:.2f})" if s.confidence_score is not None else ""
+            print(f"{i}. {s.proposed_class_name}{confidence_str}")
+
+
+def main():
+    load_dotenv()
+
+    # Install signal handlers for graceful cancellation
+    _cancellation_requested = False
+
+    def handle_sigint(signum, frame):
+        nonlocal _cancellation_requested
+        if _cancellation_requested:
+            sys.exit(130)
+        _cancellation_requested = True
+        raise KeyboardInterrupt("Cancellation requested")
+
+    signal.signal(signal.SIGINT, handle_sigint)
+    signal.signal(signal.SIGTERM, handle_sigint)
+
+    args = create_parser().parse_args()
+    _logger = _setup_logging(args)
+    target_path, repo_path, config_path = _validate_inputs(args)
+    config_overrides = _build_config_overrides(args)
+
     try:
-        pipeline = GenECPipeline(
-            config_file=str(config_path) if config_path.exists() else None,
-            config_overrides=config_overrides,
-        )
-
-        if not args.json:
-            logger.info(f"Running GenEC on {target_path}...")
-
-        # Start WebSocket progress server if requested
-        progress_server = None
-        if args.websocket:
-            try:
-                from genec.utils.progress_server import get_progress_server
-
-                progress_server = get_progress_server(args.websocket)
-                progress_server.start()
-                logger.info(f"WebSocket progress server started on port {args.websocket}")
-            except Exception as e:
-                logger.warning(f"Failed to start WebSocket server: {e}")
-
-        import time
-
-        start_time = time.time()
-
-        results = pipeline.run_full_pipeline(
-            class_file=str(target_path),
-            repo_path=str(repo_path),
-            max_suggestions=args.max_suggestions,
-        )
-
-        # Save report to custom directory if specified
-        if args.report_dir:
-            from genec.core.pipeline_recorder import PipelineRecorder
-            report_dir = Path(args.report_dir)
-            report_dir.mkdir(parents=True, exist_ok=True)
-            report_path = report_dir / f"{Path(args.target).stem}_report.json"
-            report_path.write_text(json.dumps(results.pipeline_report, indent=2, default=str))
-            logger.info(f"Pipeline report saved to {report_path}")
-
-        # Stop WebSocket server
-        if progress_server:
-            progress_server.emit_complete(
-                {
-                    "suggestions": (
-                        len(results.verified_suggestions) if results.verified_suggestions else 0
-                    )
-                }
-            )
-            progress_server.stop()
-
-        # Calculate and log total runtime
-        total_runtime = time.time() - start_time
-        runtime_str = f"{total_runtime:.1f}s" if total_runtime < 60 else f"{total_runtime/60:.1f}m"
+        results, runtime_str = _run_pipeline(args, target_path, repo_path, config_path, config_overrides)
 
         if args.json:
-            # Build message explaining results
-            if not results.suggestions:
-                message = "No refactoring suggestions found. Possible reasons: class is already well-factored, no cohesive method clusters detected, or class is too small."
-            elif not results.verified_suggestions:
-                message = f"Generated {len(results.suggestions)} suggestions but none passed verification. Check verification logs for details."
-            else:
-                message = f"Successfully generated {len(results.verified_suggestions)} verified suggestions."
-
-            output = {
-                "status": "success",
-                "message": message,
-                "runtime": runtime_str,
-                "original_metrics": results.original_metrics,
-                "suggestions": [
-                    {
-                        "name": s.proposed_class_name,
-                        "verified": s in results.verified_suggestions,
-                        "new_class_code": s.new_class_code or "",
-                        "modified_original_code": s.modified_original_code or "",
-                        "rationale": getattr(s, "rationale", None),
-                        "reasoning": getattr(s, "reasoning", None),
-                        "confidence_score": getattr(s, "confidence_score", None),
-                        "quality_score": (
-                            s.cluster.quality_score if getattr(s, "cluster", None) else getattr(s, "quality_score", None)
-                        ),
-                        "quality_tier": (
-                            s.cluster.quality_tier.value
-                            if getattr(s, "cluster", None) and s.cluster.quality_tier
-                            else getattr(s, "quality_tier", None)
-                        ),
-                        "quality_reasons": (
-                            s.cluster.quality_reasons if getattr(s, "cluster", None) else getattr(s, "quality_reasons", None)
-                        ),
-                        "verification_status": getattr(s, "verification_status", None),
-                        "methods": s.cluster.get_methods() if getattr(s, "cluster", None) else None,
-                        "fields": s.cluster.get_fields() if getattr(s, "cluster", None) else None,
-                    }
-                    for s in results.suggestions
-                ],
-                "applied_refactorings": [
-                    {
-                        "success": r.success,
-                        "new_class_path": r.new_class_path,
-                        "original_class_path": r.original_class_path,
-                        "error_message": r.error_message,
-                        "commit_hash": r.commit_hash,
-                    }
-                    for r in results.applied_refactorings
-                ],
-                "graph_data": results.graph_data,
-                "clusters": [
-                    {
-                        "name": f"Cluster_{i}",
-                        "members": c.member_names,
-                        "quality_tier": c.quality_tier.value if c.quality_tier else 'potential',
-                        "cohesion_score": getattr(c, 'internal_cohesion', 0),
-                    }
-                    for i, c in enumerate(results.ranked_clusters)
-                ],
-            }
-            print(json.dumps(output, indent=2))
+            print(_format_json_output(results, runtime_str))
         else:
-            # Dry-run mode: show detailed summary of what WOULD be applied
-            if args.dry_run and results.verified_suggestions:
-                print("\n" + "=" * 60)
-                print("DRY-RUN SUMMARY - No changes will be made")
-                print("=" * 60)
-                print(f"\nFile: {target_path.name}")
-                print(f"Total verified suggestions: {len(results.verified_suggestions)}")
-                print("\nChanges that WOULD be applied:\n")
-
-                for i, s in enumerate(results.verified_suggestions, 1):
-                    methods = s.cluster.get_methods() if hasattr(s, 'cluster') and s.cluster else []
-                    method_count = len(methods) if methods else "unknown"
-
-                    confidence_str = f" (confidence: {s.confidence_score:.2f})" if s.confidence_score is not None else ""
-                    print(f"  {i}. Extract class: {s.proposed_class_name}{confidence_str}")
-                    print(f"     Methods to move: {method_count}")
-                    if methods:
-                        for m in methods[:5]:  # Show first 5 methods
-                            print(f"       - {m}")
-                        if len(methods) > 5:
-                            print(f"       ... and {len(methods) - 5} more")
-                    reasoning = getattr(s, "reasoning", None)
-                    if reasoning:
-                        print(f"     Reason: {reasoning[:100]}...")
-                    print()
-
-                print("-" * 60)
-                print("To apply these changes, run without --dry-run flag")
-                print("=" * 60)
-
-            print("\n" + "=" * 50)
-            print(f"Refactoring Completed Successfully (Runtime: {runtime_str})")
-            print("=" * 50)
-            print(f"Original Metrics: {results.original_metrics}")
-            print(f"Suggestions Generated: {len(results.suggestions)}")
-            print(f"Verified Suggestions: {len(results.verified_suggestions)}")
-
-            # Show confidence metrics if available
-            if results.avg_confidence > 0:
-                print(f"Confidence Metrics: avg={results.avg_confidence:.2f}, "
-                      f"min={results.min_confidence:.2f}, max={results.max_confidence:.2f}, "
-                      f"high(>=0.8)={results.high_confidence_count}")
-
-            print(f"Total Runtime: {runtime_str}")
-
-            if results.verified_suggestions:
-                print("\nVerified Suggestions:")
-                for i, s in enumerate(results.verified_suggestions, 1):
-                    confidence_str = f" (confidence: {s.confidence_score:.2f})" if s.confidence_score is not None else ""
-                    print(f"{i}. {s.proposed_class_name}{confidence_str}")
+            _format_text_output(results, runtime_str, args, target_path)
 
     except KeyboardInterrupt:
         if args.json:
@@ -433,19 +466,18 @@ def main():
         if args.json:
             print(json.dumps({"status": "error", "error": str(e)}))
         else:
-            logger.error(f"Error running pipeline: {e}", exc_info=True)
+            _logger.error(f"Error running pipeline: {e}", exc_info=True)
         sys.exit(1)
     finally:
-        # Cleanup generated.java if it exists
         generated_file = target_path.parent / "generated.java"
         if generated_file.exists():
             try:
                 generated_file.unlink()
                 if not args.json:
-                    logger.info(f"Cleaned up artifact: {generated_file}")
+                    _logger.info(f"Cleaned up artifact: {generated_file}")
             except Exception as e:
                 if not args.json:
-                    logger.warning(f"Failed to cleanup artifact {generated_file}: {e}")
+                    _logger.warning(f"Failed to cleanup artifact {generated_file}: {e}")
 
 
 if __name__ == "__main__":

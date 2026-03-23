@@ -11,7 +11,7 @@ This module checks for dependencies that would make an extraction invalid:
 import re
 from dataclasses import dataclass
 
-from genec.core.cluster_detector import Cluster
+from genec.core.models import Cluster
 from genec.core.dependency_analyzer import ClassDependencies, MethodInfo
 from genec.utils.logging_utils import get_logger
 
@@ -209,70 +209,94 @@ class ExtractionValidator:
                 f"{sum(1 for i in issues if i.severity == 'warning')} warnings"
             )
 
-        # If static analysis failed but LLM validation is enabled, give LLM a chance to override
-        transformation_strategy = None
-        if not is_valid and self.llm_validator and self.llm_validator.enabled:
-            self.logger.info(
-                f"Static validation failed for cluster {cluster.id}, consulting LLM..."
-            )
-
-            # Prepare issue descriptions for LLM
-            issue_descriptions = [
-                f"{issue.issue_type}: {issue.description} (in {issue.affected_method})"
-                for issue in issues
-                if issue.severity == "error"
-            ]
-
-            # Ask LLM if extraction can still work
-            llm_result = self.llm_validator.validate_extraction_semantics(
-                cluster, class_deps, issue_descriptions
-            )
-
-            if llm_result.is_valid and llm_result.confidence >= 0.7:
-                self.logger.info(
-                    f"LLM overrode static validation for cluster {cluster.id}: "
-                    f"confidence={llm_result.confidence:.2f}, reasoning={llm_result.reasoning[:100]}..."
-                )
-                is_valid = True
-                # Add a note to issues
-                issues.append(
-                    ValidationIssue(
-                        severity="warning",
-                        issue_type="llm_override",
-                        description=f"LLM validated extraction despite static issues (confidence: {llm_result.confidence:.2f})",
-                        affected_method="N/A",
-                    )
-                )
-            else:
-                self.logger.info(
-                    f"LLM confirmed rejection for cluster {cluster.id}: {llm_result.reasoning[:100]}..."
-                )
-
-                # LLM confirmed rejection - now suggest pattern transformations
-                if self.pattern_transformer and self.pattern_transformer.enabled:
-                    self.logger.info(
-                        f"Analyzing pattern transformations for cluster {cluster.id}..."
-                    )
-                    transformation_strategy = self.pattern_transformer.suggest_transformation(
-                        cluster, class_deps, issue_descriptions
-                    )
-
-                    if transformation_strategy:
-                        # Add transformation suggestion to issues
-                        issues.append(
-                            ValidationIssue(
-                                severity="warning",
-                                issue_type="pattern_suggestion",
-                                description=f"Suggested pattern: {transformation_strategy.pattern_name} (confidence: {transformation_strategy.confidence:.2f})",
-                                affected_method="N/A",
-                            )
-                        )
+        # If static analysis failed, give LLM a chance to override
+        is_valid, transformation_strategy = self._try_llm_override(
+            is_valid, cluster, class_deps, issues
+        )
 
         # Store transformation strategy in cluster for later retrieval
         if transformation_strategy:
             cluster.transformation_strategy = transformation_strategy
 
         return is_valid, issues
+
+    def _try_llm_override(
+        self,
+        is_valid: bool,
+        cluster: Cluster,
+        class_deps: ClassDependencies,
+        issues: list[ValidationIssue],
+    ) -> tuple[bool, object | None]:
+        """Consult LLM to override static validation failures and suggest patterns.
+
+        Returns:
+            (is_valid, transformation_strategy) -- updated validity flag and optional
+            transformation strategy object (or None).
+        """
+        transformation_strategy = None
+
+        if is_valid or not self.llm_validator or not self.llm_validator.enabled:
+            return is_valid, transformation_strategy
+
+        self.logger.info(
+            f"Static validation failed for cluster {cluster.id}, consulting LLM..."
+        )
+
+        issue_descriptions = [
+            f"{issue.issue_type}: {issue.description} (in {issue.affected_method})"
+            for issue in issues
+            if issue.severity == "error"
+        ]
+
+        llm_result = self.llm_validator.validate_extraction_semantics(
+            cluster, class_deps, issue_descriptions
+        )
+
+        if llm_result.is_valid and llm_result.confidence >= 0.7:
+            self.logger.info(
+                f"LLM overrode static validation for cluster {cluster.id}: "
+                f"confidence={llm_result.confidence:.2f}, reasoning={llm_result.reasoning[:100]}..."
+            )
+            is_valid = True
+            issues.append(
+                ValidationIssue(
+                    severity="warning",
+                    issue_type="llm_override",
+                    description=(
+                        f"LLM validated extraction despite static issues "
+                        f"(confidence: {llm_result.confidence:.2f})"
+                    ),
+                    affected_method="N/A",
+                )
+            )
+        else:
+            self.logger.info(
+                f"LLM confirmed rejection for cluster {cluster.id}: "
+                f"{llm_result.reasoning[:100]}..."
+            )
+
+            if self.pattern_transformer and self.pattern_transformer.enabled:
+                self.logger.info(
+                    f"Analyzing pattern transformations for cluster {cluster.id}..."
+                )
+                transformation_strategy = self.pattern_transformer.suggest_transformation(
+                    cluster, class_deps, issue_descriptions
+                )
+
+                if transformation_strategy:
+                    issues.append(
+                        ValidationIssue(
+                            severity="warning",
+                            issue_type="pattern_suggestion",
+                            description=(
+                                f"Suggested pattern: {transformation_strategy.pattern_name} "
+                                f"(confidence: {transformation_strategy.confidence:.2f})"
+                            ),
+                            affected_method="N/A",
+                        )
+                    )
+
+        return is_valid, transformation_strategy
 
     def _find_abstract_methods(self, class_deps: ClassDependencies) -> set[str]:
         """Find all abstract methods in the class."""

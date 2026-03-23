@@ -29,7 +29,7 @@ GenEC uses a modular **Pipeline Architecture** orchestrated by a `PipelineRunner
 
 1.  **AnalysisStage**: Performs static dependency analysis (AST) and evolutionary mining (Git history).
 2.  **GraphProcessingStage**: Fuses static and evolutionary graphs, calculates centrality metrics, and exports graph data.
-3.  **ClusteringStage**: Detects communities (clusters) using Louvain algorithm, filters them based on quality tiers, and ranks them.
+3.  **ClusteringStage**: Detects communities (clusters) using Leiden algorithm, filters them based on quality tiers, and ranks them.
 4.  **NamingStage**: Generates meaningful class names and refactoring suggestions using LLM (Claude).
 5.  **RefactoringStage**: Applies refactorings (transactionally) and verifies them using the multi-tier verification engine.
 
@@ -66,9 +66,9 @@ GenEC uses a modular **Pipeline Architecture** orchestrated by a `PipelineRunner
 
 ### 2. Clustering Layer
 
-#### Louvain Community Detection
+#### Leiden Community Detection
 - **Purpose**: Identify cohesive method groups
-- **Algorithm**: Louvain modularity optimization
+- **Algorithm**: Leiden modularity optimization (with multi-resolution consensus)
 - **Filters**: Size constraints, cohesion thresholds
 - **Key Files**: [genec/core/cluster_detector.py](../genec/core/cluster_detector.py)
 
@@ -440,7 +440,7 @@ structural_transforms:
           ↓
 4. Fuse graphs (α * static + (1-α) * evolutionary)
           ↓
-5. Apply Louvain clustering → Detect communities
+5. Apply Leiden clustering → Detect communities
           ↓
 6. Filter clusters → Apply size/cohesion constraints
           ↓
@@ -473,24 +473,26 @@ GenEC uses a hierarchical YAML configuration:
 
 ```yaml
 # Graph fusion weight (0.0 = only evolutionary, 1.0 = only static)
-graph:
-  alpha: 0.5
+fusion:
+  alpha: 0.6                              # 60% static, 40% evolutionary
+  edge_threshold: 0.05
 
 # Clustering constraints
 clustering:
-  min_methods: 2
-  max_methods: 15
-  min_cohesion: 0.3
+  algorithm: leiden
+  min_cluster_size: 3
+  max_cluster_size: 30
+  min_cohesion: 0.35
 
-# ⭐ NEW: Extraction validation
+# Extraction validation
 verification:
   enable_extraction_validation: true      # Tier 1: Static
   suggest_pattern_transformations: true   # Tier 3: Pattern guidance
   enable_syntactic: true                  # Post-generation
   enable_semantic: true                   # Post-generation
-  enable_behavioral: false                # Optional (expensive)
+  enable_behavioral: true                 # Test suite check
 
-# ⭐ NEW: Structural transformation
+# Structural transformation
 structural_transforms:
   enabled: true
   compile_check: true
@@ -501,11 +503,11 @@ structural_transforms:
 
 # LLM configuration (via AnthropicClientWrapper)
 llm:
+  provider: anthropic
   model: claude-sonnet-4-20250514
-  max_prompt_chars: 16000
-  max_retries: 3
-  initial_backoff: 1.0
-  timeout: 60.0
+  max_tokens: 4000
+  temperature: 0.2
+  timeout: 120
 ```
 
 ## Output Structure
@@ -668,5 +670,5 @@ class OpenAIClientWrapper:
 
 - Eclipse JDT Documentation: https://www.eclipse.org/jdt/
 - Anthropic Claude API: https://docs.anthropic.com/
-- Louvain Algorithm: Blondel et al., 2008
+- Leiden Algorithm: Traag et al., 2019
 - RefactoringMiner: Tsantalis et al., 2018

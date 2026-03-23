@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from genec.core.llm_interface import RefactoringSuggestion
+from genec.core.models import RefactoringSuggestion
 from genec.core.refactoring_applicator import (
     RefactoringApplication,
     RefactoringApplicator,

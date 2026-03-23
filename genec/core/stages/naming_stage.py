@@ -1,8 +1,8 @@
 import re
 
-from genec.core.cluster_detector import Cluster
 from genec.core.dependency_analyzer import ClassDependencies
-from genec.core.llm_interface import LLMInterface, RefactoringSuggestion
+from genec.core.llm_interface import LLMInterface
+from genec.core.models import Cluster, RefactoringSuggestion
 from genec.core.stages.base_stage import PipelineContext, PipelineStage
 from genec.utils.progress_server import emit_progress
 

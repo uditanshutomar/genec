@@ -2,7 +2,6 @@
 
 import re
 from collections import defaultdict
-from dataclasses import dataclass, field
 
 import community as community_louvain
 import networkx as nx
@@ -26,6 +25,7 @@ except ImportError:
     SKLEARN_AVAILABLE = False
 
 from genec.core.dependency_analyzer import ClassDependencies
+from genec.core.models import Cluster, QualityTier
 from genec.utils.logging_utils import get_logger
 
 # Semantic analyzer for hybrid clustering
@@ -37,54 +37,6 @@ except ImportError:
     SEMANTIC_AVAILABLE = False
 
 logger = get_logger(__name__)
-
-
-from enum import Enum
-
-
-class QualityTier(Enum):
-    """Quality tier for refactoring suggestions."""
-
-    SHOULD = "should"  # High quality - strong recommendation
-    COULD = "could"  # Medium quality - conditional recommendation
-    POTENTIAL = "potential"  # Low quality - informational only
-
-
-@dataclass
-class Cluster:
-    """Represents a detected cluster of methods and fields."""
-
-    id: int
-    member_names: list[str]
-    member_types: dict[str, str] = field(default_factory=dict)  # name -> 'method' or 'field'
-    quality_score: float = 0.0
-    modularity: float = 0.0
-    internal_cohesion: float = 0.0
-    external_coupling: float = 0.0
-    rank_score: float | None = None
-    rejection_issues: list = field(default_factory=list)
-
-    # Advanced metrics
-    silhouette_score: float | None = None
-    conductance: float | None = None
-    coverage: float | None = None
-    is_connected: bool = True
-    stability_score: float | None = None
-
-    # Quality tier metadata
-    quality_tier: QualityTier | None = None
-    quality_reasons: list[str] = field(default_factory=list)
-
-    def __len__(self):
-        return len(self.member_names)
-
-    def get_methods(self) -> list[str]:
-        """Get only method members."""
-        return [m for m, t in self.member_types.items() if t == "method"]
-
-    def get_fields(self) -> list[str]:
-        """Get only field members."""
-        return [m for m, t in self.member_types.items() if t == "field"]
 
 
 def calculate_quality_tier(cluster: Cluster, evo_data=None) -> QualityTier:

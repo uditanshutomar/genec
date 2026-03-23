@@ -1,10 +1,9 @@
 """Multi-layer verification engine for refactoring suggestions."""
 
 import os
-from dataclasses import dataclass
 
 from genec.core.dependency_analyzer import ClassDependencies
-from genec.core.llm_interface import RefactoringSuggestion
+from genec.core.models import RefactoringSuggestion, VerificationResult
 from genec.utils.logging_utils import get_logger
 from genec.verification.behavioral_verifier import BehavioralVerifier
 from genec.verification.equivalence_checker import EquivalenceChecker
@@ -15,30 +14,6 @@ from genec.verification.static_analysis_verifier import StaticAnalysisVerifier
 from genec.verification.syntactic_verifier import SyntacticVerifier
 
 logger = get_logger(__name__)
-
-
-@dataclass
-class VerificationResult:
-    """Result of multi-layer verification."""
-
-    suggestion_id: int
-    status: str
-    equivalence_pass: bool = False  # Layer 0
-    syntactic_pass: bool = False  # Layer 1
-    quality_pass: bool = False  # Layer 1.5
-    multiversion_pass: bool = False  # Layer 1.7 (NEW)
-    semantic_pass: bool = False  # Layer 2
-    behavioral_pass: bool = False  # Layer 3
-    performance_pass: bool = False  # Layer 4 (NEW)
-    tests_run: int = 0
-    quality_improvement: float = 0.0
-    performance_regression: float = 0.0  # NEW
-    error_message: str | None = None
-
-    @property
-    def is_valid(self) -> bool:
-        """Return True if verification passed (at minimum syntactic check)."""
-        return self.status in ("PASS", "PASSED", "VALID") or self.syntactic_pass
 
 
 class VerificationEngine:
@@ -86,6 +61,244 @@ class VerificationEngine:
 
         self.logger = get_logger(self.__class__.__name__)
 
+    # ------------------------------------------------------------------
+    # Individual verification layer helpers
+    # ------------------------------------------------------------------
+
+    def _run_equivalence_check(
+        self,
+        suggestion: RefactoringSuggestion,
+        original_class_file: str,
+        repo_path: str,
+        class_deps: ClassDependencies,
+        result: VerificationResult,
+    ) -> bool:
+        """Layer 0: Equivalence checking. Returns True if check ran."""
+        if not self.enable_equivalence:
+            self.logger.info("Equivalence checking skipped (equivalence_pass left as False)")
+            return False
+
+        self.logger.info("Layer 0: Equivalence Checking (Behavioral Preservation)")
+
+        package_path = class_deps.package_name.replace(".", os.sep)
+        new_class_path = os.path.join(
+            "src", "main", "java", package_path, f"{suggestion.proposed_class_name}.java"
+        )
+        refactored_files = {
+            new_class_path: suggestion.new_class_code,
+            original_class_file: suggestion.modified_original_code,
+        }
+
+        equiv_result = self.equivalence_checker.check_equivalence(
+            original_class_file=original_class_file,
+            refactored_files=refactored_files,
+            repo_path=repo_path,
+            cluster=suggestion.cluster,
+            suggestion=suggestion,
+        )
+
+        result.equivalence_pass = equiv_result.is_equivalent
+        result.tests_run = equiv_result.tests_run
+
+        if not equiv_result.is_equivalent:
+            result.status = "FAILED_EQUIVALENCE"
+            result.error_message = (
+                f"Behavioral differences detected: {', '.join(equiv_result.differing_tests[:5])}"
+            )
+            self.logger.warning(f"Equivalence checking failed: {result.error_message}")
+        else:
+            self.logger.info(f"Equivalence verified ({equiv_result.tests_run} tests passed)")
+
+        return True
+
+    def _run_syntactic_check(
+        self,
+        suggestion: RefactoringSuggestion,
+        class_deps: ClassDependencies,
+        result: VerificationResult,
+    ) -> None:
+        """Layer 1: Syntactic verification."""
+        if not self.enable_syntactic:
+            result.syntactic_pass = True
+            self.logger.info("Syntactic verification skipped")
+            return
+
+        self.logger.info("Layer 1: Syntactic Verification")
+
+        syntactic_pass, error = self.syntactic_verifier.verify(
+            suggestion.new_class_code,
+            suggestion.modified_original_code,
+            class_deps.package_name,
+        )
+
+        result.syntactic_pass = syntactic_pass
+        if not syntactic_pass:
+            result.status = "FAILED_SYNTACTIC"
+            result.error_message = error
+            self.logger.warning(f"Syntactic verification failed: {error}")
+
+    def _run_static_analysis_check(
+        self,
+        suggestion: RefactoringSuggestion,
+        original_code: str,
+        repo_path: str,
+        class_deps: ClassDependencies,
+        result: VerificationResult,
+    ) -> None:
+        """Layer 1.5: Static analysis (code quality)."""
+        if not self.enable_static_analysis:
+            result.quality_pass = True
+            self.logger.info("Static analysis skipped")
+            return
+
+        self.logger.info("Layer 1.5: Static Analysis (Code Quality)")
+
+        quality_pass, error = self.static_analysis_verifier.verify(
+            original_code,
+            suggestion.new_class_code,
+            suggestion.modified_original_code,
+            repo_path,
+            class_deps.package_name,
+        )
+
+        result.quality_pass = quality_pass
+        if not quality_pass:
+            result.status = "FAILED_QUALITY"
+            result.error_message = error
+            self.logger.warning(f"Static analysis failed: {error}")
+        else:
+            self.logger.info("Static analysis passed (no quality regression)")
+
+    def _run_multiversion_check(
+        self,
+        suggestion: RefactoringSuggestion,
+        class_deps: ClassDependencies,
+        result: VerificationResult,
+    ) -> None:
+        """Layer 1.7: Multi-version compilation."""
+        if not self.enable_multiversion:
+            result.multiversion_pass = True
+            self.logger.info("Multi-version compilation skipped")
+            return
+
+        self.logger.info("Layer 1.7: Multi-Version Compilation")
+
+        multiversion_pass, error = self.multiversion_compiler.verify(
+            suggestion.new_class_code,
+            suggestion.modified_original_code,
+            class_deps.package_name,
+            class_deps.class_name,
+        )
+
+        result.multiversion_pass = multiversion_pass
+        if not multiversion_pass:
+            result.status = "FAILED_MULTIVERSION"
+            result.error_message = error
+            self.logger.warning(f"Multi-version compilation failed: {error}")
+        else:
+            self.logger.info("Multi-version compilation passed")
+
+    def _run_semantic_check(
+        self,
+        suggestion: RefactoringSuggestion,
+        original_code: str,
+        class_deps: ClassDependencies,
+        result: VerificationResult,
+    ) -> None:
+        """Layer 2: Semantic verification."""
+        if not self.enable_semantic:
+            result.semantic_pass = True
+            self.logger.info("Semantic verification skipped")
+            return
+
+        self.logger.info("Layer 2: Semantic Verification")
+
+        semantic_pass, error = self.semantic_verifier.verify(
+            original_code,
+            suggestion.new_class_code,
+            suggestion.modified_original_code,
+            suggestion.cluster,
+            class_deps,
+        )
+
+        result.semantic_pass = semantic_pass
+        if not semantic_pass:
+            result.status = "FAILED_SEMANTIC"
+            result.error_message = error
+            self.logger.warning(f"Semantic verification failed: {error}")
+
+    def _run_behavioral_check(
+        self,
+        suggestion: RefactoringSuggestion,
+        original_class_file: str,
+        repo_path: str,
+        class_deps: ClassDependencies,
+        result: VerificationResult,
+        equivalence_ran: bool,
+    ) -> None:
+        """Layer 3: Behavioral verification (skipped when equivalence already ran)."""
+        if self.enable_behavioral and not equivalence_ran:
+            self.logger.info("Layer 3: Behavioral Verification")
+
+            behavioral_pass, error = self.behavioral_verifier.verify(
+                original_class_file,
+                suggestion.new_class_code,
+                suggestion.modified_original_code,
+                repo_path,
+                class_deps.package_name,
+            )
+
+            result.behavioral_pass = behavioral_pass
+            if not behavioral_pass:
+                result.status = "FAILED_BEHAVIORAL"
+                result.error_message = error
+                self.logger.warning(f"Behavioral verification failed: {error}")
+        elif self.enable_behavioral and equivalence_ran and result.equivalence_pass:
+            result.behavioral_pass = True
+            self.logger.info("Behavioral verification skipped (equivalence already verified)")
+        else:
+            result.behavioral_pass = True
+            self.logger.info("Behavioral verification skipped")
+
+    def _run_performance_check(
+        self,
+        suggestion: RefactoringSuggestion,
+        original_code: str,
+        repo_path: str,
+        class_deps: ClassDependencies,
+        result: VerificationResult,
+    ) -> None:
+        """Layer 4: Performance verification."""
+        if not self.enable_performance:
+            result.performance_pass = True
+            self.logger.info("Performance verification skipped")
+            return
+
+        self.logger.info("Layer 4: Performance Verification")
+
+        perf_pass, perf_error = self.performance_verifier.verify(
+            original_code,
+            suggestion.new_class_code,
+            suggestion.modified_original_code,
+            repo_path,
+            class_deps.class_name,
+        )
+
+        result.performance_pass = perf_pass
+        if perf_error:
+            result.performance_regression = 1.0
+
+        if not perf_pass:
+            result.status = "FAILED_PERFORMANCE"
+            result.error_message = perf_error
+            self.logger.warning(f"Performance verification failed: {perf_error}")
+        else:
+            self.logger.info("Performance verification passed (no regression)")
+
+    # ------------------------------------------------------------------
+    # Main orchestrator
+    # ------------------------------------------------------------------
+
     def verify_refactoring(
         self,
         suggestion: RefactoringSuggestion,
@@ -98,218 +311,57 @@ class VerificationEngine:
         Perform multi-layer verification on a refactoring suggestion.
 
         Verification layers:
-        0. Equivalence: Do all tests produce identical outputs? (NEW)
+        0. Equivalence: Do all tests produce identical outputs?
         1. Syntactic: Does the code compile?
+        1.5. Static Analysis: No quality regression?
+        1.7. Multi-Version: Compiles on multiple Java versions?
         2. Semantic: Is it a valid Extract Class refactoring?
         3. Behavioral: Do all tests still pass?
-
-        Args:
-            suggestion: Refactoring suggestion to verify
-            original_code: Original class source code
-            original_class_file: Path to original class file
-            repo_path: Path to repository
-            class_deps: Original class dependencies
+        4. Performance: No performance regression?
 
         Returns:
             VerificationResult with detailed status
         """
         self.logger.info(f"Verifying refactoring suggestion: {suggestion.proposed_class_name}")
-
         result = VerificationResult(suggestion_id=suggestion.cluster_id, status="PENDING")
-        equivalence_ran = False
 
-        # Layer 0: Equivalence Checking (NEW - MOST CRITICAL)
-        if self.enable_equivalence:
-            self.logger.info("Layer 0: Equivalence Checking (Behavioral Preservation)")
-            equivalence_ran = True
+        # Each layer sets fields on `result` and marks status on failure.
+        # We return early whenever a layer fails.
 
-            # Build refactored files dict (use os.path.join for cross-platform)
-            package_path = class_deps.package_name.replace(".", os.sep)
-            new_class_path = os.path.join(
-                "src", "main", "java", package_path, f"{suggestion.proposed_class_name}.java"
-            )
-            refactored_files = {
-                new_class_path: suggestion.new_class_code,
-                original_class_file: suggestion.modified_original_code,
-            }
+        equivalence_ran = self._run_equivalence_check(
+            suggestion, original_class_file, repo_path, class_deps, result
+        )
+        if result.status.startswith("FAILED"):
+            return result
 
-            equiv_result = self.equivalence_checker.check_equivalence(
-                original_class_file=original_class_file,
-                refactored_files=refactored_files,
-                repo_path=repo_path,
-                cluster=suggestion.cluster,
-                suggestion=suggestion,
-            )
+        self._run_syntactic_check(suggestion, class_deps, result)
+        if result.status.startswith("FAILED"):
+            return result
 
-            result.equivalence_pass = equiv_result.is_equivalent
-            result.tests_run = equiv_result.tests_run
+        self._run_static_analysis_check(suggestion, original_code, repo_path, class_deps, result)
+        if result.status.startswith("FAILED"):
+            return result
 
-            if not equiv_result.is_equivalent:
-                result.status = "FAILED_EQUIVALENCE"
-                result.error_message = f"Behavioral differences detected: {', '.join(equiv_result.differing_tests[:5])}"
-                self.logger.warning(f"Equivalence checking failed: {result.error_message}")
-                return result
+        self._run_multiversion_check(suggestion, class_deps, result)
+        if result.status.startswith("FAILED"):
+            return result
 
-            self.logger.info(f"✓ Equivalence verified ({equiv_result.tests_run} tests passed)")
-        else:
-            # Do not claim equivalence passed when it was never checked.
-            # Leave equivalence_pass as default False; note that it was skipped.
-            self.logger.info("Equivalence checking skipped (equivalence_pass left as False)")
+        self._run_semantic_check(suggestion, original_code, class_deps, result)
+        if result.status.startswith("FAILED"):
+            return result
 
-        # Layer 1: Syntactic Verification
-        if self.enable_syntactic:
-            self.logger.info("Layer 1: Syntactic Verification")
+        self._run_behavioral_check(
+            suggestion, original_class_file, repo_path, class_deps, result, equivalence_ran
+        )
+        if result.status.startswith("FAILED"):
+            return result
 
-            syntactic_pass, error = self.syntactic_verifier.verify(
-                suggestion.new_class_code,
-                suggestion.modified_original_code,
-                class_deps.package_name,
-            )
+        self._run_performance_check(suggestion, original_code, repo_path, class_deps, result)
+        if result.status.startswith("FAILED"):
+            return result
 
-            result.syntactic_pass = syntactic_pass
-
-            if not syntactic_pass:
-                result.status = "FAILED_SYNTACTIC"
-                result.error_message = error
-                self.logger.warning(f"Syntactic verification failed: {error}")
-                return result
-        else:
-            result.syntactic_pass = True
-            self.logger.info("Syntactic verification skipped")
-
-        # Layer 1.5: Static Analysis (NEW - Code Quality)
-        if self.enable_static_analysis:
-            self.logger.info("Layer 1.5: Static Analysis (Code Quality)")
-
-            quality_pass, error = self.static_analysis_verifier.verify(
-                original_code,
-                suggestion.new_class_code,
-                suggestion.modified_original_code,
-                repo_path,
-                class_deps.package_name,
-            )
-
-            result.quality_pass = quality_pass
-
-            if not quality_pass:
-                result.status = "FAILED_QUALITY"
-                result.error_message = error
-                self.logger.warning(f"Static analysis failed: {error}")
-                return result
-
-            self.logger.info("✓ Static analysis passed (no quality regression)")
-        else:
-            result.quality_pass = True
-            self.logger.info("Static analysis skipped")
-
-        # Layer 1.7: Multi-Version Compilation (NEW)
-        if self.enable_multiversion:
-            self.logger.info("Layer 1.7: Multi-Version Compilation")
-
-            multiversion_pass, error = self.multiversion_compiler.verify(
-                suggestion.new_class_code,
-                suggestion.modified_original_code,
-                class_deps.package_name,
-                class_deps.class_name,
-            )
-
-            result.multiversion_pass = multiversion_pass
-
-            if not multiversion_pass:
-                result.status = "FAILED_MULTIVERSION"
-                result.error_message = error
-                self.logger.warning(f"Multi-version compilation failed: {error}")
-                return result
-
-            self.logger.info("✓ Multi-version compilation passed")
-        else:
-            result.multiversion_pass = True
-            self.logger.info("Multi-version compilation skipped")
-
-        # Layer 2: Semantic Verification
-        if self.enable_semantic:
-            self.logger.info("Layer 2: Semantic Verification")
-
-            semantic_pass, error = self.semantic_verifier.verify(
-                original_code,
-                suggestion.new_class_code,
-                suggestion.modified_original_code,
-                suggestion.cluster,
-                class_deps,
-            )
-
-            result.semantic_pass = semantic_pass
-
-            if not semantic_pass:
-                result.status = "FAILED_SEMANTIC"
-                result.error_message = error
-                self.logger.warning(f"Semantic verification failed: {error}")
-                return result
-        else:
-            result.semantic_pass = True
-            self.logger.info("Semantic verification skipped")
-
-        # Layer 3: Behavioral Verification
-        # Skip if equivalence checking already passed - they both run tests,
-        # so this avoids redundant test execution
-        if self.enable_behavioral and not equivalence_ran:
-            # Only run behavioral if equivalence wasn't run or didn't pass
-            self.logger.info("Layer 3: Behavioral Verification")
-
-            behavioral_pass, error = self.behavioral_verifier.verify(
-                original_class_file,
-                suggestion.new_class_code,
-                suggestion.modified_original_code,
-                repo_path,
-                class_deps.package_name,
-            )
-
-            result.behavioral_pass = behavioral_pass
-
-            if not behavioral_pass:
-                result.status = "FAILED_BEHAVIORAL"
-                result.error_message = error
-                self.logger.warning(f"Behavioral verification failed: {error}")
-                return result
-        elif self.enable_behavioral and equivalence_ran and result.equivalence_pass:
-            # Equivalence already verified behavior - skip redundant check
-            result.behavioral_pass = True
-            self.logger.info("Behavioral verification skipped (equivalence already verified)")
-        else:
-            result.behavioral_pass = True
-            self.logger.info("Behavioral verification skipped")
-
-        # Layer 4: Performance Verification (NEW)
-        if self.enable_performance:
-            self.logger.info("Layer 4: Performance Verification")
-
-            perf_pass, perf_error = self.performance_verifier.verify(
-                original_code,
-                suggestion.new_class_code,
-                suggestion.modified_original_code,
-                repo_path,
-                class_deps.class_name,
-            )
-
-            result.performance_pass = perf_pass
-            if perf_error:
-                result.performance_regression = 1.0
-
-            if not perf_pass:
-                result.status = "FAILED_PERFORMANCE"
-                result.error_message = perf_error
-                self.logger.warning(f"Performance verification failed: {perf_error}")
-                return result
-
-            self.logger.info("✓ Performance verification passed (no regression)")
-        else:
-            result.performance_pass = True
-            self.logger.info("Performance verification skipped")
-
-        # All layers passed
         result.status = "PASSED_ALL"
         self.logger.info("All verification layers PASSED")
-
         return result
 
     def check_prerequisites(self) -> dict:

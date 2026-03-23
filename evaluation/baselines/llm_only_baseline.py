@@ -4,7 +4,7 @@ import re
 import xml.etree.ElementTree as ET
 from types import SimpleNamespace
 
-from genec.core.llm_interface import RefactoringSuggestion
+from genec.core.models import RefactoringSuggestion
 from genec.llm import AnthropicClientWrapper, LLMConfig, LLMRequestFailed, LLMServiceUnavailable
 from genec.utils.logging_utils import get_logger
 

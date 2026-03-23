@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 import numpy as np
 from scipy import stats
 
-from genec.core.llm_interface import RefactoringSuggestion
+from genec.core.models import RefactoringSuggestion
 from genec.evaluation.ground_truth_builder import ExtractClassRefactoring
 from genec.utils.logging_utils import get_logger
 

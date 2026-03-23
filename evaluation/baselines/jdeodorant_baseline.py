@@ -3,7 +3,7 @@
 from types import SimpleNamespace
 
 from genec.core.dependency_analyzer import ClassDependencies, DependencyAnalyzer
-from genec.core.llm_interface import RefactoringSuggestion
+from genec.core.models import RefactoringSuggestion
 from genec.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)

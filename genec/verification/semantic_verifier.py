@@ -4,7 +4,7 @@ import re
 import tempfile
 from pathlib import Path
 
-from genec.core.cluster_detector import Cluster
+from genec.core.models import Cluster
 from genec.core.dependency_analyzer import ClassDependencies
 from genec.parsers.java_parser import JavaParser
 from genec.utils.logging_utils import get_logger

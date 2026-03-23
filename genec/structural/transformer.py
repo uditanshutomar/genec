@@ -19,7 +19,7 @@ import textwrap
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from genec.core.cluster_detector import Cluster
+from genec.core.models import Cluster
 from genec.core.dependency_analyzer import ClassDependencies
 from genec.utils.logging_utils import get_logger
 

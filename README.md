@@ -7,12 +7,19 @@ A hybrid framework for automated Extract Class refactoring in Java that combines
 - **Static Dependency Analysis**: Parses Java AST to extract method calls and field accesses
 - **Evolutionary Coupling Mining**: Analyzes Git history to identify co-changing methods
 - **Graph Fusion**: Combines static and evolutionary dependencies into unified graph
-- **Cluster Detection**: Uses Louvain algorithm to identify cohesive method groups
+- **Cluster Detection**: Uses Leiden algorithm to identify cohesive method groups
 - **LLM-Guided Refactoring**: Generates refactoring suggestions using Claude Sonnet 4
 - **Multi-Layer Verification**: Validates refactorings syntactically, semantically, and behaviorally
 - **Transactional Application**: Applies changes atomically with automatic rollback on failure
 - **Git Integration**: Creates feature branches and atomic commits for each refactoring
 - **Dry-Run & Preview**: Generates unified diffs and previews before applying changes
+
+## Prerequisites
+
+- **Python 3.10+**
+- **Java 17+** (for the JDT code generation wrapper)
+- **Git** (required for evolutionary coupling analysis)
+- **Maven** (optional, needed for behavioral verification)
 
 ## Installation
 
@@ -27,6 +34,8 @@ Set your Anthropic API key:
 ```bash
 export ANTHROPIC_API_KEY='your-api-key-here'
 ```
+
+Or pass it directly via `--api-key` on the command line.
 
 Edit `config/config.yaml` to customize parameters.
 
@@ -61,7 +70,48 @@ refactoring_application:
 
 ## Usage
 
-### Basic Usage
+### Command Line
+
+```bash
+# Basic usage
+genec --target path/to/Class.java --repo path/to/repo
+
+# Preview changes without applying them
+genec --target path/to/Class.java --repo path/to/repo --dry-run
+
+# JSON output (for tool integration)
+genec --target path/to/Class.java --repo path/to/repo --json
+
+# Save reports and use LLM cache for reproducibility
+genec --target path/to/Class.java --repo path/to/repo \
+  --report-dir ./reports --cache-dir ./cache --use-cache
+```
+
+#### CLI Flags
+
+| Flag | Description |
+|------|-------------|
+| `--target` | **(required)** Path to the Java class file to refactor |
+| `--repo` | **(required)** Path to the repository root |
+| `--config` | Path to config file (default: `config/config.yaml`) |
+| `--dry-run` | Show what would be applied without making changes |
+| `--json` | Output results in JSON format |
+| `--api-key` | Anthropic API key (overrides `ANTHROPIC_API_KEY` env var) |
+| `--report-dir` | Directory to save pipeline reports |
+| `--cache-dir` | Directory for LLM response cache (reproducibility) |
+| `--use-cache` | Use cached LLM responses if available |
+| `--max-suggestions` | Maximum number of suggestions (default: 5) |
+| `--apply-all` | Automatically apply all verified refactorings |
+| `--verbose` | Enable DEBUG-level logging |
+| `--min-cluster-size` | Override minimum cluster size |
+| `--max-cluster-size` | Override maximum cluster size |
+| `--min-cohesion` | Override minimum cohesion threshold |
+| `--check-coverage` | Verify test coverage of extracted classes (requires JaCoCo) |
+| `--no-build` | Disable automatic building of dependencies |
+| `--websocket PORT` | Enable WebSocket progress server on the given port |
+| `--multi-file` | Enable multi-file dependency analysis mode |
+
+### Python API
 
 ```python
 from genec.core.pipeline import GenECPipeline
@@ -75,26 +125,12 @@ result = pipeline.run_full_pipeline(
     repo_path='/path/to/git/repo'
 )
 
-# View suggestions
-for suggestion in result.suggestions:
+# View verified suggestions
+for suggestion in result.verified_suggestions:
     print(f"New Class: {suggestion.proposed_class_name}")
     print(f"Rationale: {suggestion.rationale}")
+    print(f"Confidence: {suggestion.confidence_score}")
     print(f"Code:\n{suggestion.new_class_code}")
-```
-
-### Command Line
-
-```bash
-# Run pipeline on a single class
-python scripts/run_pipeline.py \
-  --class-file path/to/Class.java \
-  --repo-path path/to/repo \
-  --config config/config.yaml
-
-# Evaluate on ground truth dataset
-python scripts/evaluate_all.py \
-  --ground-truth data/ground_truth/refactorings.json \
-  --output data/outputs/evaluation.json
 ```
 
 ## Architecture
@@ -112,7 +148,7 @@ genec/
 │   ├── dependency_analyzer.py    # Static Java analysis
 │   ├── evolutionary_miner.py     # Git history mining
 │   ├── graph_builder.py          # Graph construction & fusion
-│   ├── cluster_detector.py       # Louvain clustering
+│   ├── cluster_detector.py       # Leiden clustering
 │   ├── llm_interface.py          # Claude API integration
 │   ├── verification_engine.py    # Multi-layer verification
 │   └── pipeline.py               # Main orchestration
@@ -143,7 +179,7 @@ genec/
 
 1.  **AnalysisStage**: Extract method calls, field accesses from Java AST and analyze Git history for co-changing methods.
 2.  **GraphProcessingStage**: Create and fuse static + evolutionary graphs, calculate metrics, and export data.
-3.  **ClusteringStage**: Apply Louvain algorithm, filter and rank clusters.
+3.  **ClusteringStage**: Apply Leiden algorithm, filter and rank clusters.
     - **Extraction Validation**: Static analysis for abstract methods, inner classes, private dependencies
     - **Auto-fix**: Iterative transitive closure for missing private method dependencies
     - **LLM Semantic Validation**: Intelligent override for borderline cases (confidence >= 0.7)

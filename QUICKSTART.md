@@ -2,6 +2,13 @@
 
 Get up and running with GenEC in 5 minutes.
 
+## Prerequisites
+
+- **Python 3.10+**
+- **Java 17+** (for the JDT code generation wrapper)
+- **Git** (required for evolutionary coupling analysis)
+- **Maven** (optional, for behavioral verification)
+
 ## Step 1: Installation (1 minute)
 
 ```bash
@@ -9,8 +16,8 @@ cd genec
 pip install -e .
 ```
 
-This installs all dependencies:
-- javalang, gitpython, networkx, python-louvain
+This installs all dependencies including:
+- javalang, gitpython, networkx, leidenalg
 - anthropic, numpy, pandas, scikit-learn
 - matplotlib, pyyaml, pytest
 
@@ -25,12 +32,31 @@ Get your API key from: https://console.anthropic.com/
 ## Step 3: Verify Installation (30 seconds)
 
 ```bash
-python -c "from genec.core.pipeline import GenECPipeline; print('GenEC installed successfully!')"
+genec --version
 ```
+
+You should see `GenEC 1.0.0`.
 
 ## Step 4: Run on Example (3 minutes)
 
-### Option A: Use Python API
+### Option A: Use Command Line (recommended)
+
+```bash
+# Basic run
+genec --target path/to/YourClass.java --repo path/to/git/repo
+
+# Preview only (no changes applied)
+genec --target path/to/YourClass.java --repo path/to/git/repo --dry-run
+
+# JSON output for tool integration
+genec --target path/to/YourClass.java --repo path/to/git/repo --json
+
+# Limit to 3 suggestions with verbose logging
+genec --target path/to/YourClass.java --repo path/to/git/repo \
+  --max-suggestions 3 --verbose
+```
+
+### Option B: Use Python API
 
 ```python
 from genec.core.pipeline import GenECPipeline
@@ -44,31 +70,18 @@ result = pipeline.run_full_pipeline(
     repo_path='path/to/git/repo'
 )
 
-# View suggestions
+# View verified suggestions
 for suggestion in result.verified_suggestions:
     print(f"\n{'='*60}")
     print(f"Suggested Class: {suggestion.proposed_class_name}")
+    print(f"Confidence: {suggestion.confidence_score}")
     print(f"{'='*60}")
     print(f"Rationale: {suggestion.rationale}")
-    print(f"\nMembers to extract:")
-    for member in suggestion.cluster.member_names:
-        print(f"  - {member}")
+    if suggestion.cluster:
+        print(f"\nMembers to extract:")
+        for member in suggestion.cluster.member_names:
+            print(f"  - {member}")
 ```
-
-### Option B: Use Command Line
-
-```bash
-python scripts/run_pipeline.py \
-  --class-file path/to/YourClass.java \
-  --repo-path path/to/git/repo \
-  --max-suggestions 3 \
-  --output-dir ./refactorings
-```
-
-Output files will be saved in `./refactorings/`:
-- `SuggestedClassName.java` - New extracted class
-- `OriginalClass_modified_1.java` - Updated original class
-- `genec.log` - Execution log
 
 ## What Happens?
 
@@ -86,8 +99,8 @@ GenEC performs 6 stages:
    - Creates dependency graphs
    - Fuses static + evolutionary data
 
-4. **Cluster Detection** 
-   - Applies Louvain algorithm
+4. **Cluster Detection**
+   - Applies Leiden algorithm
    - Identifies cohesive method groups
 
 5. **LLM Generation** 
@@ -105,19 +118,20 @@ Edit `config/config.yaml` to customize:
 
 ```yaml
 clustering:
-  min_cluster_size: 3      # Minimum methods per cluster
-  max_cluster_size: 15     # Maximum methods per cluster
-  min_cohesion: 0.5        # Minimum cohesion threshold
+  algorithm: leiden          # Community detection algorithm
+  min_cluster_size: 3        # Minimum methods per cluster
+  max_cluster_size: 30       # Maximum methods per cluster
+  min_cohesion: 0.35         # Minimum cohesion threshold
 
 llm:
   model: claude-sonnet-4-20250514
   max_tokens: 4000
-  temperature: 0.3
+  temperature: 0.2
 
 verification:
-  enable_syntactic: true   # Compile check
-  enable_semantic: true    # Transformation check
-  enable_behavioral: false # Test suite check (slow)
+  enable_syntactic: true     # Compile check
+  enable_semantic: true      # Transformation check
+  enable_behavioral: true    # Test suite check
 ```
 
 ## Understanding Output
@@ -176,8 +190,7 @@ git commit -m "Initial commit"
 
 - **Full Documentation**: [README.md](README.md)
 - **Detailed Usage**: [USAGE.md](USAGE.md)
-- **Complete Example**: [EXAMPLE.md](EXAMPLE.md)
-- **Project Details**: [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)
+- **Architecture Guide**: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ## Example Output
 

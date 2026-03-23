@@ -7,7 +7,7 @@ the semantic relationships between methods, abstract dependencies, and design pa
 
 from dataclasses import dataclass
 
-from genec.core.cluster_detector import Cluster
+from genec.core.models import Cluster
 from genec.core.dependency_analyzer import ClassDependencies
 from genec.llm import AnthropicClientWrapper, LLMRequestFailed, LLMServiceUnavailable
 from genec.utils.logging_utils import get_logger

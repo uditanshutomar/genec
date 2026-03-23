@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 from genec.core.stages.refactoring_stage import RefactoringStage
 from genec.core.stages.base_stage import PipelineContext
 from genec.core.pipeline_recorder import PipelineRecorder
-from genec.core.verification_engine import VerificationResult
+from genec.core.models import VerificationResult
 
 
 def _make_suggestion(name, new_code="class Foo {}", modified_code="class Bar {}", cluster=None):

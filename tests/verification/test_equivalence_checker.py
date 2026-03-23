@@ -38,7 +38,7 @@ def repo(tmp_path):
 @pytest.fixture
 def cluster():
     """Create a minimal Cluster for testing."""
-    from genec.core.cluster_detector import Cluster
+    from genec.core.models import Cluster
 
     return Cluster(id=0, member_names=["methodA", "fieldX"])
 
@@ -46,7 +46,7 @@ def cluster():
 @pytest.fixture
 def suggestion(cluster):
     """Create a minimal RefactoringSuggestion for testing."""
-    from genec.core.llm_interface import RefactoringSuggestion
+    from genec.core.models import RefactoringSuggestion
 
     return RefactoringSuggestion(
         cluster_id=0,

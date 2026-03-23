@@ -14,7 +14,7 @@ Key features:
 
 import logging
 
-from genec.core.cluster_detector import Cluster
+from genec.core.models import Cluster
 from genec.core.dependency_analyzer import ClassDependencies, FieldInfo, MethodInfo
 
 logger = logging.getLogger(__name__)

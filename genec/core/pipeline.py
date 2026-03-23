@@ -7,13 +7,14 @@ import sys
 
 import yaml
 
-from genec.core.cluster_detector import Cluster, ClusterDetector
+from genec.core.cluster_detector import ClusterDetector
 from genec.core.dependency_analyzer import ClassDependencies
 from genec.core.evolutionary_miner import EvolutionaryMiner
 from genec.core.graph_builder import GraphBuilder
 from genec.core.hybrid_dependency_analyzer import HybridDependencyAnalyzer
 from genec.core.jdt_code_generator import JDTCodeGenerator
-from genec.core.llm_interface import LLMInterface, RefactoringSuggestion
+from genec.core.llm_interface import LLMInterface
+from genec.core.models import Cluster, RefactoringSuggestion, VerificationResult
 from genec.core.pipeline_recorder import PipelineRecorder
 from genec.core.pipeline_runner import PipelineRunner
 from genec.core.refactoring_applicator import RefactoringApplication, RefactoringApplicator
@@ -25,7 +26,7 @@ from genec.core.stages.clustering_stage import ClusteringStage
 from genec.core.stages.graph_processing_stage import GraphProcessingStage
 from genec.core.stages.naming_stage import NamingStage
 from genec.core.stages.refactoring_stage import RefactoringStage
-from genec.core.verification_engine import VerificationEngine, VerificationResult
+from genec.core.verification_engine import VerificationEngine
 from genec.metrics.cohesion_calculator import CohesionCalculator
 from genec.metrics.coupling_calculator import CouplingCalculator
 from genec.structural import StructuralTransformer, StructuralTransformResult

@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from genec.core.cluster_detector import Cluster
+from genec.core.models import Cluster
 from genec.core.dependency_analyzer import ClassDependencies, FieldInfo, MethodInfo
 from genec.core.jdt_code_generator import (
     CodeGenerationError,

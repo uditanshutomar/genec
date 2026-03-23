@@ -1,6 +1,6 @@
 """Core GenEC modules."""
 
-from genec.core.cluster_detector import Cluster, ClusterDetector
+from genec.core.cluster_detector import ClusterDetector
 from genec.core.dependency_analyzer import (
     ClassDependencies,
     DependencyAnalyzer,
@@ -9,9 +9,10 @@ from genec.core.dependency_analyzer import (
 )
 from genec.core.evolutionary_miner import EvolutionaryData, EvolutionaryMiner
 from genec.core.graph_builder import GraphBuilder
-from genec.core.llm_interface import LLMInterface, RefactoringSuggestion
+from genec.core.llm_interface import LLMInterface
+from genec.core.models import Cluster, QualityTier, RefactoringSuggestion, VerificationResult
 from genec.core.pipeline import GenECPipeline, PipelineResult
-from genec.core.verification_engine import VerificationEngine, VerificationResult
+from genec.core.verification_engine import VerificationEngine
 
 __all__ = [
     "DependencyAnalyzer",
@@ -23,6 +24,7 @@ __all__ = [
     "GraphBuilder",
     "ClusterDetector",
     "Cluster",
+    "QualityTier",
     "LLMInterface",
     "RefactoringSuggestion",
     "VerificationEngine",
