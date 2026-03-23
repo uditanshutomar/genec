@@ -1,4 +1,9 @@
-"""JDeodorant-style baseline: field-based agglomerative clustering."""
+"""Field-sharing heuristic baseline inspired by JDeodorant's agglomerative clustering approach.
+
+Uses union-find on shared field access patterns to group methods into
+candidate Extract Class clusters.  This is a simplified reimplementation
+of the core algorithm, not the original Eclipse plugin.
+"""
 
 from types import SimpleNamespace
 
@@ -9,12 +14,13 @@ from genec.utils.logging_utils import get_logger
 logger = get_logger(__name__)
 
 
-class JDeodorantBaseline:
-    """Baseline that groups methods by shared field access (agglomerative approach).
+class FieldSharingBaseline:
+    """Field-sharing heuristic baseline inspired by JDeodorant's agglomerative clustering approach.
 
-    Two methods are connected if they access the same field.  Transitive
-    closure is used to merge connected components into clusters, which
-    are then filtered by size.
+    Uses union-find on shared field access patterns.  Two methods are
+    connected if they access the same field.  Transitive closure is used
+    to merge connected components into clusters, which are then filtered
+    by size.
     """
 
     def __init__(self, min_cluster_size: int = 3, max_cluster_size: int = 15):
@@ -132,6 +138,10 @@ class JDeodorantBaseline:
             suggestions.append(suggestion)
 
         self.logger.info(
-            "JDeodorant baseline produced %d suggestions", len(suggestions)
+            "Field-sharing baseline produced %d suggestions", len(suggestions)
         )
         return suggestions
+
+
+# Backward-compatible alias
+JDeodorantBaseline = FieldSharingBaseline

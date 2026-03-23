@@ -177,9 +177,12 @@ def main():
     args = parser.parse_args()
 
     # Load aggregate results
+    # Try results-dir directly first, then fall back to live_evaluation subdir
     agg_file = args.results_dir / "aggregate_results.json"
     if not agg_file.exists():
-        logger.error("aggregate_results.json not found in %s", args.results_dir)
+        agg_file = args.results_dir / "live_evaluation" / "aggregate_results.json"
+    if not agg_file.exists():
+        logger.error("aggregate_results.json not found in %s or %s/live_evaluation/", args.results_dir, args.results_dir)
         return
 
     with open(agg_file) as f:

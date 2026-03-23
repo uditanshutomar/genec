@@ -1,20 +1,36 @@
-# GenEC Evaluation & Reproducibility Package
+# GenEC Evaluation
 
-This directory contains the complete evaluation infrastructure for the GenEC paper:
-"GenEC: A Hybrid Framework for Safe and Explainable Extract Class Refactoring"
+## Primary Benchmark: 23 God Classes from 6 Open-Source Projects
 
-## Directory Structure
+Results in `results/live_evaluation/aggregate_results.json`:
+- 23 classes from Apache Commons (IO, Lang, Collections, Text, Math) and JFreeChart
+- 506 total clusters detected, 76 post-filter suggestions
+- **71/76 verified (93.4%)** — compilation + semantic + behavioral tests
+- Average runtime: 57s per class
 
-```
-evaluation/
-  benchmarks/          # Benchmark class specifications
-  baselines/           # Baseline implementations (LLM-only, JDeodorant, Random)
-  configs/             # Ablation study configuration variants
-  ground_truth/        # RefactoringMiner ground truth data
-  results/             # Generated results (JSON + LaTeX tables)
-  scripts/             # Evaluation and analysis scripts
-  user_study/          # Developer study materials
-```
+## Baselines
+
+Run with `scripts/run_baselines.py` on the same 23 classes:
+- **Field-sharing heuristic** (inspired by JDeodorant's approach): 37 suggestions
+- **Random partition**: 462 suggestions
+- **LLM-only** (no graph analysis): run via `LLMOnlyBaseline` (requires `ANTHROPIC_API_KEY`)
+
+Note: The field-sharing baseline is a reimplementation of JDeodorant's core
+agglomerative clustering algorithm, not the original Eclipse plugin.
+
+## Ablation Study
+
+Configs in `configs/`: full, no_evolutionary, no_llm, no_verification, high_static
+
+## Historical Results
+
+Pre-optimization results from earlier development are in `results/historical/`.
+These used weaker verification (syntactic-only) and are not comparable to the
+current results.
+
+## User Study
+
+Protocol in `user_study/study_protocol.md`. Participant results pending.
 
 ## Prerequisites
 
@@ -32,32 +48,27 @@ evaluation/
 ./evaluation/benchmarks/setup_benchmarks.sh
 ```
 
-### 2. Run full evaluation (RQ1)
+### 2. Run full evaluation
 ```bash
-python evaluation/scripts/run_full_evaluation.py \
-  --benchmark-file evaluation/benchmarks/benchmark_classes.json \
-  --output-dir evaluation/results
+python evaluation/scripts/run_live_evaluation.py
 ```
 
-### 3. Run ablation study (RQ2)
+### 3. Run baselines
 ```bash
-python evaluation/scripts/run_ablation.py \
-  --benchmark-file evaluation/benchmarks/benchmark_classes.json \
-  --output-dir evaluation/results \
-  --max-classes 15
+python evaluation/scripts/run_baselines.py
 ```
 
 ### 4. Compute statistics
 ```bash
 python evaluation/scripts/compute_statistics.py \
-  --results-dir evaluation/results \
+  --results-dir evaluation/results/live_evaluation \
   --ground-truth-file evaluation/ground_truth/refactoring_miner_results.json
 ```
 
 ### 5. Generate LaTeX tables
 ```bash
 python evaluation/scripts/generate_latex_tables.py \
-  --results-dir evaluation/results \
+  --results-dir evaluation/results/live_evaluation \
   --output-dir evaluation/results/tables
 ```
 
@@ -65,9 +76,9 @@ python evaluation/scripts/generate_latex_tables.py \
 
 | RQ | Question | Script |
 |----|----------|--------|
-| RQ1 | Semantic coherence vs baselines | `run_full_evaluation.py` |
+| RQ1 | Verification rate and extraction quality | `run_live_evaluation.py` |
 | RQ2 | Component contributions (ablation) | `run_ablation.py` |
-| RQ3 | Verification effectiveness | `run_full_evaluation.py` (verification stats) |
+| RQ3 | Baseline comparison | `run_baselines.py` |
 | RQ4 | Developer perception | `user_study/analyze_results.py` |
 
 ## Configuration
@@ -76,11 +87,10 @@ python evaluation/scripts/generate_latex_tables.py \
 - **Temperature**: 0.2 (for naming consistency)
 - **Graph fusion**: alpha=0.6 (60% static, 40% evolutionary)
 - **Clustering**: Leiden algorithm, resolution=0.5, min_size=3
-- **Benchmark**: MLCQ dataset (50 God Classes from 12 Apache projects)
 
 ## API Costs
 
 Approximate costs per full evaluation run:
-- Full evaluation (50 classes): ~$15-25 in Claude API calls
+- Full evaluation (23 classes): ~$8-12 in Claude API calls
 - Ablation (15 classes x 5 variants): ~$20-30
-- LLM-only baseline (50 classes): ~$10-15
+- LLM-only baseline (23 classes): ~$5-10

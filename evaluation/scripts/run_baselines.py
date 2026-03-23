@@ -2,13 +2,15 @@
 """Run baselines on the same benchmark classes as GenEC."""
 
 import json
+import os
 import sys
 import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from evaluation.baselines.jdeodorant_baseline import JDeodorantBaseline
+from evaluation.baselines.jdeodorant_baseline import FieldSharingBaseline
+from evaluation.baselines.llm_only_baseline import LLMOnlyBaseline
 from evaluation.baselines.random_baseline import RandomBaseline
 
 # Import BENCHMARK from run_live_evaluation
@@ -42,11 +44,18 @@ def main():
     output_dir = Path("evaluation/results")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    jdeodorant = JDeodorantBaseline()
+    field_sharing = FieldSharingBaseline()
     random_bl = RandomBaseline(seed=42)
 
-    jd_results = []
+    # LLM-only baseline requires an API key
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    llm_bl = LLMOnlyBaseline(api_key=api_key) if api_key else None
+    if not api_key:
+        print("WARNING: ANTHROPIC_API_KEY not set — skipping LLM-only baseline")
+
+    fs_results = []
     rand_results = []
+    llm_results = []
 
     for entry in BENCHMARK:
         class_file = str(Path(entry["repo_path"]) / entry["class_file"])
@@ -58,19 +67,24 @@ def main():
 
         print(f"Running baselines on {name}...")
 
-        jd_result = run_baseline(jdeodorant, class_file, name)
-        jd_results.append(jd_result)
-        print(f"  JDeodorant: {jd_result.get('suggestions_total', 0)} suggestions")
+        fs_result = run_baseline(field_sharing, class_file, name)
+        fs_results.append(fs_result)
+        print(f"  Field-sharing: {fs_result.get('suggestions_total', 0)} suggestions")
 
         rand_result = run_baseline(random_bl, class_file, name)
         rand_results.append(rand_result)
         print(f"  Random: {rand_result.get('suggestions_total', 0)} suggestions")
 
+        if llm_bl is not None:
+            llm_result = run_baseline(llm_bl, class_file, name)
+            llm_results.append(llm_result)
+            print(f"  LLM-only: {llm_result.get('suggestions_total', 0)} suggestions")
+
     results = {
-        "jdeodorant": {
-            "total_classes": len(jd_results),
-            "total_suggestions": sum(r.get("suggestions_total", 0) for r in jd_results),
-            "per_class": jd_results,
+        "field_sharing": {
+            "total_classes": len(fs_results),
+            "total_suggestions": sum(r.get("suggestions_total", 0) for r in fs_results),
+            "per_class": fs_results,
         },
         "random": {
             "total_classes": len(rand_results),
@@ -78,6 +92,13 @@ def main():
             "per_class": rand_results,
         },
     }
+
+    if llm_results:
+        results["llm_only"] = {
+            "total_classes": len(llm_results),
+            "total_suggestions": sum(r.get("suggestions_total", 0) for r in llm_results),
+            "per_class": llm_results,
+        }
 
     out_file = output_dir / "baseline_results.json"
     out_file.write_text(json.dumps(results, indent=2, default=str))
