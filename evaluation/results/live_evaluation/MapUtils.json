@@ -2,68 +2,8 @@
   "project": "commons-collections",
   "class_name": "MapUtils",
   "class_file": "src/main/java/org/apache/commons/collections4/MapUtils.java",
-  "status": "success",
-  "execution_time": 58.1,
-  "original_metrics": {
-    "lcom5": 1.0,
-    "tcc": 0.0222,
-    "cbo": 0,
-    "num_methods": 94,
-    "num_fields": 2
-  },
-  "clusters_found": 31,
-  "clusters_filtered": 7,
-  "suggestions_total": 7,
-  "suggestions_verified": 7,
-  "suggestions": [
-    {
-      "name": "DebugPrintGroup",
-      "methods": 6,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "PopulateMapOperations",
-      "methods": 4,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "GetObjectGroup",
-      "methods": 3,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "MultiValueMapOperations",
-      "methods": 3,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "GetByteGroup",
-      "methods": 24,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "ApplyDefaultFunctionGroup",
-      "methods": 54,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "ApplyDefaultValueGroup",
-      "methods": 54,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    }
-  ]
+  "status": "error",
+  "error": "[Errno 32] Broken pipe",
+  "traceback": "e \"/Users/uditanshutomar/genec/genec/core/pipeline.py\", line 450, in run_full_pipeline\n    self._emit_progress(stage=0, total=6, message=\"Initializing pipeline\")\n    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/uditanshutomar/genec/genec/core/pipeline.py\", line 417, in _emit_progress\n    print(json.dumps(progress_event), file=sys.stderr, flush=True)\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nBrokenPipeError: [Errno 32] Broken pipe\n",
+  "execution_time": 0
 }

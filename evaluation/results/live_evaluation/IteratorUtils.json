@@ -2,54 +2,8 @@
   "project": "commons-collections",
   "class_name": "IteratorUtils",
   "class_file": "src/main/java/org/apache/commons/collections4/IteratorUtils.java",
-  "status": "success",
-  "execution_time": 58.7,
-  "original_metrics": {
-    "lcom5": 1.0,
-    "tcc": 0.0077,
-    "cbo": 0,
-    "num_methods": 78,
-    "num_fields": 6
-  },
-  "clusters_found": 65,
-  "clusters_filtered": 5,
-  "suggestions_total": 5,
-  "suggestions_verified": 5,
-  "suggestions": [
-    {
-      "name": "EmptyIteratorGroup",
-      "methods": 3,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "ContainsGroup",
-      "methods": 3,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "AddAllGroup",
-      "methods": 8,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "FirstGroup",
-      "methods": 3,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "ToStringOperations",
-      "methods": 3,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    }
-  ]
+  "status": "error",
+  "error": "[Errno 32] Broken pipe",
+  "traceback": "e \"/Users/uditanshutomar/genec/genec/core/pipeline.py\", line 450, in run_full_pipeline\n    self._emit_progress(stage=0, total=6, message=\"Initializing pipeline\")\n    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/uditanshutomar/genec/genec/core/pipeline.py\", line 417, in _emit_progress\n    print(json.dumps(progress_event), file=sys.stderr, flush=True)\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nBrokenPipeError: [Errno 32] Broken pipe\n",
+  "execution_time": 0
 }

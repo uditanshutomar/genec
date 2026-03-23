@@ -3,7 +3,7 @@
   "class_name": "SystemUtils",
   "class_file": "src/main/java/org/apache/commons/lang3/SystemUtils.java",
   "status": "success",
-  "execution_time": 33.9,
+  "execution_time": 50.9,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.0435,
@@ -17,25 +17,25 @@
   "suggestions_verified": 3,
   "suggestions": [
     {
-      "name": "GetOsMatchesGroup",
+      "name": "OperatingSystemMatcher",
       "methods": 5,
       "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit responsible for matching operating system names and versions against specified criteria. They share OS system properties and implement progressively sophisticated ma"
     },
     {
-      "name": "GetJavaVersionMatchesGroup",
+      "name": "JavaVersionChecker",
       "methods": 2,
       "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit responsible for checking Java version compatibility against specified requirements. They operate exclusively on Java version data and provide focused comparison func"
     },
     {
-      "name": "IsJavaVersionAtOperations",
+      "name": "JavaVersionMatcher",
       "methods": 2,
       "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive unit focused on matching Java version strings against prefixes. Extracting them into a JavaVersionMatcher class isolates version detection logic and improves reusability "
     }
   ]
 }

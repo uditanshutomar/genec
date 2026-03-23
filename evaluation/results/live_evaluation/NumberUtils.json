@@ -3,7 +3,7 @@
   "class_name": "NumberUtils",
   "class_file": "src/main/java/org/apache/commons/lang3/math/NumberUtils.java",
   "status": "success",
-  "execution_time": 55.3,
+  "execution_time": 82.2,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.05,
@@ -17,39 +17,39 @@
   "suggestions_verified": 5,
   "suggestions": [
     {
-      "name": "ToDoubleOperations",
-      "methods": 4,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "CompareOperations",
-      "methods": 4,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "MaxGroup",
-      "methods": 25,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "CreateBigDecimalGroup",
+      "name": "NumberParser",
       "methods": 14,
       "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive parsing unit responsible for converting string representations into appropriate numeric types and validating numeric string formats. They share complex parsing logic, han"
     },
     {
-      "name": "ToScaledBigDecimalOperations",
+      "name": "BigDecimalConverter",
       "methods": 9,
       "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive conversion unit that transforms various numeric types into scaled BigDecimal objects with consistent rounding behavior. They share common scaling defaults, null-safety ha"
+    },
+    {
+      "name": "DoubleConverter",
+      "methods": 4,
+      "verified": true,
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive unit responsible for safely converting various input types to double values with fallback handling. They share the common responsibility of type conversion with null safe"
+    },
+    {
+      "name": "NumericComparator",
+      "methods": 4,
+      "verified": true,
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive unit focused exclusively on comparing primitive numeric types using standardized three-way comparison semantics. Extracting them into a NumericComparator class isolates c"
+    },
+    {
+      "name": "NumberComparator",
+      "methods": 25,
+      "verified": true,
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive unit focused on comparing numeric values to find minimum and maximum values across different primitive types. Extracting them into a NumberComparator class improves code "
     }
   ]
 }

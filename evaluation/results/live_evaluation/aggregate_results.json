@@ -1,19 +1,19 @@
 {
   "total_classes": 11,
-  "successful": 11,
-  "failed": 0,
-  "total_suggestions": 61,
-  "total_verified": 61,
+  "successful": 9,
+  "failed": 2,
+  "total_suggestions": 49,
+  "total_verified": 49,
   "verification_rate": 100.0,
-  "total_time": 676.4,
-  "avg_time_per_class": 61.5,
+  "total_time": 799.8,
+  "avg_time_per_class": 72.7,
   "per_class": [
     {
       "project": "commons-io",
       "class_name": "IOUtils",
       "class_file": "src/main/java/org/apache/commons/io/IOUtils.java",
       "status": "success",
-      "execution_time": 102.0,
+      "execution_time": 143.6,
       "original_metrics": {
         "lcom5": 1.0,
         "tcc": 0.0543,
@@ -27,74 +27,74 @@
       "suggestions_verified": 10,
       "suggestions": [
         {
-          "name": "CopyLargeOperations",
-          "methods": 8,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "SkipOperations",
+          "name": "StreamSkipper",
           "methods": 4,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit focused on reliably skipping data from input streams and readers. They share the same core responsibility of ensuring complete data skipping operations and should be"
         },
         {
-          "name": "SkipFullyOperations",
-          "methods": 4,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "ToCharArrayOperations",
-          "methods": 4,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "LineIteratorOperations",
-          "methods": 3,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "CloseOperations",
+          "name": "ResourceCloser",
           "methods": 18,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit responsible for safely closing various types of resources with different exception handling strategies. Extracting them into a ResourceCloser class centralizes resou"
         },
         {
-          "name": "ReadLinesOperations",
+          "name": "StreamSkipper",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit focused solely on skipping data in input streams and readers. They share the same operational domain (stream navigation) and delegate to the same underlying implemen"
+        },
+        {
+          "name": "CharArrayConverter",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit focused on converting various input sources (InputStreams and Readers) into character arrays. Extracting them into a CharArrayConverter class creates a specialized c"
+        },
+        {
+          "name": "LineIteratorFactory",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive factory for creating LineIterator instances from different input sources (InputStream with various charset specifications and Reader). Extracting them into a dedicated fa"
+        },
+        {
+          "name": "LineReader",
           "methods": 7,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit focused on reading text content line-by-line from various input sources and returning them as List<String> collections. Extracting them into a LineReader class creat"
         },
         {
-          "name": "ResourceToStringGroup",
+          "name": "DataConverter",
           "methods": 24,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive conversion unit that transforms various input sources (resources, streams, URLs) into strings or input streams while handling character encoding. Extracting them improves"
         },
         {
-          "name": "CopyToOutputStreamGroup",
+          "name": "DataWriter",
           "methods": 40,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit responsible for writing various data types to output streams and writers with encoding support. Extracting them into a DataWriter class improves separation of concer"
         },
         {
-          "name": "CharArrayGroup",
+          "name": "StreamReader",
           "methods": 79,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit responsible for reading data from various input sources (streams, readers, buffers) with proper validation and comparison capabilities. Extracting them into a Stream"
+        },
+        {
+          "name": "LargeCopyDelegator",
+          "methods": 8,
+          "verified": true,
+          "confidence": 0.82,
+          "rationale": "These methods form a cohesive delegation layer that forwards large copying operations to StreamCopier. They represent a single responsibility of providing a unified interface for large-scale data copy"
         }
       ]
     },
@@ -103,7 +103,7 @@
       "class_name": "FileUtils",
       "class_file": "src/main/java/org/apache/commons/io/FileUtils.java",
       "status": "success",
-      "execution_time": 98.9,
+      "execution_time": 135.7,
       "original_metrics": {
         "lcom5": 0.9958,
         "tcc": 0.0428,
@@ -117,60 +117,60 @@
       "suggestions_verified": 8,
       "suggestions": [
         {
-          "name": "ReadFileToStringOperations",
+          "name": "ByteSizeFormatter",
           "methods": 3,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.92,
+          "rationale": "These methods and constants form a cohesive unit responsible for converting byte counts into human-readable display formats with appropriate units. Extracting them into a ByteSizeFormatter class separ"
         },
         {
-          "name": "ReadLinesOperations",
-          "methods": 3,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "ByteCountToDisplaySizeOperations",
-          "methods": 3,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "CopyOperations",
+          "name": "LineWriter",
           "methods": 9,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit focused specifically on writing collections of text lines to files with various encoding and formatting options. Extracting them into a LineWriter class creates a sp"
         },
         {
-          "name": "WriteLinesOperations",
-          "methods": 9,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "ConvertFileCollectionToFileArrayGroup",
-          "methods": 8,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "IsFileOlderOperations",
+          "name": "FileAgeComparator",
           "methods": 12,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit responsible for comparing file modification times against various temporal references. They share the same core responsibility of determining file age relationships "
         },
         {
-          "name": "WriteOperations",
+          "name": "FileContentReader",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit focused on reading file contents and converting them to strings with different charset handling approaches. Extracting them into a FileContentReader class creates a "
+        },
+        {
+          "name": "FileLineReader",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit focused on reading file contents as lines of text with different charset handling approaches. Extracting them into a FileLineReader class creates a specialized compo"
+        },
+        {
+          "name": "FileWriter",
           "methods": 17,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit responsible for writing various data types to files with different encoding and append options. Extracting them into a FileWriter class creates a focused component t"
+        },
+        {
+          "name": "StreamCopier",
+          "methods": 9,
+          "verified": true,
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit responsible for copying data from various input streams to file destinations. They share common patterns of resource management, stream handling, and data transfer o"
+        },
+        {
+          "name": "FileConverter",
+          "methods": 8,
+          "verified": true,
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive conversion unit that transforms various representations (URLs, string paths) into File objects. They share URL decoding logic, protocol validation, and path construction "
         }
       ]
     },
@@ -179,7 +179,7 @@
       "class_name": "FilenameUtils",
       "class_file": "src/main/java/org/apache/commons/io/FilenameUtils.java",
       "status": "success",
-      "execution_time": 32.8,
+      "execution_time": 51.0,
       "original_metrics": {
         "lcom5": 0.9668,
         "tcc": 0.1241,
@@ -193,25 +193,25 @@
       "suggestions_verified": 3,
       "suggestions": [
         {
-          "name": "IsEmptyGroup",
+          "name": "NetworkAddressValidator",
           "methods": 5,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive network address validation unit that validates IPv4, IPv6, and hostname formats. They share network-specific validation patterns and constants, representing a clear separ"
         },
         {
-          "name": "EqualsGroup",
+          "name": "FilenameComparator",
           "methods": 33,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit responsible for comparing and matching filenames using various strategies (case sensitivity, normalization, wildcards). Extracting them into a FilenameComparator cla"
         },
         {
-          "name": "ConcatGroup",
+          "name": "PathProcessor",
           "methods": 27,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit responsible for processing and manipulating file system paths. They handle path parsing, normalization, validation, and component extraction operations that work tog"
         }
       ]
     },
@@ -220,7 +220,7 @@
       "class_name": "StringUtils",
       "class_file": "src/main/java/org/apache/commons/lang3/StringUtils.java",
       "status": "success",
-      "execution_time": 37.0,
+      "execution_time": 54.3,
       "original_metrics": {
         "lcom5": 0.9695,
         "tcc": 0.0633,
@@ -234,25 +234,25 @@
       "suggestions_verified": 3,
       "suggestions": [
         {
-          "name": "ReplaceOperations",
+          "name": "StringReplacer",
           "methods": 13,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit focused exclusively on string replacement operations with different strategies (case-sensitive, case-insensitive, character-based, with occurrence limits). Extractin"
         },
         {
-          "name": "CompareOperations",
+          "name": "StringComparator",
           "methods": 4,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit responsible for comparing strings using different strategies (case-sensitive, case-insensitive, null-safe). Extracting them into a StringComparator class isolates co"
         },
         {
-          "name": "AbbreviateOperations",
+          "name": "StringAbbreviator",
           "methods": 8,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit focused on abbreviating strings with ellipsis markers to fit specified width constraints. They share the same abbreviation logic and ellipsis constant, representing "
         }
       ]
     },
@@ -261,7 +261,7 @@
       "class_name": "ArrayUtils",
       "class_file": "src/main/java/org/apache/commons/lang3/ArrayUtils.java",
       "status": "success",
-      "execution_time": 63.9,
+      "execution_time": 83.6,
       "original_metrics": {
         "lcom5": 0.9897,
         "tcc": 0.0913,
@@ -275,32 +275,32 @@
       "suggestions_verified": 4,
       "suggestions": [
         {
-          "name": "RemoveAllOperations",
-          "methods": 47,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "ReverseOperations",
+          "name": "ArrayReverser",
           "methods": 18,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit focused exclusively on reversing array elements in-place. They share identical algorithmic logic, consistent error handling, and operate on the same domain concept o"
         },
         {
-          "name": "SetAllGroup",
+          "name": "PrimitiveArrayConverter",
           "methods": 14,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit responsible for converting primitive arrays to their corresponding wrapper object arrays. They share common conversion logic, empty array constants, and array popula"
         },
         {
-          "name": "GetLengthGroup",
+          "name": "ArrayInspector",
           "methods": 22,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit focused on inspecting and analyzing array properties without modification. They share common patterns for null-safe array analysis, length comparison, and ordering v"
+        },
+        {
+          "name": "ArrayElementRemover",
+          "methods": 47,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit focused exclusively on removing multiple elements from arrays by index positions. They share identical behavior across different array types and delegate to a common"
         }
       ]
     },
@@ -309,7 +309,7 @@
       "class_name": "NumberUtils",
       "class_file": "src/main/java/org/apache/commons/lang3/math/NumberUtils.java",
       "status": "success",
-      "execution_time": 55.3,
+      "execution_time": 82.2,
       "original_metrics": {
         "lcom5": 1.0,
         "tcc": 0.05,
@@ -323,39 +323,39 @@
       "suggestions_verified": 5,
       "suggestions": [
         {
-          "name": "ToDoubleOperations",
-          "methods": 4,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "CompareOperations",
-          "methods": 4,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "MaxGroup",
-          "methods": 25,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "CreateBigDecimalGroup",
+          "name": "NumberParser",
           "methods": 14,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive parsing unit responsible for converting string representations into appropriate numeric types and validating numeric string formats. They share complex parsing logic, han"
         },
         {
-          "name": "ToScaledBigDecimalOperations",
+          "name": "BigDecimalConverter",
           "methods": 9,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive conversion unit that transforms various numeric types into scaled BigDecimal objects with consistent rounding behavior. They share common scaling defaults, null-safety ha"
+        },
+        {
+          "name": "DoubleConverter",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit responsible for safely converting various input types to double values with fallback handling. They share the common responsibility of type conversion with null safe"
+        },
+        {
+          "name": "NumericComparator",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit focused exclusively on comparing primitive numeric types using standardized three-way comparison semantics. Extracting them into a NumericComparator class isolates c"
+        },
+        {
+          "name": "NumberComparator",
+          "methods": 25,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit focused on comparing numeric values to find minimum and maximum values across different primitive types. Extracting them into a NumberComparator class improves code "
         }
       ]
     },
@@ -364,7 +364,7 @@
       "class_name": "DateUtils",
       "class_file": "src/main/java/org/apache/commons/lang3/time/DateUtils.java",
       "status": "success",
-      "execution_time": 66.7,
+      "execution_time": 92.9,
       "original_metrics": {
         "lcom5": 1.0,
         "tcc": 0.0466,
@@ -378,46 +378,46 @@
       "suggestions_verified": 6,
       "suggestions": [
         {
-          "name": "ToLocalDateTimeGroup",
-          "methods": 7,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "ParseDateOperations",
+          "name": "DateParser",
           "methods": 5,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive date parsing unit that converts string representations to Date objects using configurable patterns and strictness levels. Extracting them into a DateParser class improves"
         },
         {
-          "name": "AddGroup",
-          "methods": 18,
+          "name": "DateToTemporalConverter",
+          "methods": 7,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive conversion unit that transforms legacy Date objects to modern temporal types. They share the same conversion pattern and represent a single responsibility of bridging leg"
         },
         {
-          "name": "GetFragmentGroup",
+          "name": "TimeFragmentCalculator",
           "methods": 13,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit responsible for calculating time fragments from dates and calendars. They share the same core algorithm and provide different granularities of the same calculation, "
         },
         {
-          "name": "CeilingGroup",
+          "name": "DateCalculator",
+          "methods": 18,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit focused on performing arithmetic calculations on Date objects. They share common implementation patterns through the private add() and set() helper methods and repre"
+        },
+        {
+          "name": "DateCalculator",
           "methods": 20,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit focused on performing mathematical operations on dates and calendars, including arithmetic, rounding, and field-level modifications. Extracting them into a DateCalcu"
         },
         {
-          "name": "IteratorGroup",
+          "name": "CalendarFieldManipulator",
           "methods": 16,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit focused on manipulating dates at the calendar field level - truncating, modifying, comparing, and iterating based on specific calendar field boundaries. They share c"
         }
       ]
     },
@@ -426,7 +426,7 @@
       "class_name": "SystemUtils",
       "class_file": "src/main/java/org/apache/commons/lang3/SystemUtils.java",
       "status": "success",
-      "execution_time": 33.9,
+      "execution_time": 50.9,
       "original_metrics": {
         "lcom5": 1.0,
         "tcc": 0.0435,
@@ -440,25 +440,25 @@
       "suggestions_verified": 3,
       "suggestions": [
         {
-          "name": "GetOsMatchesGroup",
+          "name": "OperatingSystemMatcher",
           "methods": 5,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit responsible for matching operating system names and versions against specified criteria. They share OS system properties and implement progressively sophisticated ma"
         },
         {
-          "name": "GetJavaVersionMatchesGroup",
+          "name": "JavaVersionChecker",
           "methods": 2,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit responsible for checking Java version compatibility against specified requirements. They operate exclusively on Java version data and provide focused comparison func"
         },
         {
-          "name": "IsJavaVersionAtOperations",
+          "name": "JavaVersionMatcher",
           "methods": 2,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit focused on matching Java version strings against prefixes. Extracting them into a JavaVersionMatcher class isolates version detection logic and improves reusability "
         }
       ]
     },
@@ -467,7 +467,7 @@
       "class_name": "CollectionUtils",
       "class_file": "src/main/java/org/apache/commons/collections4/CollectionUtils.java",
       "status": "success",
-      "execution_time": 69.1,
+      "execution_time": 105.6,
       "original_metrics": {
         "lcom5": 1.0,
         "tcc": 0.03,
@@ -481,53 +481,53 @@
       "suggestions_verified": 7,
       "suggestions": [
         {
-          "name": "ContainsAllGroup",
-          "methods": 4,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "CheckIndexBoundsGroup",
-          "methods": 6,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "EmptyOperations",
-          "methods": 2,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "AddAllGroup",
-          "methods": 11,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "CollateOperations",
+          "name": "CollectionMerger",
           "methods": 5,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit responsible for merging two sorted collections into a single sorted result. They implement variations of the collation algorithm with different parameters for compar"
         },
         {
-          "name": "ContainsAnyGroup",
-          "methods": 13,
+          "name": "CollectionStateInspector",
+          "methods": 4,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit focused on inspecting and evaluating the state of collections and collection-like objects. They provide read-only queries about emptiness, containment relationships,"
         },
         {
-          "name": "CollectGroup",
+          "name": "IndexedAccessor",
+          "methods": 6,
+          "verified": true,
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit responsible for providing indexed access to elements across different collection types (Map, arrays, Iterator, Iterable, Enumeration). They encapsulate the complexit"
+        },
+        {
+          "name": "EmptyCollectionProvider",
+          "methods": 2,
+          "verified": true,
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit responsible for providing empty collection instances and converting null collections to empty ones. Extracting them into an EmptyCollectionProvider class isolates th"
+        },
+        {
+          "name": "CollectionAugmenter",
           "methods": 11,
           "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit responsible for augmenting collections by adding elements from various sources or transforming existing elements in-place. They share common patterns of null validat"
+        },
+        {
+          "name": "CollectionAnalyzer",
+          "methods": 13,
+          "verified": true,
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit focused on analyzing and manipulating collections based on specific criteria, relationships, and constraints. They perform sophisticated operations like intersection"
+        },
+        {
+          "name": "EquatorCollectionOperator",
+          "methods": 11,
+          "verified": true,
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit responsible for performing collection operations using custom equality semantics via Equator instances. They share the common pattern of wrapping elements in Equator"
         }
       ]
     },
@@ -535,125 +535,19 @@
       "project": "commons-collections",
       "class_name": "MapUtils",
       "class_file": "src/main/java/org/apache/commons/collections4/MapUtils.java",
-      "status": "success",
-      "execution_time": 58.1,
-      "original_metrics": {
-        "lcom5": 1.0,
-        "tcc": 0.0222,
-        "cbo": 0,
-        "num_methods": 94,
-        "num_fields": 2
-      },
-      "clusters_found": 31,
-      "clusters_filtered": 7,
-      "suggestions_total": 7,
-      "suggestions_verified": 7,
-      "suggestions": [
-        {
-          "name": "DebugPrintGroup",
-          "methods": 6,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "PopulateMapOperations",
-          "methods": 4,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "GetObjectGroup",
-          "methods": 3,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "MultiValueMapOperations",
-          "methods": 3,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "GetByteGroup",
-          "methods": 24,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "ApplyDefaultFunctionGroup",
-          "methods": 54,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "ApplyDefaultValueGroup",
-          "methods": 54,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        }
-      ]
+      "status": "error",
+      "error": "[Errno 32] Broken pipe",
+      "traceback": "e \"/Users/uditanshutomar/genec/genec/core/pipeline.py\", line 450, in run_full_pipeline\n    self._emit_progress(stage=0, total=6, message=\"Initializing pipeline\")\n    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/uditanshutomar/genec/genec/core/pipeline.py\", line 417, in _emit_progress\n    print(json.dumps(progress_event), file=sys.stderr, flush=True)\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nBrokenPipeError: [Errno 32] Broken pipe\n",
+      "execution_time": 0
     },
     {
       "project": "commons-collections",
       "class_name": "IteratorUtils",
       "class_file": "src/main/java/org/apache/commons/collections4/IteratorUtils.java",
-      "status": "success",
-      "execution_time": 58.7,
-      "original_metrics": {
-        "lcom5": 1.0,
-        "tcc": 0.0077,
-        "cbo": 0,
-        "num_methods": 78,
-        "num_fields": 6
-      },
-      "clusters_found": 65,
-      "clusters_filtered": 5,
-      "suggestions_total": 5,
-      "suggestions_verified": 5,
-      "suggestions": [
-        {
-          "name": "EmptyIteratorGroup",
-          "methods": 3,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "ContainsGroup",
-          "methods": 3,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "AddAllGroup",
-          "methods": 8,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "FirstGroup",
-          "methods": 3,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        },
-        {
-          "name": "ToStringOperations",
-          "methods": 3,
-          "verified": true,
-          "confidence": 0.5,
-          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-        }
-      ]
+      "status": "error",
+      "error": "[Errno 32] Broken pipe",
+      "traceback": "e \"/Users/uditanshutomar/genec/genec/core/pipeline.py\", line 450, in run_full_pipeline\n    self._emit_progress(stage=0, total=6, message=\"Initializing pipeline\")\n    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/uditanshutomar/genec/genec/core/pipeline.py\", line 417, in _emit_progress\n    print(json.dumps(progress_event), file=sys.stderr, flush=True)\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nBrokenPipeError: [Errno 32] Broken pipe\n",
+      "execution_time": 0
     }
   ]
 }

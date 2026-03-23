@@ -3,7 +3,7 @@
   "class_name": "FileUtils",
   "class_file": "src/main/java/org/apache/commons/io/FileUtils.java",
   "status": "success",
-  "execution_time": 98.9,
+  "execution_time": 135.7,
   "original_metrics": {
     "lcom5": 0.9958,
     "tcc": 0.0428,
@@ -17,60 +17,60 @@
   "suggestions_verified": 8,
   "suggestions": [
     {
-      "name": "ReadFileToStringOperations",
+      "name": "ByteSizeFormatter",
       "methods": 3,
       "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+      "confidence": 0.92,
+      "rationale": "These methods and constants form a cohesive unit responsible for converting byte counts into human-readable display formats with appropriate units. Extracting them into a ByteSizeFormatter class separ"
     },
     {
-      "name": "ReadLinesOperations",
-      "methods": 3,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "ByteCountToDisplaySizeOperations",
-      "methods": 3,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "CopyOperations",
+      "name": "LineWriter",
       "methods": 9,
       "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit focused specifically on writing collections of text lines to files with various encoding and formatting options. Extracting them into a LineWriter class creates a sp"
     },
     {
-      "name": "WriteLinesOperations",
-      "methods": 9,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "ConvertFileCollectionToFileArrayGroup",
-      "methods": 8,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "IsFileOlderOperations",
+      "name": "FileAgeComparator",
       "methods": 12,
       "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit responsible for comparing file modification times against various temporal references. They share the same core responsibility of determining file age relationships "
     },
     {
-      "name": "WriteOperations",
+      "name": "FileContentReader",
+      "methods": 3,
+      "verified": true,
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive unit focused on reading file contents and converting them to strings with different charset handling approaches. Extracting them into a FileContentReader class creates a "
+    },
+    {
+      "name": "FileLineReader",
+      "methods": 3,
+      "verified": true,
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive unit focused on reading file contents as lines of text with different charset handling approaches. Extracting them into a FileLineReader class creates a specialized compo"
+    },
+    {
+      "name": "FileWriter",
       "methods": 17,
       "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive unit responsible for writing various data types to files with different encoding and append options. Extracting them into a FileWriter class creates a focused component t"
+    },
+    {
+      "name": "StreamCopier",
+      "methods": 9,
+      "verified": true,
+      "confidence": 0.88,
+      "rationale": "These methods form a cohesive unit responsible for copying data from various input streams to file destinations. They share common patterns of resource management, stream handling, and data transfer o"
+    },
+    {
+      "name": "FileConverter",
+      "methods": 8,
+      "verified": true,
+      "confidence": 0.88,
+      "rationale": "These methods form a cohesive conversion unit that transforms various representations (URLs, string paths) into File objects. They share URL decoding logic, protocol validation, and path construction "
     }
   ]
 }

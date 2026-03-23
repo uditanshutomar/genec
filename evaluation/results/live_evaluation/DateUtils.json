@@ -3,7 +3,7 @@
   "class_name": "DateUtils",
   "class_file": "src/main/java/org/apache/commons/lang3/time/DateUtils.java",
   "status": "success",
-  "execution_time": 66.7,
+  "execution_time": 92.9,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.0466,
@@ -17,46 +17,46 @@
   "suggestions_verified": 6,
   "suggestions": [
     {
-      "name": "ToLocalDateTimeGroup",
-      "methods": 7,
-      "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
-    },
-    {
-      "name": "ParseDateOperations",
+      "name": "DateParser",
       "methods": 5,
       "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive date parsing unit that converts string representations to Date objects using configurable patterns and strictness levels. Extracting them into a DateParser class improves"
     },
     {
-      "name": "AddGroup",
-      "methods": 18,
+      "name": "DateToTemporalConverter",
+      "methods": 7,
       "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive conversion unit that transforms legacy Date objects to modern temporal types. They share the same conversion pattern and represent a single responsibility of bridging leg"
     },
     {
-      "name": "GetFragmentGroup",
+      "name": "TimeFragmentCalculator",
       "methods": 13,
       "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit responsible for calculating time fragments from dates and calendars. They share the same core algorithm and provide different granularities of the same calculation, "
     },
     {
-      "name": "CeilingGroup",
+      "name": "DateCalculator",
+      "methods": 18,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit focused on performing arithmetic calculations on Date objects. They share common implementation patterns through the private add() and set() helper methods and repre"
+    },
+    {
+      "name": "DateCalculator",
       "methods": 20,
       "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive unit focused on performing mathematical operations on dates and calendars, including arithmetic, rounding, and field-level modifications. Extracting them into a DateCalcu"
     },
     {
-      "name": "IteratorGroup",
+      "name": "CalendarFieldManipulator",
       "methods": 16,
       "verified": true,
-      "confidence": 0.5,
-      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+      "confidence": 0.88,
+      "rationale": "These methods form a cohesive unit focused on manipulating dates at the calendar field level - truncating, modifying, comparing, and iterating based on specific calendar field boundaries. They share c"
     }
   ]
 }
