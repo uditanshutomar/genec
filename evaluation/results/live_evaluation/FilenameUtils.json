@@ -3,7 +3,7 @@
   "class_name": "FilenameUtils",
   "class_file": "src/main/java/org/apache/commons/io/FilenameUtils.java",
   "status": "success",
-  "execution_time": 55.7,
+  "execution_time": 42.9,
   "original_metrics": {
     "lcom5": 0.9668,
     "tcc": 0.1259,
@@ -14,42 +14,34 @@
   "clusters_found": 9,
   "clusters_filtered": 4,
   "clusters_rejected": 5,
-  "filter_pass_rate": 44.4,
-  "suggestions_total": 4,
-  "suggestions_verified": 4,
+  "filter_pass_rate": 22.2,
+  "suggestions_total": 2,
+  "suggestions_verified": 2,
   "suggestions": [
     {
       "name": "NetworkAddressValidator",
       "methods": 5,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive network address validation unit that validates IPv4 addresses, IPv6 addresses, and RFC3986 hostnames. Extracting them into a NetworkAddressValidator class separates netwo"
+      "rationale": "These methods form a cohesive network address validation unit that validates IPv4 addresses, IPv6 addresses, and RFC3986 hostnames. They share validation constants and patterns, have a single clear re",
+      "post_lcom5": 0.9433,
+      "post_tcc": 0.1206
     },
     {
       "name": "FilePathParser",
       "methods": 33,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for parsing file paths and extracting their components (name, extension, path segments). They share common constants for separators and implement related"
-    },
-    {
-      "name": "FilenameComparator",
-      "methods": 18,
-      "verified": true,
-      "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused exclusively on comparing filenames for equality using different strategies (normalized, case-sensitive, system-aware). Extracting them into a FilenameCompara"
-    },
-    {
-      "name": "PathManipulator",
-      "methods": 24,
-      "verified": true,
-      "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for manipulating file system paths - normalizing, concatenating, extracting components, and validating path structures across different operating systems"
+      "rationale": "These methods form a cohesive unit responsible for parsing file paths and extracting their components (path, name, extension). They share path separator constants and parsing logic, representing a sin",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0266
     }
   ],
   "post_refactoring": {
-    "methods_extracted": 80,
-    "methods_remaining": 0,
-    "extraction_coverage": 166.7
+    "methods_extracted": 38,
+    "methods_remaining": 10,
+    "extraction_coverage": 79.2,
+    "lcom5": 1.0,
+    "tcc": 0.0266
   }
 }

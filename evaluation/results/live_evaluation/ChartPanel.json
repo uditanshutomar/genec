@@ -1,0 +1,47 @@
+{
+  "project": "jfreechart",
+  "class_name": "ChartPanel",
+  "class_file": "src/main/java/org/jfree/chart/swing/ChartPanel.java",
+  "status": "success",
+  "execution_time": 25.9,
+  "original_metrics": {
+    "lcom5": 0.9751,
+    "tcc": 0.1515,
+    "cbo": 0,
+    "num_methods": 115,
+    "num_fields": 78
+  },
+  "clusters_found": 11,
+  "clusters_filtered": 2,
+  "clusters_rejected": 9,
+  "filter_pass_rate": 18.2,
+  "suggestions_total": 2,
+  "suggestions_verified": 2,
+  "suggestions": [
+    {
+      "name": "TooltipDelayOverride",
+      "methods": 8,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These members form a cohesive unit responsible for temporarily overriding system tooltip delays with custom values during mouse interactions. They encapsulate the complete lifecycle of storing origina",
+      "post_lcom5": 0.9737,
+      "post_tcc": 0.1539
+    },
+    {
+      "name": "MouseWheelFeatureToggle",
+      "methods": 2,
+      "verified": true,
+      "confidence": 0.88,
+      "rationale": "These methods form a cohesive unit responsible for managing the enabled/disabled state of mouse wheel functionality. They encapsulate the logic for lazy initialization and cleanup of the mouse wheel h",
+      "post_lcom5": 0.9751,
+      "post_tcc": 0.1515
+    }
+  ],
+  "post_refactoring": {
+    "methods_extracted": 10,
+    "methods_remaining": 105,
+    "extraction_coverage": 8.7,
+    "lcom5": 0.9751,
+    "tcc": 0.1515
+  }
+}

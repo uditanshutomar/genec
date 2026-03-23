@@ -3,7 +3,7 @@
   "class_name": "NumberUtils",
   "class_file": "src/main/java/org/apache/commons/lang3/math/NumberUtils.java",
   "status": "success",
-  "execution_time": 87.7,
+  "execution_time": 89.2,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.09,
@@ -23,47 +23,61 @@
       "methods": 9,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive conversion unit that transforms various numeric types into scaled BigDecimal objects with consistent precision and rounding behavior. Extracting them into a BigDecimalCon"
+      "rationale": "These methods form a cohesive conversion unit that transforms various numeric types into scaled BigDecimal objects with consistent null handling and default precision. Extracting them into a BigDecima",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0896
     },
     {
-      "name": "NumericStringParser",
+      "name": "NumberParser",
       "methods": 14,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive parsing unit responsible for converting string representations into various numeric types. They share complex parsing logic, validation rules, and format detection capabi"
+      "rationale": "These methods form a cohesive unit responsible for parsing string representations into various numeric types with comprehensive format validation and error handling. They share the single responsibili",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0838
     },
     {
-      "name": "MaxCalculator",
+      "name": "MaximumFinder",
       "methods": 13,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused exclusively on calculating maximum values across all primitive numeric types. They share common validation logic and implement the same mathematical operatio"
+      "rationale": "These methods form a cohesive unit focused on finding maximum values across all primitive numeric types. Extracting them into a MaximumFinder class improves code organization by isolating this specifi",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0874
     },
     {
-      "name": "MinimumCalculator",
+      "name": "MinimumFinder",
       "methods": 13,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused on calculating minimum values across all primitive numeric types. They share the same algorithmic responsibility and validation logic, making them ideal cand"
+      "rationale": "These methods form a cohesive unit focused on finding minimum values across all primitive numeric types. Extracting them into a MinimumFinder class creates a specialized mathematical component with a ",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0874
     },
     {
       "name": "DoubleConverter",
       "methods": 4,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for safely converting different input types to double values with default fallback behavior. Extracting them into a DoubleConverter class improves separa"
+      "rationale": "These methods form a cohesive unit responsible for safely converting different input types to double values with default fallback behavior. Extracting them into a DoubleConverter class improves separa",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.09
     },
     {
       "name": "PrimitiveComparator",
       "methods": 4,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused solely on comparing primitive numeric types using three-way comparison semantics. Extracting them into a PrimitiveComparator class isolates comparison logic "
+      "rationale": "These methods form a cohesive unit focused solely on comparing primitive numeric types using standardized three-way comparison semantics. Extracting them into a PrimitiveComparator class improves sepa",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.09
     }
   ],
   "post_refactoring": {
     "methods_extracted": 57,
     "methods_remaining": 11,
-    "extraction_coverage": 83.8
+    "extraction_coverage": 83.8,
+    "lcom5": 1.0,
+    "tcc": 0.09
   }
 }

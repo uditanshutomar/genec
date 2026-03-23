@@ -3,7 +3,7 @@
   "class_name": "IteratorUtils",
   "class_file": "src/main/java/org/apache/commons/collections4/IteratorUtils.java",
   "status": "success",
-  "execution_time": 146.2,
+  "execution_time": 141.2,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.0223,
@@ -19,79 +19,101 @@
   "suggestions_verified": 10,
   "suggestions": [
     {
-      "name": "ArrayIteratorFactory",
-      "methods": 6,
+      "name": "IteratorFactory",
+      "methods": 3,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive factory unit responsible for creating ResettableIterator instances from arrays. They share the same creation pattern, handle related array types, and encapsulate the logi"
+      "rationale": "These methods form a cohesive factory for creating Iterator instances from various object types. They encapsulate the complex logic of type detection and iterator conversion, implementing a clear fact",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0216
     },
     {
       "name": "ArrayIteratorFactory",
       "methods": 6,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive factory unit responsible for creating ResettableListIterator instances from arrays. They encapsulate the logic for selecting appropriate iterator implementations based on"
+      "rationale": "These methods form a cohesive factory unit responsible for creating ResettableIterator instances from arrays. They share the common purpose of abstracting array iterator creation with various paramete",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0223
+    },
+    {
+      "name": "ArrayIteratorFactory",
+      "methods": 6,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive factory unit responsible for creating ResettableListIterator instances from arrays. They encapsulate the logic for selecting appropriate iterator implementations based on",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0223
+    },
+    {
+      "name": "IteratorCollator",
+      "methods": 3,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive factory for creating collated (merged and sorted) iterators from multiple input iterators. They share the same core responsibility of handling comparator normalization an",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0223
     },
     {
       "name": "ZippingIteratorFactory",
       "methods": 3,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive factory unit responsible exclusively for creating ZippingIterator instances with different parameter configurations. Extracting them into a dedicated factory class improv"
+      "rationale": "These methods form a cohesive factory unit responsible exclusively for creating ZippingIterator instances with different parameter combinations. Extracting them into a dedicated factory class improves",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0223
     },
     {
-      "name": "IteratorFactory",
+      "name": "IteratorFormatter",
+      "methods": 3,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive formatting unit responsible for converting Iterator objects into formatted string representations. They share formatting logic, work with the same data type (Iterator), a",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0223
+    },
+    {
+      "name": "IteratorSearcher",
       "methods": 3,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive factory responsible for creating Iterator instances from various object types. They encapsulate complex type detection and conversion logic, providing a unified interface"
-    },
-    {
-      "name": "IteratorChainFactory",
-      "methods": 4,
-      "verified": true,
-      "confidence": 0.9,
-      "rationale": "These methods form a cohesive factory for creating chained iterators that traverse multiple iterator sources sequentially. They share the single responsibility of iterator chain construction through d"
+      "rationale": "These methods form a cohesive unit focused on searching through iterators using different matching strategies. They share the common responsibility of traversing iterators and applying search criteria",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0216
     },
     {
       "name": "IteratorConverter",
       "methods": 8,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive conversion unit that transforms Iterator objects into various collection types (List, Set, Array). They share the common responsibility of materializing lazy iteration in"
+      "rationale": "These methods form a cohesive unit responsible for converting Iterator objects into various collection types and data structures. They share the common responsibility of materializing iterator data in",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.02
     },
     {
-      "name": "IteratorCollator",
-      "methods": 3,
+      "name": "IteratorChainFactory",
+      "methods": 4,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused on collating (merging and sorting) multiple iterators into a single sorted iterator. They share the same algorithmic responsibility and work together to prov"
-    },
-    {
-      "name": "IteratorFormatter",
-      "methods": 3,
-      "verified": true,
-      "confidence": 0.9,
-      "rationale": "These methods form a cohesive formatting unit responsible for converting iterator contents into formatted strings with customizable delimiters, prefixes, and suffixes. Extracting them into an Iterator"
-    },
-    {
-      "name": "IteratorSearcher",
-      "methods": 3,
-      "verified": true,
-      "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit focused on searching through iterators using different criteria (exact match, predicate-based search, and existence checking). Extracting them into an IteratorSearch"
+      "rationale": "These methods form a cohesive factory unit responsible for creating chained iterators from various input sources. They share the single responsibility of iterator composition and should be extracted i",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0223
     },
     {
       "name": "IteratorIndexAccessor",
       "methods": 3,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit responsible for providing indexed access to iterator elements. They share the common purpose of converting sequential iterator traversal into positional element retr"
+      "rationale": "These methods form a cohesive unit responsible for providing indexed access to iterator elements. They share the common purpose of converting sequential iterator traversal into positional element retr",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0216
     }
   ],
   "post_refactoring": {
     "methods_extracted": 42,
     "methods_remaining": 36,
-    "extraction_coverage": 53.8
+    "extraction_coverage": 53.8,
+    "lcom5": 1.0,
+    "tcc": 0.0216
   }
 }

@@ -1,21 +1,21 @@
 {
-  "total_classes": 11,
-  "successful": 11,
+  "total_classes": 23,
+  "successful": 23,
   "failed": 0,
-  "total_clusters_found": 390,
-  "filter_pass_rate": 17.4,
-  "total_suggestions": 68,
-  "total_verified": 65,
-  "verification_rate": 95.6,
-  "total_time": 1030.4,
-  "avg_time_per_class": 93.7,
+  "total_clusters_found": 506,
+  "filter_pass_rate": 15.0,
+  "total_suggestions": 76,
+  "total_verified": 71,
+  "verification_rate": 93.4,
+  "total_time": 1314.9,
+  "avg_time_per_class": 57.2,
   "per_class": [
     {
       "project": "commons-io",
       "class_name": "IOUtils",
       "class_file": "src/main/java/org/apache/commons/io/IOUtils.java",
       "status": "success",
-      "execution_time": 162.6,
+      "execution_time": 125.2,
       "original_metrics": {
         "lcom5": 1.0,
         "tcc": 0.0613,
@@ -23,95 +23,92 @@
         "num_methods": 172,
         "num_fields": 12
       },
-      "clusters_found": 25,
-      "clusters_filtered": 11,
-      "clusters_rejected": 14,
-      "filter_pass_rate": 44.0,
-      "suggestions_total": 11,
-      "suggestions_verified": 11,
+      "clusters_found": 24,
+      "clusters_filtered": 9,
+      "clusters_rejected": 15,
+      "filter_pass_rate": 33.3,
+      "suggestions_total": 8,
+      "suggestions_verified": 8,
       "suggestions": [
         {
-          "name": "StreamBufferFactory",
+          "name": "StreamCopier",
           "methods": 8,
           "verified": true,
-          "confidence": 0.92,
-          "rationale": "These methods form a cohesive factory for creating buffered I/O streams and readers/writers. They share the common responsibility of ensuring optimal buffering while preventing double-wrapping, making"
+          "confidence": 0.95,
+          "rationale": "These methods form a cohesive unit responsible for copying data between streams efficiently. They already delegate to a `StreamCopier` class, indicating this extraction is the natural completion of se",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0613
         },
         {
-          "name": "LargeStreamCopier",
+          "name": "StreamBufferWrapper",
           "methods": 8,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit focused specifically on copying large amounts of data between streams and readers/writers. They represent different overloaded variants of the same core responsibili"
+          "rationale": "These methods form a cohesive unit responsible for intelligently wrapping I/O streams and readers/writers with buffering capabilities. They share the same algorithmic pattern of checking for existing ",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0613
+        },
+        {
+          "name": "StreamSkipper",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit focused solely on skipping data in input streams. They share the same operational responsibility and work with related input types, making them ideal candidates for ",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0613
         },
         {
           "name": "ResourceCloser",
           "methods": 18,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit responsible for safely closing and releasing system resources. They provide consistent resource cleanup patterns with different error handling strategies (throwing v"
-        },
-        {
-          "name": "LineReader",
-          "methods": 7,
-          "verified": true,
-          "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit focused on reading text input and parsing it into lines, regardless of the input source type. Extracting them into a LineReader class creates a specialized component"
+          "rationale": "These methods form a cohesive unit responsible for safely closing and disposing of various system resources. They share common patterns for null-checking, exception handling, and resource cleanup. Ext",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0594
         },
         {
           "name": "StreamSkipper",
           "methods": 4,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused solely on skipping data in various stream types. Extracting them into a StreamSkipper class creates a specialized component with a single, clear responsibili"
+          "rationale": "These methods form a cohesive unit focused on skipping data from various input streams with guaranteed completion. Extracting them into a StreamSkipper class isolates this specific I/O operation, impr",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0613
         },
         {
-          "name": "StreamSkipper",
+          "name": "CharArrayConverter",
           "methods": 4,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused on the single responsibility of reliably skipping data from various input streams. Extracting them into a StreamSkipper class improves separation of concerns"
-        },
-        {
-          "name": "StreamToCharArrayConverter",
-          "methods": 4,
-          "verified": true,
-          "confidence": 0.9,
-          "rationale": "These methods form a cohesive conversion unit that transforms various input streams and readers into character arrays. Extracting them into a dedicated converter class improves separation of concerns "
+          "rationale": "These methods form a cohesive unit focused on converting input streams and readers into character arrays. Extracting them into a CharArrayConverter class isolates this specific transformation responsi",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0613
         },
         {
           "name": "LineIteratorFactory",
           "methods": 3,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive factory for creating LineIterator instances from different input sources. They share the single responsibility of LineIterator creation and handle charset conversion comp"
+          "rationale": "These methods form a cohesive factory for creating LineIterator instances from various input sources (InputStream and Reader). Extracting them into a dedicated factory class improves separation of con",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0613
         },
         {
           "name": "DataWriter",
           "methods": 40,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit responsible for writing various data types to output streams and writers. They share common concerns around charset handling, chunked writing, and formatted output o"
-        },
-        {
-          "name": "DataConverter",
-          "methods": 24,
-          "verified": true,
-          "confidence": 0.88,
-          "rationale": "These methods form a cohesive conversion unit that transforms between different data representations (strings, streams, resources, URLs) while handling character encoding. Extracting them into a DataC"
-        },
-        {
-          "name": "SafeIOOperations",
-          "methods": 79,
-          "verified": true,
-          "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit focused on providing safe, bounds-checked I/O operations with guaranteed complete reads and content comparison capabilities. Extracting them into SafeIOOperations im"
+          "rationale": "These methods form a cohesive unit responsible for writing various data types to output streams and writers with encoding support. They share the common responsibility of data output operations and ca",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0528
         }
       ],
       "post_refactoring": {
-        "methods_extracted": 199,
-        "methods_remaining": 0,
-        "extraction_coverage": 115.7
+        "methods_extracted": 89,
+        "methods_remaining": 83,
+        "extraction_coverage": 51.7,
+        "lcom5": 1.0,
+        "tcc": 0.0528
       }
     },
     {
@@ -119,7 +116,7 @@
       "class_name": "FileUtils",
       "class_file": "src/main/java/org/apache/commons/io/FileUtils.java",
       "status": "success",
-      "execution_time": 103.3,
+      "execution_time": 100.9,
       "original_metrics": {
         "lcom5": 0.9958,
         "tcc": 0.0462,
@@ -135,52 +132,66 @@
       "suggestions_verified": 6,
       "suggestions": [
         {
-          "name": "FileLineReader",
+          "name": "LineReader",
           "methods": 3,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit responsible for reading text files line-by-line into String collections. They handle the same core operation with different charset handling approaches, making them "
+          "rationale": "These methods form a cohesive unit focused on reading text files line by line into String collections. Extracting them into a LineReader class creates a specialized component with a single, clear resp",
+          "post_lcom5": 0.9958,
+          "post_tcc": 0.0462
         },
         {
           "name": "ByteSizeFormatter",
           "methods": 3,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods and constants form a cohesive unit responsible for formatting byte counts into human-readable display strings with appropriate units. Extracting them into a ByteSizeFormatter class impro"
+          "rationale": "These methods and constants form a cohesive unit responsible for formatting byte counts into human-readable display strings with appropriate units. Extracting them into a ByteSizeFormatter class impro",
+          "post_lcom5": 0.9905,
+          "post_tcc": 0.0462
         },
         {
           "name": "LineWriter",
           "methods": 9,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit focused on writing collections as lines to files. They share the same core responsibility of converting collection elements to text lines and writing them to files w"
+          "rationale": "These methods form a cohesive unit focused on writing collections as lines to files with various encoding and formatting options. Extracting them into a LineWriter class creates a specialized componen",
+          "post_lcom5": 0.9961,
+          "post_tcc": 0.0447
         },
         {
-          "name": "FileReader",
+          "name": "FileContentReader",
           "methods": 3,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused exclusively on reading file contents and converting them to strings with various charset handling options. Extracting them into a FileReader class improves s"
+          "rationale": "These methods form a cohesive unit focused specifically on reading file contents and converting them to strings with various charset handling options. Extracting them into a FileContentReader class im",
+          "post_lcom5": 0.9958,
+          "post_tcc": 0.0462
         },
         {
           "name": "FileWriter",
           "methods": 17,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused exclusively on writing data to files, handling different data types (strings, byte arrays) with consistent encoding and append support. Extracting them into "
+          "rationale": "These methods form a cohesive file writing unit that handles all aspects of writing data to files with different encodings and modes. Extracting them into a FileWriter class creates a focused componen",
+          "post_lcom5": 0.9961,
+          "post_tcc": 0.0433
         },
         {
-          "name": "FileSystemNavigator",
+          "name": "FileNavigator",
           "methods": 34,
           "verified": true,
           "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit responsible for navigating and discovering files within the file system. They handle directory traversal, file listing, iteration, and conversion between different f"
+          "rationale": "These methods form a cohesive unit focused on navigating and discovering files within the file system. They handle directory traversal, file listing, iteration, and conversion between different file r",
+          "post_lcom5": 0.9974,
+          "post_tcc": 0.0356
         }
       ],
       "post_refactoring": {
         "methods_extracted": 69,
         "methods_remaining": 90,
-        "extraction_coverage": 43.4
+        "extraction_coverage": 43.4,
+        "lcom5": 0.9974,
+        "tcc": 0.0356
       }
     },
     {
@@ -188,7 +199,7 @@
       "class_name": "FilenameUtils",
       "class_file": "src/main/java/org/apache/commons/io/FilenameUtils.java",
       "status": "success",
-      "execution_time": 55.7,
+      "execution_time": 42.9,
       "original_metrics": {
         "lcom5": 0.9668,
         "tcc": 0.1259,
@@ -199,43 +210,35 @@
       "clusters_found": 9,
       "clusters_filtered": 4,
       "clusters_rejected": 5,
-      "filter_pass_rate": 44.4,
-      "suggestions_total": 4,
-      "suggestions_verified": 4,
+      "filter_pass_rate": 22.2,
+      "suggestions_total": 2,
+      "suggestions_verified": 2,
       "suggestions": [
         {
           "name": "NetworkAddressValidator",
           "methods": 5,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive network address validation unit that validates IPv4 addresses, IPv6 addresses, and RFC3986 hostnames. Extracting them into a NetworkAddressValidator class separates netwo"
+          "rationale": "These methods form a cohesive network address validation unit that validates IPv4 addresses, IPv6 addresses, and RFC3986 hostnames. They share validation constants and patterns, have a single clear re",
+          "post_lcom5": 0.9433,
+          "post_tcc": 0.1206
         },
         {
           "name": "FilePathParser",
           "methods": 33,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit responsible for parsing file paths and extracting their components (name, extension, path segments). They share common constants for separators and implement related"
-        },
-        {
-          "name": "FilenameComparator",
-          "methods": 18,
-          "verified": true,
-          "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused exclusively on comparing filenames for equality using different strategies (normalized, case-sensitive, system-aware). Extracting them into a FilenameCompara"
-        },
-        {
-          "name": "PathManipulator",
-          "methods": 24,
-          "verified": true,
-          "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit responsible for manipulating file system paths - normalizing, concatenating, extracting components, and validating path structures across different operating systems"
+          "rationale": "These methods form a cohesive unit responsible for parsing file paths and extracting their components (path, name, extension). They share path separator constants and parsing logic, representing a sin",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0266
         }
       ],
       "post_refactoring": {
-        "methods_extracted": 80,
-        "methods_remaining": 0,
-        "extraction_coverage": 166.7
+        "methods_extracted": 38,
+        "methods_remaining": 10,
+        "extraction_coverage": 79.2,
+        "lcom5": 1.0,
+        "tcc": 0.0266
       }
     },
     {
@@ -243,7 +246,7 @@
       "class_name": "StringUtils",
       "class_file": "src/main/java/org/apache/commons/lang3/StringUtils.java",
       "status": "success",
-      "execution_time": 95.6,
+      "execution_time": 66.5,
       "original_metrics": {
         "lcom5": 0.9695,
         "tcc": 0.0643,
@@ -254,57 +257,44 @@
       "clusters_found": 25,
       "clusters_filtered": 6,
       "clusters_rejected": 19,
-      "filter_pass_rate": 24.0,
-      "suggestions_total": 6,
-      "suggestions_verified": 6,
+      "filter_pass_rate": 12.0,
+      "suggestions_total": 3,
+      "suggestions_verified": 3,
       "suggestions": [
-        {
-          "name": "StringReplacer",
-          "methods": 13,
-          "verified": true,
-          "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit focused exclusively on string replacement operations with different strategies (case-sensitive, case-insensitive, character-based, bounded). Extracting them into a S"
-        },
         {
           "name": "StringComparator",
           "methods": 4,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive comparison unit that handles null-safe string comparison with various options (case sensitivity, null ordering). Extracting them into a StringComparator class isolates co"
+          "rationale": "These methods form a cohesive comparison unit that implements various string comparison strategies with null-safe handling. They share the common responsibility of comparing strings and returning stan",
+          "post_lcom5": 0.9695,
+          "post_tcc": 0.0642
         },
         {
-          "name": "StringSplitter",
-          "methods": 19,
+          "name": "StringReplacer",
+          "methods": 13,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit responsible for splitting strings into arrays based on various separator criteria. They share common splitting algorithms, work with the same data types (String inpu"
+          "rationale": "These methods form a cohesive unit focused exclusively on string replacement operations with various strategies (case-sensitive/insensitive, limited occurrences, character vs substring). Extracting th",
+          "post_lcom5": 0.9704,
+          "post_tcc": 0.0627
         },
         {
-          "name": "TextAbbreviator",
-          "methods": 8,
-          "verified": true,
-          "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit focused on abbreviating text strings with ellipsis markers. They share the same core responsibility and work together to provide a complete API for text truncation, "
-        },
-        {
-          "name": "StringAligner",
+          "name": "StringFormatter",
           "methods": 22,
           "verified": true,
-          "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit responsible for string alignment and padding operations. They share common padding logic, alignment algorithms, and formatting constants, making them ideal candidate"
-        },
-        {
-          "name": "StringPrefixRemover",
-          "methods": 7,
-          "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused exclusively on removing prefixes from strings with different sensitivity options. Extracting them into a specialized class improves code organization by isol"
+          "rationale": "These methods form a cohesive unit responsible for string formatting operations including padding, centering, and alignment. They share common formatting logic and work together to transform strings f",
+          "post_lcom5": 0.9726,
+          "post_tcc": 0.0574
         }
       ],
       "post_refactoring": {
-        "methods_extracted": 73,
-        "methods_remaining": 171,
-        "extraction_coverage": 29.9
+        "methods_extracted": 39,
+        "methods_remaining": 205,
+        "extraction_coverage": 16.0,
+        "lcom5": 0.9726,
+        "tcc": 0.0574
       }
     },
     {
@@ -312,7 +302,7 @@
       "class_name": "ArrayUtils",
       "class_file": "src/main/java/org/apache/commons/lang3/ArrayUtils.java",
       "status": "success",
-      "execution_time": 78.5,
+      "execution_time": 63.8,
       "original_metrics": {
         "lcom5": 0.9897,
         "tcc": 0.0913,
@@ -320,46 +310,47 @@
         "num_methods": 388,
         "num_fields": 26
       },
-      "clusters_found": 19,
-      "clusters_filtered": 4,
-      "clusters_rejected": 15,
-      "filter_pass_rate": 21.1,
-      "suggestions_total": 4,
-      "suggestions_verified": 4,
+      "clusters_found": 17,
+      "clusters_filtered": 3,
+      "clusters_rejected": 14,
+      "filter_pass_rate": 17.6,
+      "suggestions_total": 3,
+      "suggestions_verified": 3,
       "suggestions": [
         {
           "name": "ArrayReverser",
           "methods": 18,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit focused exclusively on reversing array elements, implementing the same core algorithm across all primitive and object array types. Extracting them into an ArrayRever"
+          "rationale": "These methods form a cohesive unit focused exclusively on reversing array elements, either for entire arrays or specific ranges. They share identical algorithmic patterns and parameter validation logi",
+          "post_lcom5": 0.9897,
+          "post_tcc": 0.0913
         },
         {
-          "name": "PrimitiveArrayConverter",
-          "methods": 14,
+          "name": "ArrayTypeConverter",
+          "methods": 18,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit responsible for converting primitive arrays to their corresponding wrapper object arrays. They share common conversion patterns, utilize the same empty array constan"
+          "rationale": "These methods form a cohesive unit responsible for converting wrapper object arrays to primitive arrays across all Java primitive types. They share common conversion patterns, null-handling logic, and",
+          "post_lcom5": 0.9912,
+          "post_tcc": 0.0908
         },
         {
           "name": "ArrayInspector",
           "methods": 22,
           "verified": true,
-          "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit focused on inspecting and analyzing array properties without modification. They provide comprehensive array analysis capabilities including length checking, bounds v"
-        },
-        {
-          "name": "ArrayElementRemover",
-          "methods": 47,
-          "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused exclusively on removing multiple elements from arrays by index positions. They share identical behavior across different array types and delegate to common r"
+          "rationale": "These methods form a cohesive unit focused on inspecting and analyzing array properties without modification. They provide read-only operations for examining array characteristics like length, bounds ",
+          "post_lcom5": 0.9897,
+          "post_tcc": 0.091
         }
       ],
       "post_refactoring": {
-        "methods_extracted": 101,
-        "methods_remaining": 287,
-        "extraction_coverage": 26.0
+        "methods_extracted": 58,
+        "methods_remaining": 330,
+        "extraction_coverage": 14.9,
+        "lcom5": 0.9897,
+        "tcc": 0.091
       }
     },
     {
@@ -367,7 +358,7 @@
       "class_name": "NumberUtils",
       "class_file": "src/main/java/org/apache/commons/lang3/math/NumberUtils.java",
       "status": "success",
-      "execution_time": 87.7,
+      "execution_time": 89.2,
       "original_metrics": {
         "lcom5": 1.0,
         "tcc": 0.09,
@@ -387,48 +378,62 @@
           "methods": 9,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive conversion unit that transforms various numeric types into scaled BigDecimal objects with consistent precision and rounding behavior. Extracting them into a BigDecimalCon"
+          "rationale": "These methods form a cohesive conversion unit that transforms various numeric types into scaled BigDecimal objects with consistent null handling and default precision. Extracting them into a BigDecima",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0896
         },
         {
-          "name": "NumericStringParser",
+          "name": "NumberParser",
           "methods": 14,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive parsing unit responsible for converting string representations into various numeric types. They share complex parsing logic, validation rules, and format detection capabi"
+          "rationale": "These methods form a cohesive unit responsible for parsing string representations into various numeric types with comprehensive format validation and error handling. They share the single responsibili",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0838
         },
         {
-          "name": "MaxCalculator",
+          "name": "MaximumFinder",
           "methods": 13,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit focused exclusively on calculating maximum values across all primitive numeric types. They share common validation logic and implement the same mathematical operatio"
+          "rationale": "These methods form a cohesive unit focused on finding maximum values across all primitive numeric types. Extracting them into a MaximumFinder class improves code organization by isolating this specifi",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0874
         },
         {
-          "name": "MinimumCalculator",
+          "name": "MinimumFinder",
           "methods": 13,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit focused on calculating minimum values across all primitive numeric types. They share the same algorithmic responsibility and validation logic, making them ideal cand"
+          "rationale": "These methods form a cohesive unit focused on finding minimum values across all primitive numeric types. Extracting them into a MinimumFinder class creates a specialized mathematical component with a ",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0874
         },
         {
           "name": "DoubleConverter",
           "methods": 4,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit responsible for safely converting different input types to double values with default fallback behavior. Extracting them into a DoubleConverter class improves separa"
+          "rationale": "These methods form a cohesive unit responsible for safely converting different input types to double values with default fallback behavior. Extracting them into a DoubleConverter class improves separa",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.09
         },
         {
           "name": "PrimitiveComparator",
           "methods": 4,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused solely on comparing primitive numeric types using three-way comparison semantics. Extracting them into a PrimitiveComparator class isolates comparison logic "
+          "rationale": "These methods form a cohesive unit focused solely on comparing primitive numeric types using standardized three-way comparison semantics. Extracting them into a PrimitiveComparator class improves sepa",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.09
         }
       ],
       "post_refactoring": {
         "methods_extracted": 57,
         "methods_remaining": 11,
-        "extraction_coverage": 83.8
+        "extraction_coverage": 83.8,
+        "lcom5": 1.0,
+        "tcc": 0.09
       }
     },
     {
@@ -436,7 +441,7 @@
       "class_name": "DateUtils",
       "class_file": "src/main/java/org/apache/commons/lang3/time/DateUtils.java",
       "status": "success",
-      "execution_time": 91.1,
+      "execution_time": 81.5,
       "original_metrics": {
         "lcom5": 1.0,
         "tcc": 0.0466,
@@ -447,57 +452,62 @@
       "clusters_found": 11,
       "clusters_filtered": 6,
       "clusters_rejected": 5,
-      "filter_pass_rate": 54.5,
-      "suggestions_total": 6,
-      "suggestions_verified": 6,
+      "filter_pass_rate": 45.5,
+      "suggestions_total": 5,
+      "suggestions_verified": 5,
       "suggestions": [
-        {
-          "name": "DateParser",
-          "methods": 5,
-          "verified": true,
-          "confidence": 0.92,
-          "rationale": "These methods form a cohesive date parsing unit that should be extracted into a DateParser class. They share the single responsibility of converting date strings to Date objects using various patterns"
-        },
         {
           "name": "DateToTemporalConverter",
           "methods": 7,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive conversion unit that transforms legacy Date objects into modern Java 8+ temporal types. They share common conversion patterns and helper methods, representing a single re"
+          "rationale": "These methods form a cohesive conversion unit that transforms legacy Date objects into modern temporal types. They share common conversion logic, handle timezone considerations consistently, and repre",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0452
         },
         {
-          "name": "DateCalculator",
-          "methods": 18,
+          "name": "DateParser",
+          "methods": 5,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit focused on performing arithmetic calculations on Date objects, including both addition/subtraction and field-setting operations. Extracting them into a DateCalculato"
+          "rationale": "These methods form a cohesive date parsing unit that converts string representations to Date objects using configurable patterns and locales. They share parsing logic, handle different strictness leve",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0457
         },
         {
           "name": "TimeFragmentCalculator",
           "methods": 13,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive computational unit focused on calculating time fragments from dates and calendars. They share the same core algorithm and provide different time unit views of fragment ca"
+          "rationale": "These methods form a cohesive unit responsible for calculating time fragments from dates and calendars. They share the same core algorithm and provide different unit granularities of the same calculat",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0371
+        },
+        {
+          "name": "DateCalculator",
+          "methods": 18,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit focused on performing arithmetic calculations on Date objects. They provide immutable add and set operations across all calendar fields, encapsulating the complexity",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0389
         },
         {
           "name": "DateCalculator",
           "methods": 20,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused on performing mathematical operations and calculations on date/time values. They handle arithmetic operations (add, set), precision-based rounding (round, ce"
-        },
-        {
-          "name": "CalendarFieldManipulator",
-          "methods": 16,
-          "verified": true,
-          "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit responsible for manipulating dates at specific calendar field granularities - truncating, comparing, iterating, and modifying dates based on field boundaries. Extrac"
+          "rationale": "These methods form a cohesive unit focused on mathematical operations with dates and times - adding periods, rounding to boundaries, and performing temporal comparisons. Extracting them into a DateCal",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0357
         }
       ],
       "post_refactoring": {
-        "methods_extracted": 79,
-        "methods_remaining": 0,
-        "extraction_coverage": 117.9
+        "methods_extracted": 63,
+        "methods_remaining": 4,
+        "extraction_coverage": 94.0,
+        "lcom5": 1.0,
+        "tcc": 0.0357
       }
     },
     {
@@ -505,7 +515,7 @@
       "class_name": "SystemUtils",
       "class_file": "src/main/java/org/apache/commons/lang3/SystemUtils.java",
       "status": "success",
-      "execution_time": 46.2,
+      "execution_time": 48.4,
       "original_metrics": {
         "lcom5": 1.0,
         "tcc": 0.0435,
@@ -525,27 +535,35 @@
           "methods": 5,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit responsible for matching operating system names and versions against specified criteria. They share common OS information fields and implement complementary matching"
-        },
-        {
-          "name": "JavaVersionMatcher",
-          "methods": 2,
-          "verified": true,
-          "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit responsible for matching Java version strings against specified prefixes. Extracting them into a JavaVersionMatcher class isolates version comparison logic and impro"
+          "rationale": "These methods form a cohesive unit responsible for matching and comparing operating system names and versions against specified criteria. They share the common purpose of OS detection and work togethe",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0237
         },
         {
           "name": "JavaVersionComparator",
           "methods": 2,
           "verified": true,
-          "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused on comparing Java versions against requirements. They share the same field dependency and provide complementary comparison operations (minimum and maximum ve"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit focused on comparing Java runtime versions against requirements. They share the same domain concept (version comparison) and operate on the same version data, making",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0395
+        },
+        {
+          "name": "JavaVersionMatcher",
+          "methods": 2,
+          "verified": true,
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit responsible for matching Java version strings against version prefixes. Extracting them into a JavaVersionMatcher class isolates version detection logic and improves",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0395
         }
       ],
       "post_refactoring": {
         "methods_extracted": 9,
         "methods_remaining": 14,
-        "extraction_coverage": 39.1
+        "extraction_coverage": 39.1,
+        "lcom5": 1.0,
+        "tcc": 0.0395
       }
     },
     {
@@ -553,7 +571,7 @@
       "class_name": "CollectionUtils",
       "class_file": "src/main/java/org/apache/commons/collections4/CollectionUtils.java",
       "status": "success",
-      "execution_time": 89.3,
+      "execution_time": 87.0,
       "original_metrics": {
         "lcom5": 1.0,
         "tcc": 0.0314,
@@ -573,48 +591,62 @@
           "methods": 5,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods implement the classic two-way merge algorithm for combining sorted iterables into a single sorted result. They form a cohesive algorithmic unit focused solely on merging/collating operat"
+          "rationale": "These methods implement a cohesive merge algorithm that combines two sorted iterables into a single sorted list. Extracting them into a CollectionMerger class isolates this specific algorithmic respon",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.031
+        },
+        {
+          "name": "EmptyCollectionProvider",
+          "methods": 2,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit responsible for providing empty collection instances and handling null collection scenarios safely. Extracting them into an EmptyCollectionProvider class centralizes",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.031
         },
         {
           "name": "CollectionStateInspector",
           "methods": 4,
           "verified": true,
           "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit focused on inspecting the state of collections and container objects to determine emptiness and containment relationships. They share the common responsibility of pr"
+          "rationale": "These methods form a cohesive unit focused on inspecting the state of collections and collection-like objects without modifying them. They provide consistent emptiness and containment checking across ",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0302
         },
         {
           "name": "ElementAccessor",
           "methods": 6,
           "verified": true,
           "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit responsible for accessing and analyzing elements across different collection types. They provide uniform indexed access and element counting functionality, abstracti"
-        },
-        {
-          "name": "EmptyCollectionProvider",
-          "methods": 2,
-          "verified": true,
-          "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit responsible for providing empty collection instances and null-safe collection handling. Extracting them creates a focused provider that encapsulates empty collection"
+          "rationale": "These methods form a cohesive unit responsible for accessing and analyzing elements across different collection types. They provide unified indexed access and element counting functionality, abstracti",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0294
         },
         {
           "name": "CollectionAnalyzer",
           "methods": 13,
           "verified": true,
           "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit focused on analyzing collections - determining relationships between collections, extracting elements based on criteria, and querying collection properties. Extracti"
+          "rationale": "These methods form a cohesive unit focused on analyzing collections - determining relationships between collections, extracting elements based on criteria, and querying collection properties. Extracti",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0274
         },
         {
-          "name": "CollectionBulkOperator",
+          "name": "CollectionOperator",
           "methods": 16,
           "verified": true,
           "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit focused on bulk operations that manipulate entire collections or large portions of them. They share common patterns of null safety, generic type handling, and collec"
+          "rationale": "These methods form a cohesive unit focused on bulk collection operations including adding multiple elements, transforming collections, equality checking, and set operations. They represent a distinct ",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0225
         }
       ],
       "post_refactoring": {
         "methods_extracted": 46,
         "methods_remaining": 25,
-        "extraction_coverage": 64.8
+        "extraction_coverage": 64.8,
+        "lcom5": 1.0,
+        "tcc": 0.0225
       }
     },
     {
@@ -622,7 +654,7 @@
       "class_name": "MapUtils",
       "class_file": "src/main/java/org/apache/commons/collections4/MapUtils.java",
       "status": "success",
-      "execution_time": 74.2,
+      "execution_time": 67.9,
       "original_metrics": {
         "lcom5": 1.0,
         "tcc": 0.0343,
@@ -633,8 +665,8 @@
       "clusters_found": 29,
       "clusters_filtered": 6,
       "clusters_rejected": 23,
-      "filter_pass_rate": 20.7,
-      "suggestions_total": 6,
+      "filter_pass_rate": 17.2,
+      "suggestions_total": 5,
       "suggestions_verified": 3,
       "suggestions": [
         {
@@ -642,48 +674,53 @@
           "methods": 4,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit responsible for populating maps from iterable collections using transformation functions. They share the same algorithmic pattern and domain concept of building maps"
+          "rationale": "These methods form a cohesive unit responsible for populating maps from iterable collections using transformation functions. They share the same algorithmic pattern and domain concept, making them ide",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0343
         },
         {
           "name": "MultiValueMapFactory",
           "methods": 3,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive factory unit responsible for creating MultiValueMap instances from existing maps using different strategies. They share the single responsibility of MultiValueMap constru"
+          "rationale": "These methods form a cohesive factory unit responsible for creating MultiValueMap instances from existing maps with different collection strategies. Extracting them into a dedicated factory class sepa",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0343
         },
         {
           "name": "MapFormatter",
           "methods": 6,
           "verified": false,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit responsible for formatting and displaying Map data structures in readable formats. They share formatting logic, indentation handling, and circular reference detectio"
-        },
-        {
-          "name": "BooleanExtractor",
-          "methods": 9,
-          "verified": false,
-          "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit responsible for extracting and converting boolean values from maps with type safety and default handling. They share common conversion logic and fallback strategies,"
+          "rationale": "These methods form a cohesive unit responsible for formatting and displaying Map data structures in various human-readable formats. They share formatting logic, indentation handling, and work together",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0336
         },
         {
           "name": "MapValueConverter",
           "methods": 24,
           "verified": false,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit responsible for converting map values to specific numeric types with null safety and default value handling. Extracting them creates a focused converter that encapsu"
+          "rationale": "These methods form a cohesive unit responsible for converting map values to specific numeric types with null safety and default value handling. Extracting them creates a focused converter that encapsu",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0254
         },
         {
           "name": "MapAccessor",
           "methods": 3,
           "verified": true,
           "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit focused on safe map data access and retrieval operations. They share the common responsibility of providing null-safe access to map values and converting data struct"
+          "rationale": "These methods form a cohesive unit focused on safely accessing and retrieving values from Map data structures. They provide null-safe access patterns and map conversion capabilities that represent a s",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0339
         }
       ],
       "post_refactoring": {
         "methods_extracted": 10,
         "methods_remaining": 84,
-        "extraction_coverage": 10.6
+        "extraction_coverage": 10.6,
+        "lcom5": 1.0,
+        "tcc": 0.0339
       }
     },
     {
@@ -691,7 +728,7 @@
       "class_name": "IteratorUtils",
       "class_file": "src/main/java/org/apache/commons/collections4/IteratorUtils.java",
       "status": "success",
-      "execution_time": 146.2,
+      "execution_time": 141.2,
       "original_metrics": {
         "lcom5": 1.0,
         "tcc": 0.0223,
@@ -707,80 +744,608 @@
       "suggestions_verified": 10,
       "suggestions": [
         {
-          "name": "ArrayIteratorFactory",
-          "methods": 6,
+          "name": "IteratorFactory",
+          "methods": 3,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive factory unit responsible for creating ResettableIterator instances from arrays. They share the same creation pattern, handle related array types, and encapsulate the logi"
+          "rationale": "These methods form a cohesive factory for creating Iterator instances from various object types. They encapsulate the complex logic of type detection and iterator conversion, implementing a clear fact",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0216
         },
         {
           "name": "ArrayIteratorFactory",
           "methods": 6,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive factory unit responsible for creating ResettableListIterator instances from arrays. They encapsulate the logic for selecting appropriate iterator implementations based on"
+          "rationale": "These methods form a cohesive factory unit responsible for creating ResettableIterator instances from arrays. They share the common purpose of abstracting array iterator creation with various paramete",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0223
+        },
+        {
+          "name": "ArrayIteratorFactory",
+          "methods": 6,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive factory unit responsible for creating ResettableListIterator instances from arrays. They encapsulate the logic for selecting appropriate iterator implementations based on",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0223
+        },
+        {
+          "name": "IteratorCollator",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive factory for creating collated (merged and sorted) iterators from multiple input iterators. They share the same core responsibility of handling comparator normalization an",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0223
         },
         {
           "name": "ZippingIteratorFactory",
           "methods": 3,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive factory unit responsible exclusively for creating ZippingIterator instances with different parameter configurations. Extracting them into a dedicated factory class improv"
+          "rationale": "These methods form a cohesive factory unit responsible exclusively for creating ZippingIterator instances with different parameter combinations. Extracting them into a dedicated factory class improves",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0223
         },
         {
-          "name": "IteratorFactory",
+          "name": "IteratorFormatter",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive formatting unit responsible for converting Iterator objects into formatted string representations. They share formatting logic, work with the same data type (Iterator), a",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0223
+        },
+        {
+          "name": "IteratorSearcher",
           "methods": 3,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive factory responsible for creating Iterator instances from various object types. They encapsulate complex type detection and conversion logic, providing a unified interface"
-        },
-        {
-          "name": "IteratorChainFactory",
-          "methods": 4,
-          "verified": true,
-          "confidence": 0.9,
-          "rationale": "These methods form a cohesive factory for creating chained iterators that traverse multiple iterator sources sequentially. They share the single responsibility of iterator chain construction through d"
+          "rationale": "These methods form a cohesive unit focused on searching through iterators using different matching strategies. They share the common responsibility of traversing iterators and applying search criteria",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0216
         },
         {
           "name": "IteratorConverter",
           "methods": 8,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive conversion unit that transforms Iterator objects into various collection types (List, Set, Array). They share the common responsibility of materializing lazy iteration in"
+          "rationale": "These methods form a cohesive unit responsible for converting Iterator objects into various collection types and data structures. They share the common responsibility of materializing iterator data in",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.02
         },
         {
-          "name": "IteratorCollator",
-          "methods": 3,
+          "name": "IteratorChainFactory",
+          "methods": 4,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused on collating (merging and sorting) multiple iterators into a single sorted iterator. They share the same algorithmic responsibility and work together to prov"
-        },
-        {
-          "name": "IteratorFormatter",
-          "methods": 3,
-          "verified": true,
-          "confidence": 0.9,
-          "rationale": "These methods form a cohesive formatting unit responsible for converting iterator contents into formatted strings with customizable delimiters, prefixes, and suffixes. Extracting them into an Iterator"
-        },
-        {
-          "name": "IteratorSearcher",
-          "methods": 3,
-          "verified": true,
-          "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit focused on searching through iterators using different criteria (exact match, predicate-based search, and existence checking). Extracting them into an IteratorSearch"
+          "rationale": "These methods form a cohesive factory unit responsible for creating chained iterators from various input sources. They share the single responsibility of iterator composition and should be extracted i",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0223
         },
         {
           "name": "IteratorIndexAccessor",
           "methods": 3,
           "verified": true,
           "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit responsible for providing indexed access to iterator elements. They share the common purpose of converting sequential iterator traversal into positional element retr"
+          "rationale": "These methods form a cohesive unit responsible for providing indexed access to iterator elements. They share the common purpose of converting sequential iterator traversal into positional element retr",
+          "post_lcom5": 1.0,
+          "post_tcc": 0.0216
         }
       ],
       "post_refactoring": {
         "methods_extracted": 42,
         "methods_remaining": 36,
-        "extraction_coverage": 53.8
+        "extraction_coverage": 53.8,
+        "lcom5": 1.0,
+        "tcc": 0.0216
+      }
+    },
+    {
+      "project": "jfreechart",
+      "class_name": "XYPlot",
+      "class_file": "src/main/java/org/jfree/chart/plot/XYPlot.java",
+      "status": "success",
+      "execution_time": 23.6,
+      "original_metrics": {
+        "lcom5": 0.9769,
+        "tcc": 0.0494,
+        "cbo": 0,
+        "num_methods": 236,
+        "num_fields": 63
+      },
+      "clusters_found": 10,
+      "clusters_filtered": 1,
+      "clusters_rejected": 9,
+      "filter_pass_rate": 10.0,
+      "suggestions_total": 1,
+      "suggestions_verified": 1,
+      "suggestions": [
+        {
+          "name": "MarkerRegistry",
+          "methods": 24,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive marker management subsystem that maintains organized collections of markers by axis type, layer, and index. Extracting them into a MarkerRegistry improves separation of c",
+          "post_lcom5": 0.9762,
+          "post_tcc": 0.0595
+        }
+      ],
+      "post_refactoring": {
+        "methods_extracted": 24,
+        "methods_remaining": 212,
+        "extraction_coverage": 10.2,
+        "lcom5": 0.9762,
+        "tcc": 0.0595
+      }
+    },
+    {
+      "project": "jfreechart",
+      "class_name": "CategoryPlot",
+      "class_file": "src/main/java/org/jfree/chart/plot/CategoryPlot.java",
+      "status": "success",
+      "execution_time": 44.7,
+      "original_metrics": {
+        "lcom5": 0.9771,
+        "tcc": 0.0488,
+        "cbo": 0,
+        "num_methods": 225,
+        "num_fields": 60
+      },
+      "clusters_found": 13,
+      "clusters_filtered": 3,
+      "clusters_rejected": 10,
+      "filter_pass_rate": 23.1,
+      "suggestions_total": 3,
+      "suggestions_verified": 3,
+      "suggestions": [
+        {
+          "name": "MarkerRegistry",
+          "methods": 26,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive marker management system that maintains collections of domain and range markers organized by layer and index. Extracting them into a MarkerRegistry centralizes all marker",
+          "post_lcom5": 0.9761,
+          "post_tcc": 0.062
+        },
+        {
+          "name": "DomainAxisLocationRegistry",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit responsible for registering and managing domain axis locations within a plot. They share the same data structure and validation logic, representing a clear \"registry",
+          "post_lcom5": 0.9773,
+          "post_tcc": 0.0486
+        },
+        {
+          "name": "DomainZoomConstraint",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.75,
+          "rationale": "These methods represent a cohesive constraint behavior - the inability to perform domain axis zooming in category plots. Extracting them into a DomainZoomConstraint class encapsulates this specific in",
+          "post_lcom5": 0.9773,
+          "post_tcc": 0.0488
+        }
+      ],
+      "post_refactoring": {
+        "methods_extracted": 33,
+        "methods_remaining": 192,
+        "extraction_coverage": 14.7,
+        "lcom5": 0.9773,
+        "tcc": 0.0488
+      }
+    },
+    {
+      "project": "jfreechart",
+      "class_name": "PiePlot",
+      "class_file": "src/main/java/org/jfree/chart/plot/pie/PiePlot.java",
+      "status": "success",
+      "execution_time": 3.4,
+      "original_metrics": {
+        "lcom5": 0.9628,
+        "tcc": 0.0929,
+        "cbo": 0,
+        "num_methods": 132,
+        "num_fields": 63
+      },
+      "clusters_found": 3,
+      "clusters_filtered": 0,
+      "clusters_rejected": 3,
+      "filter_pass_rate": 0.0,
+      "suggestions_total": 0,
+      "suggestions_verified": 0,
+      "suggestions": [],
+      "post_refactoring": {
+        "methods_extracted": 0,
+        "methods_remaining": 132,
+        "extraction_coverage": 0.0
+      }
+    },
+    {
+      "project": "jfreechart",
+      "class_name": "AbstractRenderer",
+      "class_file": "src/main/java/org/jfree/chart/renderer/AbstractRenderer.java",
+      "status": "success",
+      "execution_time": 22.9,
+      "original_metrics": {
+        "lcom5": 0.9758,
+        "tcc": 0.0478,
+        "cbo": 0,
+        "num_methods": 169,
+        "num_fields": 59
+      },
+      "clusters_found": 11,
+      "clusters_filtered": 2,
+      "clusters_rejected": 9,
+      "filter_pass_rate": 18.2,
+      "suggestions_total": 2,
+      "suggestions_verified": 0,
+      "suggestions": [
+        {
+          "name": "EntityCreationPolicy",
+          "methods": 4,
+          "verified": false,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive policy system for determining when chart entities should be created during rendering. They manage a hierarchical decision process (item \u2192 series \u2192 default) and encapsulat",
+          "post_lcom5": 0.9758,
+          "post_tcc": 0.0478
+        },
+        {
+          "name": "NegativeItemLabelPositionRegistry",
+          "methods": 7,
+          "verified": false,
+          "confidence": 0.88,
+          "rationale": "These methods and fields form a cohesive registry system for managing negative item label positions in chart rendering. They provide a hierarchical lookup mechanism with series-specific overrides and ",
+          "post_lcom5": 0.9754,
+          "post_tcc": 0.049
+        }
+      ],
+      "post_refactoring": {
+        "methods_extracted": 0,
+        "methods_remaining": 169,
+        "extraction_coverage": 0.0
+      }
+    },
+    {
+      "project": "jfreechart",
+      "class_name": "ChartPanel",
+      "class_file": "src/main/java/org/jfree/chart/swing/ChartPanel.java",
+      "status": "success",
+      "execution_time": 25.9,
+      "original_metrics": {
+        "lcom5": 0.9751,
+        "tcc": 0.1515,
+        "cbo": 0,
+        "num_methods": 115,
+        "num_fields": 78
+      },
+      "clusters_found": 11,
+      "clusters_filtered": 2,
+      "clusters_rejected": 9,
+      "filter_pass_rate": 18.2,
+      "suggestions_total": 2,
+      "suggestions_verified": 2,
+      "suggestions": [
+        {
+          "name": "TooltipDelayOverride",
+          "methods": 8,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These members form a cohesive unit responsible for temporarily overriding system tooltip delays with custom values during mouse interactions. They encapsulate the complete lifecycle of storing origina",
+          "post_lcom5": 0.9737,
+          "post_tcc": 0.1539
+        },
+        {
+          "name": "MouseWheelFeatureToggle",
+          "methods": 2,
+          "verified": true,
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit responsible for managing the enabled/disabled state of mouse wheel functionality. They encapsulate the logic for lazy initialization and cleanup of the mouse wheel h",
+          "post_lcom5": 0.9751,
+          "post_tcc": 0.1515
+        }
+      ],
+      "post_refactoring": {
+        "methods_extracted": 10,
+        "methods_remaining": 105,
+        "extraction_coverage": 8.7,
+        "lcom5": 0.9751,
+        "tcc": 0.1515
+      }
+    },
+    {
+      "project": "commons-math",
+      "class_name": "AccurateMath",
+      "class_file": "commons-math-core/src/main/java/org/apache/commons/math4/core/jdkmath/AccurateMath.java",
+      "status": "success",
+      "execution_time": 162.8,
+      "original_metrics": {
+        "lcom5": 0.9857,
+        "tcc": 0.0878,
+        "cbo": 0,
+        "num_methods": 88,
+        "num_fields": 50
+      },
+      "clusters_found": 12,
+      "clusters_filtered": 6,
+      "clusters_rejected": 6,
+      "filter_pass_rate": 50.0,
+      "suggestions_total": 6,
+      "suggestions_verified": 6,
+      "suggestions": [
+        {
+          "name": "FloatingPointNavigator",
+          "methods": 6,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit responsible for navigating between adjacent floating-point values in IEEE 754 representation. They handle the complex bit-level operations needed to move precisely t",
+          "post_lcom5": 0.9857,
+          "post_tcc": 0.0857
+        },
+        {
+          "name": "OverflowSafeArithmetic",
+          "methods": 11,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit responsible for performing basic arithmetic operations with overflow protection. They share common overflow detection patterns and error handling, representing a dis",
+          "post_lcom5": 0.9878,
+          "post_tcc": 0.0747
+        },
+        {
+          "name": "FloorArithmeticCalculator",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit responsible for floor-based arithmetic operations (division and modulo). They share common mathematical algorithms, error handling patterns, and operate on the same ",
+          "post_lcom5": 0.9862,
+          "post_tcc": 0.0867
+        },
+        {
+          "name": "LogarithmCalculator",
+          "methods": 7,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit for computing logarithmic functions including natural logarithms, arbitrary base logarithms, and inverse hyperbolic functions (which are mathematically defined using",
+          "post_lcom5": 0.986,
+          "post_tcc": 0.0797
+        },
+        {
+          "name": "NumericComparator",
+          "methods": 8,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit responsible for comparing numeric values and finding minimum/maximum results across all primitive numeric types. They share specialized logic for handling floating-p",
+          "post_lcom5": 0.9857,
+          "post_tcc": 0.0857
+        },
+        {
+          "name": "FloatingPointArithmetic",
+          "methods": 16,
+          "verified": true,
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit responsible for precise floating-point arithmetic operations that require direct bit manipulation of IEEE 754 representations. Extracting them creates a specialized ",
+          "post_lcom5": 0.9854,
+          "post_tcc": 0.0815
+        }
+      ],
+      "post_refactoring": {
+        "methods_extracted": 52,
+        "methods_remaining": 36,
+        "extraction_coverage": 59.1,
+        "lcom5": 0.9854,
+        "tcc": 0.0815
+      }
+    },
+    {
+      "project": "commons-math",
+      "class_name": "Dfp",
+      "class_file": "commons-math-legacy-core/src/main/java/org/apache/commons/math4/legacy/core/dfp/Dfp.java",
+      "status": "success",
+      "execution_time": 31.7,
+      "original_metrics": {
+        "lcom5": 0.9255,
+        "tcc": 0.3273,
+        "cbo": 0,
+        "num_methods": 113,
+        "num_fields": 26
+      },
+      "clusters_found": 7,
+      "clusters_filtered": 1,
+      "clusters_rejected": 6,
+      "filter_pass_rate": 14.3,
+      "suggestions_total": 1,
+      "suggestions_verified": 1,
+      "suggestions": [
+        {
+          "name": "DfpCalculator",
+          "methods": 21,
+          "verified": true,
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive computational unit that should be extracted into a DfpCalculator class. They share mathematical operations, computational algorithms, and error handling for decimal float",
+          "post_lcom5": 0.9279,
+          "post_tcc": 0.2968
+        }
+      ],
+      "post_refactoring": {
+        "methods_extracted": 21,
+        "methods_remaining": 92,
+        "extraction_coverage": 18.6,
+        "lcom5": 0.9279,
+        "tcc": 0.2968
+      }
+    },
+    {
+      "project": "commons-math",
+      "class_name": "BOBYQAOptimizer",
+      "class_file": "commons-math-legacy/src/main/java/org/apache/commons/math4/legacy/optim/nonlinear/scalar/noderiv/BOBYQAOptimizer.java",
+      "status": "success",
+      "execution_time": 2.3,
+      "original_metrics": {
+        "lcom5": 0.8086,
+        "tcc": 0.6795,
+        "cbo": 0,
+        "num_methods": 13,
+        "num_fields": 37
+      },
+      "clusters_found": 1,
+      "clusters_filtered": 0,
+      "clusters_rejected": 1,
+      "filter_pass_rate": 0.0,
+      "suggestions_total": 0,
+      "suggestions_verified": 0,
+      "suggestions": [],
+      "post_refactoring": {
+        "methods_extracted": 0,
+        "methods_remaining": 13,
+        "extraction_coverage": 0.0
+      }
+    },
+    {
+      "project": "commons-math",
+      "class_name": "DSCompiler",
+      "class_file": "commons-math-legacy/src/main/java/org/apache/commons/math4/legacy/analysis/differentiation/DSCompiler.java",
+      "status": "success",
+      "execution_time": 22.2,
+      "original_metrics": {
+        "lcom5": 0.8484,
+        "tcc": 0.539,
+        "cbo": 0,
+        "num_methods": 48,
+        "num_fields": 8
+      },
+      "clusters_found": 2,
+      "clusters_filtered": 1,
+      "clusters_rejected": 1,
+      "filter_pass_rate": 50.0,
+      "suggestions_total": 1,
+      "suggestions_verified": 0,
+      "suggestions": [
+        {
+          "name": "LinearCombinationCalculator",
+          "methods": 3,
+          "verified": false,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive mathematical computation unit that performs linear combinations of arrays with scalar coefficients. Extracting them into a LinearCombinationCalculator class isolates this",
+          "post_lcom5": 0.8605,
+          "post_tcc": 0.5363
+        }
+      ],
+      "post_refactoring": {
+        "methods_extracted": 0,
+        "methods_remaining": 48,
+        "extraction_coverage": 0.0
+      }
+    },
+    {
+      "project": "commons-text",
+      "class_name": "TextStringBuilder",
+      "class_file": "src/main/java/org/apache/commons/text/TextStringBuilder.java",
+      "status": "success",
+      "execution_time": 2.5,
+      "original_metrics": {
+        "lcom5": 0.9221,
+        "tcc": 0.3336,
+        "cbo": 0,
+        "num_methods": 169,
+        "num_fields": 12
+      },
+      "clusters_found": 6,
+      "clusters_filtered": 0,
+      "clusters_rejected": 6,
+      "filter_pass_rate": 0.0,
+      "suggestions_total": 0,
+      "suggestions_verified": 0,
+      "suggestions": [],
+      "post_refactoring": {
+        "methods_extracted": 0,
+        "methods_remaining": 169,
+        "extraction_coverage": 0.0
+      }
+    },
+    {
+      "project": "commons-text",
+      "class_name": "StringLookupFactory",
+      "class_file": "src/main/java/org/apache/commons/text/lookup/StringLookupFactory.java",
+      "status": "success",
+      "execution_time": 39.0,
+      "original_metrics": {
+        "lcom5": 0.9982,
+        "tcc": 0.1878,
+        "cbo": 0,
+        "num_methods": 41,
+        "num_fields": 28
+      },
+      "clusters_found": 38,
+      "clusters_filtered": 4,
+      "clusters_rejected": 34,
+      "filter_pass_rate": 5.3,
+      "suggestions_total": 2,
+      "suggestions_verified": 2,
+      "suggestions": [
+        {
+          "name": "StringLookupRegistry",
+          "methods": 24,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive registry of StringLookup instances, providing centralized access to various lookup implementations. Extracting them into a StringLookupRegistry improves separation of con",
+          "post_lcom5": 0.9875,
+          "post_tcc": 0.35
+        },
+        {
+          "name": "Base64DecoderFactory",
+          "methods": 2,
+          "verified": true,
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit focused solely on providing Base64 decoding string lookup instances. Extracting them into a specialized factory improves separation of concerns by isolating Base64 d",
+          "post_lcom5": 0.9982,
+          "post_tcc": 0.1878
+        }
+      ],
+      "post_refactoring": {
+        "methods_extracted": 26,
+        "methods_remaining": 15,
+        "extraction_coverage": 63.4,
+        "lcom5": 0.9982,
+        "tcc": 0.1878
+      }
+    },
+    {
+      "project": "commons-text",
+      "class_name": "StringSubstitutor",
+      "class_file": "src/main/java/org/apache/commons/text/StringSubstitutor.java",
+      "status": "success",
+      "execution_time": 19.4,
+      "original_metrics": {
+        "lcom5": 0.9529,
+        "tcc": 0.2152,
+        "cbo": 0,
+        "num_methods": 62,
+        "num_fields": 16
+      },
+      "clusters_found": 5,
+      "clusters_filtered": 1,
+      "clusters_rejected": 4,
+      "filter_pass_rate": 20.0,
+      "suggestions_total": 1,
+      "suggestions_verified": 1,
+      "suggestions": [
+        {
+          "name": "VariableSubstitutionEngine",
+          "methods": 25,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive variable substitution system that handles placeholder resolution, cyclic detection, and nested variable processing. Extracting them creates a focused engine responsible s",
+          "post_lcom5": 0.9402,
+          "post_tcc": 0.2147
+        }
+      ],
+      "post_refactoring": {
+        "methods_extracted": 25,
+        "methods_remaining": 37,
+        "extraction_coverage": 40.3,
+        "lcom5": 0.9402,
+        "tcc": 0.2147
       }
     }
   ]

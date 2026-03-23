@@ -3,7 +3,7 @@
   "class_name": "MapUtils",
   "class_file": "src/main/java/org/apache/commons/collections4/MapUtils.java",
   "status": "success",
-  "execution_time": 74.2,
+  "execution_time": 67.9,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.0343,
@@ -14,8 +14,8 @@
   "clusters_found": 29,
   "clusters_filtered": 6,
   "clusters_rejected": 23,
-  "filter_pass_rate": 20.7,
-  "suggestions_total": 6,
+  "filter_pass_rate": 17.2,
+  "suggestions_total": 5,
   "suggestions_verified": 3,
   "suggestions": [
     {
@@ -23,47 +23,52 @@
       "methods": 4,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for populating maps from iterable collections using transformation functions. They share the same algorithmic pattern and domain concept of building maps"
+      "rationale": "These methods form a cohesive unit responsible for populating maps from iterable collections using transformation functions. They share the same algorithmic pattern and domain concept, making them ide",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0343
     },
     {
       "name": "MultiValueMapFactory",
       "methods": 3,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive factory unit responsible for creating MultiValueMap instances from existing maps using different strategies. They share the single responsibility of MultiValueMap constru"
+      "rationale": "These methods form a cohesive factory unit responsible for creating MultiValueMap instances from existing maps with different collection strategies. Extracting them into a dedicated factory class sepa",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0343
     },
     {
       "name": "MapFormatter",
       "methods": 6,
       "verified": false,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for formatting and displaying Map data structures in readable formats. They share formatting logic, indentation handling, and circular reference detectio"
-    },
-    {
-      "name": "BooleanExtractor",
-      "methods": 9,
-      "verified": false,
-      "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for extracting and converting boolean values from maps with type safety and default handling. They share common conversion logic and fallback strategies,"
+      "rationale": "These methods form a cohesive unit responsible for formatting and displaying Map data structures in various human-readable formats. They share formatting logic, indentation handling, and work together",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0336
     },
     {
       "name": "MapValueConverter",
       "methods": 24,
       "verified": false,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for converting map values to specific numeric types with null safety and default value handling. Extracting them creates a focused converter that encapsu"
+      "rationale": "These methods form a cohesive unit responsible for converting map values to specific numeric types with null safety and default value handling. Extracting them creates a focused converter that encapsu",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0254
     },
     {
       "name": "MapAccessor",
       "methods": 3,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit focused on safe map data access and retrieval operations. They share the common responsibility of providing null-safe access to map values and converting data struct"
+      "rationale": "These methods form a cohesive unit focused on safely accessing and retrieving values from Map data structures. They provide null-safe access patterns and map conversion capabilities that represent a s",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0339
     }
   ],
   "post_refactoring": {
     "methods_extracted": 10,
     "methods_remaining": 84,
-    "extraction_coverage": 10.6
+    "extraction_coverage": 10.6,
+    "lcom5": 1.0,
+    "tcc": 0.0339
   }
 }

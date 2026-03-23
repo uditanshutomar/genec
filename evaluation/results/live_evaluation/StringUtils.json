@@ -3,7 +3,7 @@
   "class_name": "StringUtils",
   "class_file": "src/main/java/org/apache/commons/lang3/StringUtils.java",
   "status": "success",
-  "execution_time": 95.6,
+  "execution_time": 66.5,
   "original_metrics": {
     "lcom5": 0.9695,
     "tcc": 0.0643,
@@ -14,56 +14,43 @@
   "clusters_found": 25,
   "clusters_filtered": 6,
   "clusters_rejected": 19,
-  "filter_pass_rate": 24.0,
-  "suggestions_total": 6,
-  "suggestions_verified": 6,
+  "filter_pass_rate": 12.0,
+  "suggestions_total": 3,
+  "suggestions_verified": 3,
   "suggestions": [
-    {
-      "name": "StringReplacer",
-      "methods": 13,
-      "verified": true,
-      "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused exclusively on string replacement operations with different strategies (case-sensitive, case-insensitive, character-based, bounded). Extracting them into a S"
-    },
     {
       "name": "StringComparator",
       "methods": 4,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive comparison unit that handles null-safe string comparison with various options (case sensitivity, null ordering). Extracting them into a StringComparator class isolates co"
+      "rationale": "These methods form a cohesive comparison unit that implements various string comparison strategies with null-safe handling. They share the common responsibility of comparing strings and returning stan",
+      "post_lcom5": 0.9695,
+      "post_tcc": 0.0642
     },
     {
-      "name": "StringSplitter",
-      "methods": 19,
+      "name": "StringReplacer",
+      "methods": 13,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for splitting strings into arrays based on various separator criteria. They share common splitting algorithms, work with the same data types (String inpu"
+      "rationale": "These methods form a cohesive unit focused exclusively on string replacement operations with various strategies (case-sensitive/insensitive, limited occurrences, character vs substring). Extracting th",
+      "post_lcom5": 0.9704,
+      "post_tcc": 0.0627
     },
     {
-      "name": "TextAbbreviator",
-      "methods": 8,
-      "verified": true,
-      "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused on abbreviating text strings with ellipsis markers. They share the same core responsibility and work together to provide a complete API for text truncation, "
-    },
-    {
-      "name": "StringAligner",
+      "name": "StringFormatter",
       "methods": 22,
       "verified": true,
-      "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for string alignment and padding operations. They share common padding logic, alignment algorithms, and formatting constants, making them ideal candidate"
-    },
-    {
-      "name": "StringPrefixRemover",
-      "methods": 7,
-      "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused exclusively on removing prefixes from strings with different sensitivity options. Extracting them into a specialized class improves code organization by isol"
+      "rationale": "These methods form a cohesive unit responsible for string formatting operations including padding, centering, and alignment. They share common formatting logic and work together to transform strings f",
+      "post_lcom5": 0.9726,
+      "post_tcc": 0.0574
     }
   ],
   "post_refactoring": {
-    "methods_extracted": 73,
-    "methods_remaining": 171,
-    "extraction_coverage": 29.9
+    "methods_extracted": 39,
+    "methods_remaining": 205,
+    "extraction_coverage": 16.0,
+    "lcom5": 0.9726,
+    "tcc": 0.0574
   }
 }

@@ -1,0 +1,47 @@
+{
+  "project": "commons-text",
+  "class_name": "StringLookupFactory",
+  "class_file": "src/main/java/org/apache/commons/text/lookup/StringLookupFactory.java",
+  "status": "success",
+  "execution_time": 39.0,
+  "original_metrics": {
+    "lcom5": 0.9982,
+    "tcc": 0.1878,
+    "cbo": 0,
+    "num_methods": 41,
+    "num_fields": 28
+  },
+  "clusters_found": 38,
+  "clusters_filtered": 4,
+  "clusters_rejected": 34,
+  "filter_pass_rate": 5.3,
+  "suggestions_total": 2,
+  "suggestions_verified": 2,
+  "suggestions": [
+    {
+      "name": "StringLookupRegistry",
+      "methods": 24,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive registry of StringLookup instances, providing centralized access to various lookup implementations. Extracting them into a StringLookupRegistry improves separation of con",
+      "post_lcom5": 0.9875,
+      "post_tcc": 0.35
+    },
+    {
+      "name": "Base64DecoderFactory",
+      "methods": 2,
+      "verified": true,
+      "confidence": 0.88,
+      "rationale": "These methods form a cohesive unit focused solely on providing Base64 decoding string lookup instances. Extracting them into a specialized factory improves separation of concerns by isolating Base64 d",
+      "post_lcom5": 0.9982,
+      "post_tcc": 0.1878
+    }
+  ],
+  "post_refactoring": {
+    "methods_extracted": 26,
+    "methods_remaining": 15,
+    "extraction_coverage": 63.4,
+    "lcom5": 0.9982,
+    "tcc": 0.1878
+  }
+}

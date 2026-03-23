@@ -1,0 +1,36 @@
+{
+  "project": "commons-math",
+  "class_name": "DSCompiler",
+  "class_file": "commons-math-legacy/src/main/java/org/apache/commons/math4/legacy/analysis/differentiation/DSCompiler.java",
+  "status": "success",
+  "execution_time": 22.2,
+  "original_metrics": {
+    "lcom5": 0.8484,
+    "tcc": 0.539,
+    "cbo": 0,
+    "num_methods": 48,
+    "num_fields": 8
+  },
+  "clusters_found": 2,
+  "clusters_filtered": 1,
+  "clusters_rejected": 1,
+  "filter_pass_rate": 50.0,
+  "suggestions_total": 1,
+  "suggestions_verified": 0,
+  "suggestions": [
+    {
+      "name": "LinearCombinationCalculator",
+      "methods": 3,
+      "verified": false,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive mathematical computation unit that performs linear combinations of arrays with scalar coefficients. Extracting them into a LinearCombinationCalculator class isolates this",
+      "post_lcom5": 0.8605,
+      "post_tcc": 0.5363
+    }
+  ],
+  "post_refactoring": {
+    "methods_extracted": 0,
+    "methods_remaining": 48,
+    "extraction_coverage": 0.0
+  }
+}

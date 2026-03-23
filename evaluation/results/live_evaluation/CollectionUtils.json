@@ -3,7 +3,7 @@
   "class_name": "CollectionUtils",
   "class_file": "src/main/java/org/apache/commons/collections4/CollectionUtils.java",
   "status": "success",
-  "execution_time": 89.3,
+  "execution_time": 87.0,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.0314,
@@ -23,47 +23,61 @@
       "methods": 5,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods implement the classic two-way merge algorithm for combining sorted iterables into a single sorted result. They form a cohesive algorithmic unit focused solely on merging/collating operat"
+      "rationale": "These methods implement a cohesive merge algorithm that combines two sorted iterables into a single sorted list. Extracting them into a CollectionMerger class isolates this specific algorithmic respon",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.031
+    },
+    {
+      "name": "EmptyCollectionProvider",
+      "methods": 2,
+      "verified": true,
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive unit responsible for providing empty collection instances and handling null collection scenarios safely. Extracting them into an EmptyCollectionProvider class centralizes",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.031
     },
     {
       "name": "CollectionStateInspector",
       "methods": 4,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit focused on inspecting the state of collections and container objects to determine emptiness and containment relationships. They share the common responsibility of pr"
+      "rationale": "These methods form a cohesive unit focused on inspecting the state of collections and collection-like objects without modifying them. They provide consistent emptiness and containment checking across ",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0302
     },
     {
       "name": "ElementAccessor",
       "methods": 6,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit responsible for accessing and analyzing elements across different collection types. They provide uniform indexed access and element counting functionality, abstracti"
-    },
-    {
-      "name": "EmptyCollectionProvider",
-      "methods": 2,
-      "verified": true,
-      "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit responsible for providing empty collection instances and null-safe collection handling. Extracting them creates a focused provider that encapsulates empty collection"
+      "rationale": "These methods form a cohesive unit responsible for accessing and analyzing elements across different collection types. They provide unified indexed access and element counting functionality, abstracti",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0294
     },
     {
       "name": "CollectionAnalyzer",
       "methods": 13,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit focused on analyzing collections - determining relationships between collections, extracting elements based on criteria, and querying collection properties. Extracti"
+      "rationale": "These methods form a cohesive unit focused on analyzing collections - determining relationships between collections, extracting elements based on criteria, and querying collection properties. Extracti",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0274
     },
     {
-      "name": "CollectionBulkOperator",
+      "name": "CollectionOperator",
       "methods": 16,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit focused on bulk operations that manipulate entire collections or large portions of them. They share common patterns of null safety, generic type handling, and collec"
+      "rationale": "These methods form a cohesive unit focused on bulk collection operations including adding multiple elements, transforming collections, equality checking, and set operations. They represent a distinct ",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0225
     }
   ],
   "post_refactoring": {
     "methods_extracted": 46,
     "methods_remaining": 25,
-    "extraction_coverage": 64.8
+    "extraction_coverage": 64.8,
+    "lcom5": 1.0,
+    "tcc": 0.0225
   }
 }

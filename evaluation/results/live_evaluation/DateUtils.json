@@ -3,7 +3,7 @@
   "class_name": "DateUtils",
   "class_file": "src/main/java/org/apache/commons/lang3/time/DateUtils.java",
   "status": "success",
-  "execution_time": 91.1,
+  "execution_time": 81.5,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.0466,
@@ -14,56 +14,61 @@
   "clusters_found": 11,
   "clusters_filtered": 6,
   "clusters_rejected": 5,
-  "filter_pass_rate": 54.5,
-  "suggestions_total": 6,
-  "suggestions_verified": 6,
+  "filter_pass_rate": 45.5,
+  "suggestions_total": 5,
+  "suggestions_verified": 5,
   "suggestions": [
-    {
-      "name": "DateParser",
-      "methods": 5,
-      "verified": true,
-      "confidence": 0.92,
-      "rationale": "These methods form a cohesive date parsing unit that should be extracted into a DateParser class. They share the single responsibility of converting date strings to Date objects using various patterns"
-    },
     {
       "name": "DateToTemporalConverter",
       "methods": 7,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive conversion unit that transforms legacy Date objects into modern Java 8+ temporal types. They share common conversion patterns and helper methods, representing a single re"
+      "rationale": "These methods form a cohesive conversion unit that transforms legacy Date objects into modern temporal types. They share common conversion logic, handle timezone considerations consistently, and repre",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0452
     },
     {
-      "name": "DateCalculator",
-      "methods": 18,
+      "name": "DateParser",
+      "methods": 5,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused on performing arithmetic calculations on Date objects, including both addition/subtraction and field-setting operations. Extracting them into a DateCalculato"
+      "rationale": "These methods form a cohesive date parsing unit that converts string representations to Date objects using configurable patterns and locales. They share parsing logic, handle different strictness leve",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0457
     },
     {
       "name": "TimeFragmentCalculator",
       "methods": 13,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive computational unit focused on calculating time fragments from dates and calendars. They share the same core algorithm and provide different time unit views of fragment ca"
+      "rationale": "These methods form a cohesive unit responsible for calculating time fragments from dates and calendars. They share the same core algorithm and provide different unit granularities of the same calculat",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0371
+    },
+    {
+      "name": "DateCalculator",
+      "methods": 18,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit focused on performing arithmetic calculations on Date objects. They provide immutable add and set operations across all calendar fields, encapsulating the complexity",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0389
     },
     {
       "name": "DateCalculator",
       "methods": 20,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused on performing mathematical operations and calculations on date/time values. They handle arithmetic operations (add, set), precision-based rounding (round, ce"
-    },
-    {
-      "name": "CalendarFieldManipulator",
-      "methods": 16,
-      "verified": true,
-      "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit responsible for manipulating dates at specific calendar field granularities - truncating, comparing, iterating, and modifying dates based on field boundaries. Extrac"
+      "rationale": "These methods form a cohesive unit focused on mathematical operations with dates and times - adding periods, rounding to boundaries, and performing temporal comparisons. Extracting them into a DateCal",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0357
     }
   ],
   "post_refactoring": {
-    "methods_extracted": 79,
-    "methods_remaining": 0,
-    "extraction_coverage": 117.9
+    "methods_extracted": 63,
+    "methods_remaining": 4,
+    "extraction_coverage": 94.0,
+    "lcom5": 1.0,
+    "tcc": 0.0357
   }
 }

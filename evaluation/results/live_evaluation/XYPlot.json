@@ -1,0 +1,38 @@
+{
+  "project": "jfreechart",
+  "class_name": "XYPlot",
+  "class_file": "src/main/java/org/jfree/chart/plot/XYPlot.java",
+  "status": "success",
+  "execution_time": 23.6,
+  "original_metrics": {
+    "lcom5": 0.9769,
+    "tcc": 0.0494,
+    "cbo": 0,
+    "num_methods": 236,
+    "num_fields": 63
+  },
+  "clusters_found": 10,
+  "clusters_filtered": 1,
+  "clusters_rejected": 9,
+  "filter_pass_rate": 10.0,
+  "suggestions_total": 1,
+  "suggestions_verified": 1,
+  "suggestions": [
+    {
+      "name": "MarkerRegistry",
+      "methods": 24,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive marker management subsystem that maintains organized collections of markers by axis type, layer, and index. Extracting them into a MarkerRegistry improves separation of c",
+      "post_lcom5": 0.9762,
+      "post_tcc": 0.0595
+    }
+  ],
+  "post_refactoring": {
+    "methods_extracted": 24,
+    "methods_remaining": 212,
+    "extraction_coverage": 10.2,
+    "lcom5": 0.9762,
+    "tcc": 0.0595
+  }
+}

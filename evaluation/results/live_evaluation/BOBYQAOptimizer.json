@@ -1,0 +1,26 @@
+{
+  "project": "commons-math",
+  "class_name": "BOBYQAOptimizer",
+  "class_file": "commons-math-legacy/src/main/java/org/apache/commons/math4/legacy/optim/nonlinear/scalar/noderiv/BOBYQAOptimizer.java",
+  "status": "success",
+  "execution_time": 2.3,
+  "original_metrics": {
+    "lcom5": 0.8086,
+    "tcc": 0.6795,
+    "cbo": 0,
+    "num_methods": 13,
+    "num_fields": 37
+  },
+  "clusters_found": 1,
+  "clusters_filtered": 0,
+  "clusters_rejected": 1,
+  "filter_pass_rate": 0.0,
+  "suggestions_total": 0,
+  "suggestions_verified": 0,
+  "suggestions": [],
+  "post_refactoring": {
+    "methods_extracted": 0,
+    "methods_remaining": 13,
+    "extraction_coverage": 0.0
+  }
+}

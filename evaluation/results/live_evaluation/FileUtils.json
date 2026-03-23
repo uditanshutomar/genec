@@ -3,7 +3,7 @@
   "class_name": "FileUtils",
   "class_file": "src/main/java/org/apache/commons/io/FileUtils.java",
   "status": "success",
-  "execution_time": 103.3,
+  "execution_time": 100.9,
   "original_metrics": {
     "lcom5": 0.9958,
     "tcc": 0.0462,
@@ -19,51 +19,65 @@
   "suggestions_verified": 6,
   "suggestions": [
     {
-      "name": "FileLineReader",
+      "name": "LineReader",
       "methods": 3,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for reading text files line-by-line into String collections. They handle the same core operation with different charset handling approaches, making them "
+      "rationale": "These methods form a cohesive unit focused on reading text files line by line into String collections. Extracting them into a LineReader class creates a specialized component with a single, clear resp",
+      "post_lcom5": 0.9958,
+      "post_tcc": 0.0462
     },
     {
       "name": "ByteSizeFormatter",
       "methods": 3,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods and constants form a cohesive unit responsible for formatting byte counts into human-readable display strings with appropriate units. Extracting them into a ByteSizeFormatter class impro"
+      "rationale": "These methods and constants form a cohesive unit responsible for formatting byte counts into human-readable display strings with appropriate units. Extracting them into a ByteSizeFormatter class impro",
+      "post_lcom5": 0.9905,
+      "post_tcc": 0.0462
     },
     {
       "name": "LineWriter",
       "methods": 9,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused on writing collections as lines to files. They share the same core responsibility of converting collection elements to text lines and writing them to files w"
+      "rationale": "These methods form a cohesive unit focused on writing collections as lines to files with various encoding and formatting options. Extracting them into a LineWriter class creates a specialized componen",
+      "post_lcom5": 0.9961,
+      "post_tcc": 0.0447
     },
     {
-      "name": "FileReader",
+      "name": "FileContentReader",
       "methods": 3,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused exclusively on reading file contents and converting them to strings with various charset handling options. Extracting them into a FileReader class improves s"
+      "rationale": "These methods form a cohesive unit focused specifically on reading file contents and converting them to strings with various charset handling options. Extracting them into a FileContentReader class im",
+      "post_lcom5": 0.9958,
+      "post_tcc": 0.0462
     },
     {
       "name": "FileWriter",
       "methods": 17,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused exclusively on writing data to files, handling different data types (strings, byte arrays) with consistent encoding and append support. Extracting them into "
+      "rationale": "These methods form a cohesive file writing unit that handles all aspects of writing data to files with different encodings and modes. Extracting them into a FileWriter class creates a focused componen",
+      "post_lcom5": 0.9961,
+      "post_tcc": 0.0433
     },
     {
-      "name": "FileSystemNavigator",
+      "name": "FileNavigator",
       "methods": 34,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit responsible for navigating and discovering files within the file system. They handle directory traversal, file listing, iteration, and conversion between different f"
+      "rationale": "These methods form a cohesive unit focused on navigating and discovering files within the file system. They handle directory traversal, file listing, iteration, and conversion between different file r",
+      "post_lcom5": 0.9974,
+      "post_tcc": 0.0356
     }
   ],
   "post_refactoring": {
     "methods_extracted": 69,
     "methods_remaining": 90,
-    "extraction_coverage": 43.4
+    "extraction_coverage": 43.4,
+    "lcom5": 0.9974,
+    "tcc": 0.0356
   }
 }

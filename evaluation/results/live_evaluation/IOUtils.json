@@ -3,7 +3,7 @@
   "class_name": "IOUtils",
   "class_file": "src/main/java/org/apache/commons/io/IOUtils.java",
   "status": "success",
-  "execution_time": 162.6,
+  "execution_time": 125.2,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.0613,
@@ -11,94 +11,91 @@
     "num_methods": 172,
     "num_fields": 12
   },
-  "clusters_found": 25,
-  "clusters_filtered": 11,
-  "clusters_rejected": 14,
-  "filter_pass_rate": 44.0,
-  "suggestions_total": 11,
-  "suggestions_verified": 11,
+  "clusters_found": 24,
+  "clusters_filtered": 9,
+  "clusters_rejected": 15,
+  "filter_pass_rate": 33.3,
+  "suggestions_total": 8,
+  "suggestions_verified": 8,
   "suggestions": [
     {
-      "name": "StreamBufferFactory",
+      "name": "StreamCopier",
       "methods": 8,
       "verified": true,
-      "confidence": 0.92,
-      "rationale": "These methods form a cohesive factory for creating buffered I/O streams and readers/writers. They share the common responsibility of ensuring optimal buffering while preventing double-wrapping, making"
+      "confidence": 0.95,
+      "rationale": "These methods form a cohesive unit responsible for copying data between streams efficiently. They already delegate to a `StreamCopier` class, indicating this extraction is the natural completion of se",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0613
     },
     {
-      "name": "LargeStreamCopier",
+      "name": "StreamBufferWrapper",
       "methods": 8,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused specifically on copying large amounts of data between streams and readers/writers. They represent different overloaded variants of the same core responsibili"
+      "rationale": "These methods form a cohesive unit responsible for intelligently wrapping I/O streams and readers/writers with buffering capabilities. They share the same algorithmic pattern of checking for existing ",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0613
+    },
+    {
+      "name": "StreamSkipper",
+      "methods": 4,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit focused solely on skipping data in input streams. They share the same operational responsibility and work with related input types, making them ideal candidates for ",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0613
     },
     {
       "name": "ResourceCloser",
       "methods": 18,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for safely closing and releasing system resources. They provide consistent resource cleanup patterns with different error handling strategies (throwing v"
-    },
-    {
-      "name": "LineReader",
-      "methods": 7,
-      "verified": true,
-      "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused on reading text input and parsing it into lines, regardless of the input source type. Extracting them into a LineReader class creates a specialized component"
+      "rationale": "These methods form a cohesive unit responsible for safely closing and disposing of various system resources. They share common patterns for null-checking, exception handling, and resource cleanup. Ext",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0594
     },
     {
       "name": "StreamSkipper",
       "methods": 4,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused solely on skipping data in various stream types. Extracting them into a StreamSkipper class creates a specialized component with a single, clear responsibili"
+      "rationale": "These methods form a cohesive unit focused on skipping data from various input streams with guaranteed completion. Extracting them into a StreamSkipper class isolates this specific I/O operation, impr",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0613
     },
     {
-      "name": "StreamSkipper",
+      "name": "CharArrayConverter",
       "methods": 4,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused on the single responsibility of reliably skipping data from various input streams. Extracting them into a StreamSkipper class improves separation of concerns"
-    },
-    {
-      "name": "StreamToCharArrayConverter",
-      "methods": 4,
-      "verified": true,
-      "confidence": 0.9,
-      "rationale": "These methods form a cohesive conversion unit that transforms various input streams and readers into character arrays. Extracting them into a dedicated converter class improves separation of concerns "
+      "rationale": "These methods form a cohesive unit focused on converting input streams and readers into character arrays. Extracting them into a CharArrayConverter class isolates this specific transformation responsi",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0613
     },
     {
       "name": "LineIteratorFactory",
       "methods": 3,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive factory for creating LineIterator instances from different input sources. They share the single responsibility of LineIterator creation and handle charset conversion comp"
+      "rationale": "These methods form a cohesive factory for creating LineIterator instances from various input sources (InputStream and Reader). Extracting them into a dedicated factory class improves separation of con",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0613
     },
     {
       "name": "DataWriter",
       "methods": 40,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for writing various data types to output streams and writers. They share common concerns around charset handling, chunked writing, and formatted output o"
-    },
-    {
-      "name": "DataConverter",
-      "methods": 24,
-      "verified": true,
-      "confidence": 0.88,
-      "rationale": "These methods form a cohesive conversion unit that transforms between different data representations (strings, streams, resources, URLs) while handling character encoding. Extracting them into a DataC"
-    },
-    {
-      "name": "SafeIOOperations",
-      "methods": 79,
-      "verified": true,
-      "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit focused on providing safe, bounds-checked I/O operations with guaranteed complete reads and content comparison capabilities. Extracting them into SafeIOOperations im"
+      "rationale": "These methods form a cohesive unit responsible for writing various data types to output streams and writers with encoding support. They share the common responsibility of data output operations and ca",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0528
     }
   ],
   "post_refactoring": {
-    "methods_extracted": 199,
-    "methods_remaining": 0,
-    "extraction_coverage": 115.7
+    "methods_extracted": 89,
+    "methods_remaining": 83,
+    "extraction_coverage": 51.7,
+    "lcom5": 1.0,
+    "tcc": 0.0528
   }
 }

@@ -1,0 +1,56 @@
+{
+  "project": "jfreechart",
+  "class_name": "CategoryPlot",
+  "class_file": "src/main/java/org/jfree/chart/plot/CategoryPlot.java",
+  "status": "success",
+  "execution_time": 44.7,
+  "original_metrics": {
+    "lcom5": 0.9771,
+    "tcc": 0.0488,
+    "cbo": 0,
+    "num_methods": 225,
+    "num_fields": 60
+  },
+  "clusters_found": 13,
+  "clusters_filtered": 3,
+  "clusters_rejected": 10,
+  "filter_pass_rate": 23.1,
+  "suggestions_total": 3,
+  "suggestions_verified": 3,
+  "suggestions": [
+    {
+      "name": "MarkerRegistry",
+      "methods": 26,
+      "verified": true,
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive marker management system that maintains collections of domain and range markers organized by layer and index. Extracting them into a MarkerRegistry centralizes all marker",
+      "post_lcom5": 0.9761,
+      "post_tcc": 0.062
+    },
+    {
+      "name": "DomainAxisLocationRegistry",
+      "methods": 4,
+      "verified": true,
+      "confidence": 0.88,
+      "rationale": "These methods form a cohesive unit responsible for registering and managing domain axis locations within a plot. They share the same data structure and validation logic, representing a clear \"registry",
+      "post_lcom5": 0.9773,
+      "post_tcc": 0.0486
+    },
+    {
+      "name": "DomainZoomConstraint",
+      "methods": 3,
+      "verified": true,
+      "confidence": 0.75,
+      "rationale": "These methods represent a cohesive constraint behavior - the inability to perform domain axis zooming in category plots. Extracting them into a DomainZoomConstraint class encapsulates this specific in",
+      "post_lcom5": 0.9773,
+      "post_tcc": 0.0488
+    }
+  ],
+  "post_refactoring": {
+    "methods_extracted": 33,
+    "methods_remaining": 192,
+    "extraction_coverage": 14.7,
+    "lcom5": 0.9773,
+    "tcc": 0.0488
+  }
+}

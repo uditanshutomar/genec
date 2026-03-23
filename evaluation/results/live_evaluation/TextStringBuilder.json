@@ -1,0 +1,26 @@
+{
+  "project": "commons-text",
+  "class_name": "TextStringBuilder",
+  "class_file": "src/main/java/org/apache/commons/text/TextStringBuilder.java",
+  "status": "success",
+  "execution_time": 2.5,
+  "original_metrics": {
+    "lcom5": 0.9221,
+    "tcc": 0.3336,
+    "cbo": 0,
+    "num_methods": 169,
+    "num_fields": 12
+  },
+  "clusters_found": 6,
+  "clusters_filtered": 0,
+  "clusters_rejected": 6,
+  "filter_pass_rate": 0.0,
+  "suggestions_total": 0,
+  "suggestions_verified": 0,
+  "suggestions": [],
+  "post_refactoring": {
+    "methods_extracted": 0,
+    "methods_remaining": 169,
+    "extraction_coverage": 0.0
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "project": "jfreechart",
+  "class_name": "PiePlot",
+  "class_file": "src/main/java/org/jfree/chart/plot/pie/PiePlot.java",
+  "status": "success",
+  "execution_time": 3.4,
+  "original_metrics": {
+    "lcom5": 0.9628,
+    "tcc": 0.0929,
+    "cbo": 0,
+    "num_methods": 132,
+    "num_fields": 63
+  },
+  "clusters_found": 3,
+  "clusters_filtered": 0,
+  "clusters_rejected": 3,
+  "filter_pass_rate": 0.0,
+  "suggestions_total": 0,
+  "suggestions_verified": 0,
+  "suggestions": [],
+  "post_refactoring": {
+    "methods_extracted": 0,
+    "methods_remaining": 132,
+    "extraction_coverage": 0.0
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "project": "commons-text",
+  "class_name": "StringSubstitutor",
+  "class_file": "src/main/java/org/apache/commons/text/StringSubstitutor.java",
+  "status": "success",
+  "execution_time": 19.4,
+  "original_metrics": {
+    "lcom5": 0.9529,
+    "tcc": 0.2152,
+    "cbo": 0,
+    "num_methods": 62,
+    "num_fields": 16
+  },
+  "clusters_found": 5,
+  "clusters_filtered": 1,
+  "clusters_rejected": 4,
+  "filter_pass_rate": 20.0,
+  "suggestions_total": 1,
+  "suggestions_verified": 1,
+  "suggestions": [
+    {
+      "name": "VariableSubstitutionEngine",
+      "methods": 25,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive variable substitution system that handles placeholder resolution, cyclic detection, and nested variable processing. Extracting them creates a focused engine responsible s",
+      "post_lcom5": 0.9402,
+      "post_tcc": 0.2147
+    }
+  ],
+  "post_refactoring": {
+    "methods_extracted": 25,
+    "methods_remaining": 37,
+    "extraction_coverage": 40.3,
+    "lcom5": 0.9402,
+    "tcc": 0.2147
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "project": "commons-math",
+  "class_name": "Dfp",
+  "class_file": "commons-math-legacy-core/src/main/java/org/apache/commons/math4/legacy/core/dfp/Dfp.java",
+  "status": "success",
+  "execution_time": 31.7,
+  "original_metrics": {
+    "lcom5": 0.9255,
+    "tcc": 0.3273,
+    "cbo": 0,
+    "num_methods": 113,
+    "num_fields": 26
+  },
+  "clusters_found": 7,
+  "clusters_filtered": 1,
+  "clusters_rejected": 6,
+  "filter_pass_rate": 14.3,
+  "suggestions_total": 1,
+  "suggestions_verified": 1,
+  "suggestions": [
+    {
+      "name": "DfpCalculator",
+      "methods": 21,
+      "verified": true,
+      "confidence": 0.88,
+      "rationale": "These methods form a cohesive computational unit that should be extracted into a DfpCalculator class. They share mathematical operations, computational algorithms, and error handling for decimal float",
+      "post_lcom5": 0.9279,
+      "post_tcc": 0.2968
+    }
+  ],
+  "post_refactoring": {
+    "methods_extracted": 21,
+    "methods_remaining": 92,
+    "extraction_coverage": 18.6,
+    "lcom5": 0.9279,
+    "tcc": 0.2968
+  }
+}

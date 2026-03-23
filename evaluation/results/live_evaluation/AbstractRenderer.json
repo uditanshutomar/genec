@@ -1,0 +1,45 @@
+{
+  "project": "jfreechart",
+  "class_name": "AbstractRenderer",
+  "class_file": "src/main/java/org/jfree/chart/renderer/AbstractRenderer.java",
+  "status": "success",
+  "execution_time": 22.9,
+  "original_metrics": {
+    "lcom5": 0.9758,
+    "tcc": 0.0478,
+    "cbo": 0,
+    "num_methods": 169,
+    "num_fields": 59
+  },
+  "clusters_found": 11,
+  "clusters_filtered": 2,
+  "clusters_rejected": 9,
+  "filter_pass_rate": 18.2,
+  "suggestions_total": 2,
+  "suggestions_verified": 0,
+  "suggestions": [
+    {
+      "name": "EntityCreationPolicy",
+      "methods": 4,
+      "verified": false,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive policy system for determining when chart entities should be created during rendering. They manage a hierarchical decision process (item \u2192 series \u2192 default) and encapsulat",
+      "post_lcom5": 0.9758,
+      "post_tcc": 0.0478
+    },
+    {
+      "name": "NegativeItemLabelPositionRegistry",
+      "methods": 7,
+      "verified": false,
+      "confidence": 0.88,
+      "rationale": "These methods and fields form a cohesive registry system for managing negative item label positions in chart rendering. They provide a hierarchical lookup mechanism with series-specific overrides and ",
+      "post_lcom5": 0.9754,
+      "post_tcc": 0.049
+    }
+  ],
+  "post_refactoring": {
+    "methods_extracted": 0,
+    "methods_remaining": 169,
+    "extraction_coverage": 0.0
+  }
+}
