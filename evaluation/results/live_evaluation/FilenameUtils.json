@@ -1,0 +1,41 @@
+{
+  "project": "commons-io",
+  "class_name": "FilenameUtils",
+  "class_file": "src/main/java/org/apache/commons/io/FilenameUtils.java",
+  "status": "success",
+  "execution_time": 32.8,
+  "original_metrics": {
+    "lcom5": 0.9668,
+    "tcc": 0.1241,
+    "cbo": 0,
+    "num_methods": 48,
+    "num_fields": 16
+  },
+  "clusters_found": 8,
+  "clusters_filtered": 3,
+  "suggestions_total": 3,
+  "suggestions_verified": 3,
+  "suggestions": [
+    {
+      "name": "IsEmptyGroup",
+      "methods": 5,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "EqualsGroup",
+      "methods": 33,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "ConcatGroup",
+      "methods": 27,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    }
+  ]
+}

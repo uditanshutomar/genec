@@ -1,0 +1,659 @@
+{
+  "total_classes": 11,
+  "successful": 11,
+  "failed": 0,
+  "total_suggestions": 61,
+  "total_verified": 61,
+  "verification_rate": 100.0,
+  "total_time": 676.4,
+  "avg_time_per_class": 61.5,
+  "per_class": [
+    {
+      "project": "commons-io",
+      "class_name": "IOUtils",
+      "class_file": "src/main/java/org/apache/commons/io/IOUtils.java",
+      "status": "success",
+      "execution_time": 102.0,
+      "original_metrics": {
+        "lcom5": 1.0,
+        "tcc": 0.0543,
+        "cbo": 0,
+        "num_methods": 174,
+        "num_fields": 12
+      },
+      "clusters_found": 34,
+      "clusters_filtered": 10,
+      "suggestions_total": 10,
+      "suggestions_verified": 10,
+      "suggestions": [
+        {
+          "name": "CopyLargeOperations",
+          "methods": 8,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "SkipOperations",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "SkipFullyOperations",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "ToCharArrayOperations",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "LineIteratorOperations",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "CloseOperations",
+          "methods": 18,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "ReadLinesOperations",
+          "methods": 7,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "ResourceToStringGroup",
+          "methods": 24,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "CopyToOutputStreamGroup",
+          "methods": 40,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "CharArrayGroup",
+          "methods": 79,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        }
+      ]
+    },
+    {
+      "project": "commons-io",
+      "class_name": "FileUtils",
+      "class_file": "src/main/java/org/apache/commons/io/FileUtils.java",
+      "status": "success",
+      "execution_time": 98.9,
+      "original_metrics": {
+        "lcom5": 0.9958,
+        "tcc": 0.0428,
+        "cbo": 0,
+        "num_methods": 159,
+        "num_fields": 18
+      },
+      "clusters_found": 26,
+      "clusters_filtered": 8,
+      "suggestions_total": 8,
+      "suggestions_verified": 8,
+      "suggestions": [
+        {
+          "name": "ReadFileToStringOperations",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "ReadLinesOperations",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "ByteCountToDisplaySizeOperations",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "CopyOperations",
+          "methods": 9,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "WriteLinesOperations",
+          "methods": 9,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "ConvertFileCollectionToFileArrayGroup",
+          "methods": 8,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "IsFileOlderOperations",
+          "methods": 12,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "WriteOperations",
+          "methods": 17,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        }
+      ]
+    },
+    {
+      "project": "commons-io",
+      "class_name": "FilenameUtils",
+      "class_file": "src/main/java/org/apache/commons/io/FilenameUtils.java",
+      "status": "success",
+      "execution_time": 32.8,
+      "original_metrics": {
+        "lcom5": 0.9668,
+        "tcc": 0.1241,
+        "cbo": 0,
+        "num_methods": 48,
+        "num_fields": 16
+      },
+      "clusters_found": 8,
+      "clusters_filtered": 3,
+      "suggestions_total": 3,
+      "suggestions_verified": 3,
+      "suggestions": [
+        {
+          "name": "IsEmptyGroup",
+          "methods": 5,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "EqualsGroup",
+          "methods": 33,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "ConcatGroup",
+          "methods": 27,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        }
+      ]
+    },
+    {
+      "project": "commons-lang",
+      "class_name": "StringUtils",
+      "class_file": "src/main/java/org/apache/commons/lang3/StringUtils.java",
+      "status": "success",
+      "execution_time": 37.0,
+      "original_metrics": {
+        "lcom5": 0.9695,
+        "tcc": 0.0633,
+        "cbo": 0,
+        "num_methods": 244,
+        "num_fields": 10
+      },
+      "clusters_found": 26,
+      "clusters_filtered": 3,
+      "suggestions_total": 3,
+      "suggestions_verified": 3,
+      "suggestions": [
+        {
+          "name": "ReplaceOperations",
+          "methods": 13,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "CompareOperations",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "AbbreviateOperations",
+          "methods": 8,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        }
+      ]
+    },
+    {
+      "project": "commons-lang",
+      "class_name": "ArrayUtils",
+      "class_file": "src/main/java/org/apache/commons/lang3/ArrayUtils.java",
+      "status": "success",
+      "execution_time": 63.9,
+      "original_metrics": {
+        "lcom5": 0.9897,
+        "tcc": 0.0913,
+        "cbo": 0,
+        "num_methods": 388,
+        "num_fields": 26
+      },
+      "clusters_found": 19,
+      "clusters_filtered": 4,
+      "suggestions_total": 4,
+      "suggestions_verified": 4,
+      "suggestions": [
+        {
+          "name": "RemoveAllOperations",
+          "methods": 47,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "ReverseOperations",
+          "methods": 18,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "SetAllGroup",
+          "methods": 14,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "GetLengthGroup",
+          "methods": 22,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        }
+      ]
+    },
+    {
+      "project": "commons-lang",
+      "class_name": "NumberUtils",
+      "class_file": "src/main/java/org/apache/commons/lang3/math/NumberUtils.java",
+      "status": "success",
+      "execution_time": 55.3,
+      "original_metrics": {
+        "lcom5": 1.0,
+        "tcc": 0.05,
+        "cbo": 0,
+        "num_methods": 68,
+        "num_fields": 21
+      },
+      "clusters_found": 32,
+      "clusters_filtered": 5,
+      "suggestions_total": 5,
+      "suggestions_verified": 5,
+      "suggestions": [
+        {
+          "name": "ToDoubleOperations",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "CompareOperations",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "MaxGroup",
+          "methods": 25,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "CreateBigDecimalGroup",
+          "methods": 14,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "ToScaledBigDecimalOperations",
+          "methods": 9,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        }
+      ]
+    },
+    {
+      "project": "commons-lang",
+      "class_name": "DateUtils",
+      "class_file": "src/main/java/org/apache/commons/lang3/time/DateUtils.java",
+      "status": "success",
+      "execution_time": 66.7,
+      "original_metrics": {
+        "lcom5": 1.0,
+        "tcc": 0.0466,
+        "cbo": 0,
+        "num_methods": 67,
+        "num_fields": 12
+      },
+      "clusters_found": 11,
+      "clusters_filtered": 6,
+      "suggestions_total": 6,
+      "suggestions_verified": 6,
+      "suggestions": [
+        {
+          "name": "ToLocalDateTimeGroup",
+          "methods": 7,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "ParseDateOperations",
+          "methods": 5,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "AddGroup",
+          "methods": 18,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "GetFragmentGroup",
+          "methods": 13,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "CeilingGroup",
+          "methods": 20,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "IteratorGroup",
+          "methods": 16,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        }
+      ]
+    },
+    {
+      "project": "commons-lang",
+      "class_name": "SystemUtils",
+      "class_file": "src/main/java/org/apache/commons/lang3/SystemUtils.java",
+      "status": "success",
+      "execution_time": 33.9,
+      "original_metrics": {
+        "lcom5": 1.0,
+        "tcc": 0.0435,
+        "cbo": 0,
+        "num_methods": 23,
+        "num_fields": 130
+      },
+      "clusters_found": 137,
+      "clusters_filtered": 3,
+      "suggestions_total": 3,
+      "suggestions_verified": 3,
+      "suggestions": [
+        {
+          "name": "GetOsMatchesGroup",
+          "methods": 5,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "GetJavaVersionMatchesGroup",
+          "methods": 2,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "IsJavaVersionAtOperations",
+          "methods": 2,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        }
+      ]
+    },
+    {
+      "project": "commons-collections",
+      "class_name": "CollectionUtils",
+      "class_file": "src/main/java/org/apache/commons/collections4/CollectionUtils.java",
+      "status": "success",
+      "execution_time": 69.1,
+      "original_metrics": {
+        "lcom5": 1.0,
+        "tcc": 0.03,
+        "cbo": 0,
+        "num_methods": 74,
+        "num_fields": 6
+      },
+      "clusters_found": 38,
+      "clusters_filtered": 7,
+      "suggestions_total": 7,
+      "suggestions_verified": 7,
+      "suggestions": [
+        {
+          "name": "ContainsAllGroup",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "CheckIndexBoundsGroup",
+          "methods": 6,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "EmptyOperations",
+          "methods": 2,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "AddAllGroup",
+          "methods": 11,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "CollateOperations",
+          "methods": 5,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "ContainsAnyGroup",
+          "methods": 13,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "CollectGroup",
+          "methods": 11,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        }
+      ]
+    },
+    {
+      "project": "commons-collections",
+      "class_name": "MapUtils",
+      "class_file": "src/main/java/org/apache/commons/collections4/MapUtils.java",
+      "status": "success",
+      "execution_time": 58.1,
+      "original_metrics": {
+        "lcom5": 1.0,
+        "tcc": 0.0222,
+        "cbo": 0,
+        "num_methods": 94,
+        "num_fields": 2
+      },
+      "clusters_found": 31,
+      "clusters_filtered": 7,
+      "suggestions_total": 7,
+      "suggestions_verified": 7,
+      "suggestions": [
+        {
+          "name": "DebugPrintGroup",
+          "methods": 6,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "PopulateMapOperations",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "GetObjectGroup",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "MultiValueMapOperations",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "GetByteGroup",
+          "methods": 24,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "ApplyDefaultFunctionGroup",
+          "methods": 54,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "ApplyDefaultValueGroup",
+          "methods": 54,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        }
+      ]
+    },
+    {
+      "project": "commons-collections",
+      "class_name": "IteratorUtils",
+      "class_file": "src/main/java/org/apache/commons/collections4/IteratorUtils.java",
+      "status": "success",
+      "execution_time": 58.7,
+      "original_metrics": {
+        "lcom5": 1.0,
+        "tcc": 0.0077,
+        "cbo": 0,
+        "num_methods": 78,
+        "num_fields": 6
+      },
+      "clusters_found": 65,
+      "clusters_filtered": 5,
+      "suggestions_total": 5,
+      "suggestions_verified": 5,
+      "suggestions": [
+        {
+          "name": "EmptyIteratorGroup",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "ContainsGroup",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "AddAllGroup",
+          "methods": 8,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "FirstGroup",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        },
+        {
+          "name": "ToStringOperations",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.5,
+          "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+        }
+      ]
+    }
+  ]
+}

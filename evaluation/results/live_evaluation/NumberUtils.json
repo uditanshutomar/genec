@@ -1,0 +1,55 @@
+{
+  "project": "commons-lang",
+  "class_name": "NumberUtils",
+  "class_file": "src/main/java/org/apache/commons/lang3/math/NumberUtils.java",
+  "status": "success",
+  "execution_time": 55.3,
+  "original_metrics": {
+    "lcom5": 1.0,
+    "tcc": 0.05,
+    "cbo": 0,
+    "num_methods": 68,
+    "num_fields": 21
+  },
+  "clusters_found": 32,
+  "clusters_filtered": 5,
+  "suggestions_total": 5,
+  "suggestions_verified": 5,
+  "suggestions": [
+    {
+      "name": "ToDoubleOperations",
+      "methods": 4,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "CompareOperations",
+      "methods": 4,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "MaxGroup",
+      "methods": 25,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "CreateBigDecimalGroup",
+      "methods": 14,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "ToScaledBigDecimalOperations",
+      "methods": 9,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    }
+  ]
+}

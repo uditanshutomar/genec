@@ -1,0 +1,41 @@
+{
+  "project": "commons-lang",
+  "class_name": "SystemUtils",
+  "class_file": "src/main/java/org/apache/commons/lang3/SystemUtils.java",
+  "status": "success",
+  "execution_time": 33.9,
+  "original_metrics": {
+    "lcom5": 1.0,
+    "tcc": 0.0435,
+    "cbo": 0,
+    "num_methods": 23,
+    "num_fields": 130
+  },
+  "clusters_found": 137,
+  "clusters_filtered": 3,
+  "suggestions_total": 3,
+  "suggestions_verified": 3,
+  "suggestions": [
+    {
+      "name": "GetOsMatchesGroup",
+      "methods": 5,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "GetJavaVersionMatchesGroup",
+      "methods": 2,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "IsJavaVersionAtOperations",
+      "methods": 2,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    }
+  ]
+}

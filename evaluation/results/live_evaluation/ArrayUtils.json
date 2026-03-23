@@ -1,0 +1,48 @@
+{
+  "project": "commons-lang",
+  "class_name": "ArrayUtils",
+  "class_file": "src/main/java/org/apache/commons/lang3/ArrayUtils.java",
+  "status": "success",
+  "execution_time": 63.9,
+  "original_metrics": {
+    "lcom5": 0.9897,
+    "tcc": 0.0913,
+    "cbo": 0,
+    "num_methods": 388,
+    "num_fields": 26
+  },
+  "clusters_found": 19,
+  "clusters_filtered": 4,
+  "suggestions_total": 4,
+  "suggestions_verified": 4,
+  "suggestions": [
+    {
+      "name": "RemoveAllOperations",
+      "methods": 47,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "ReverseOperations",
+      "methods": 18,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "SetAllGroup",
+      "methods": 14,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "GetLengthGroup",
+      "methods": 22,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    }
+  ]
+}

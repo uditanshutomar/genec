@@ -1,0 +1,76 @@
+{
+  "project": "commons-io",
+  "class_name": "FileUtils",
+  "class_file": "src/main/java/org/apache/commons/io/FileUtils.java",
+  "status": "success",
+  "execution_time": 98.9,
+  "original_metrics": {
+    "lcom5": 0.9958,
+    "tcc": 0.0428,
+    "cbo": 0,
+    "num_methods": 159,
+    "num_fields": 18
+  },
+  "clusters_found": 26,
+  "clusters_filtered": 8,
+  "suggestions_total": 8,
+  "suggestions_verified": 8,
+  "suggestions": [
+    {
+      "name": "ReadFileToStringOperations",
+      "methods": 3,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "ReadLinesOperations",
+      "methods": 3,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "ByteCountToDisplaySizeOperations",
+      "methods": 3,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "CopyOperations",
+      "methods": 9,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "WriteLinesOperations",
+      "methods": 9,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "ConvertFileCollectionToFileArrayGroup",
+      "methods": 8,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "IsFileOlderOperations",
+      "methods": 12,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "WriteOperations",
+      "methods": 17,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "project": "commons-lang",
+  "class_name": "StringUtils",
+  "class_file": "src/main/java/org/apache/commons/lang3/StringUtils.java",
+  "status": "success",
+  "execution_time": 37.0,
+  "original_metrics": {
+    "lcom5": 0.9695,
+    "tcc": 0.0633,
+    "cbo": 0,
+    "num_methods": 244,
+    "num_fields": 10
+  },
+  "clusters_found": 26,
+  "clusters_filtered": 3,
+  "suggestions_total": 3,
+  "suggestions_verified": 3,
+  "suggestions": [
+    {
+      "name": "ReplaceOperations",
+      "methods": 13,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "CompareOperations",
+      "methods": 4,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    },
+    {
+      "name": "AbbreviateOperations",
+      "methods": 8,
+      "verified": true,
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)"
+    }
+  ]
+}
