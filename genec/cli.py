@@ -33,8 +33,8 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--max-suggestions",
         type=int,
-        default=5,
-        help="Maximum number of suggestions to generate (default: 5)",
+        default=None,
+        help="Maximum number of suggestions to generate (default: all valid clusters)",
     )
     parser.add_argument("--json", action="store_true", help="Output results in JSON format")
     parser.add_argument(
