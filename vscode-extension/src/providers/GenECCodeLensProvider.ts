@@ -9,18 +9,25 @@ export class GenECCodeLensProvider implements vscode.CodeLensProvider {
     public readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
 
     private stateManager: StateManager;
+    private disposables: vscode.Disposable[] = [];
 
     constructor() {
         this.stateManager = StateManager.getInstance();
 
         // Refresh CodeLens when suggestions change
-        this.stateManager.onSuggestionsChanged(() => {
-            this._onDidChangeCodeLenses.fire();
-        });
+        this.disposables.push(
+            this.stateManager.onSuggestionsChanged(() => {
+                this._onDidChangeCodeLenses.fire();
+            }),
+            this.stateManager.onAnalysisStateChanged(() => {
+                this._onDidChangeCodeLenses.fire();
+            })
+        );
+    }
 
-        this.stateManager.onAnalysisStateChanged(() => {
-            this._onDidChangeCodeLenses.fire();
-        });
+    public dispose(): void {
+        this.disposables.forEach(d => d.dispose());
+        this._onDidChangeCodeLenses.dispose();
     }
 
     public refresh(): void {
@@ -70,15 +77,18 @@ export class GenECCodeLensProvider implements vscode.CodeLensProvider {
                     tooltip: 'Click to view suggestions'
                 }));
 
-                // Add quick apply for SHOULD tier
-                const shouldSuggestions = this.stateManager.getSuggestionsByTier('should');
-                if (shouldSuggestions.length > 0) {
-                    codeLenses.push(new vscode.CodeLens(range, {
-                        title: `$(play) Apply ${shouldSuggestions[0].name}`,
-                        command: 'genec.applySuggestion',
-                        arguments: [0],
-                        tooltip: 'Apply the top SHOULD suggestion'
-                    }));
+                // Add quick apply for top ranked suggestion
+                const topIndex = this.stateManager.getTopRankedSuggestionIndex();
+                if (topIndex !== undefined) {
+                    const topSuggestion = this.stateManager.getSuggestion(topIndex);
+                    if (topSuggestion) {
+                        codeLenses.push(new vscode.CodeLens(range, {
+                            title: `$(play) Apply Top: ${topSuggestion.name}`,
+                            command: 'genec.applySuggestion',
+                            arguments: [topIndex],
+                            tooltip: 'Apply the top ranked suggestion'
+                        }));
+                    }
                 }
             } else {
                 // Show analyze action

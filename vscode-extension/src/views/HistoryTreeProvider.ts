@@ -51,19 +51,27 @@ export class HistoryTreeItem extends vscode.TreeItem {
     }
 }
 
-export class HistoryTreeProvider implements vscode.TreeDataProvider<HistoryTreeItem> {
+export class HistoryTreeProvider implements vscode.TreeDataProvider<HistoryTreeItem>, vscode.Disposable {
     private _onDidChangeTreeData = new vscode.EventEmitter<HistoryTreeItem | undefined>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
     private stateManager: StateManager;
+    private disposables: vscode.Disposable[] = [];
 
     constructor() {
         this.stateManager = StateManager.getInstance();
 
-        // Refresh when history changes
-        this.stateManager.onHistoryChanged(() => {
-            this.refresh();
-        });
+        // Refresh when history changes (track disposable to prevent memory leak)
+        this.disposables.push(
+            this.stateManager.onHistoryChanged(() => {
+                this.refresh();
+            })
+        );
+    }
+
+    public dispose(): void {
+        this.disposables.forEach(d => d.dispose());
+        this._onDidChangeTreeData.dispose();
     }
 
     public refresh(): void {

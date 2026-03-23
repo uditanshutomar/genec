@@ -34,6 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
     stateManager = StateManager.initialize(context);
     genecService = new GenECService(context.extensionPath);
     const configService = ConfigService.getInstance();
+    configService.setContext(context); // Enable secret storage for API key
 
     // Create status bar item
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
@@ -112,15 +113,15 @@ export function activate(context: vscode.ExtensionContext) {
                 );
 
                 if (action === 'View Suggestions') {
-                    vscode.commands.executeCommand('genec.focusSuggestions');
+                    void vscode.commands.executeCommand('genec.focusSuggestions');
                 } else if (action === 'Show Graph') {
-                    vscode.commands.executeCommand('genec.showGraph');
+                    void vscode.commands.executeCommand('genec.showGraph');
                 }
 
             } catch (error) {
                 stateManager.cancelAnalysis();
                 statusBarItem.hide();
-                vscode.window.showErrorMessage(`GenEC failed: ${(error as Error).message}`);
+                vscode.window.showErrorMessage(`GenEC failed: ${error instanceof Error ? error.message : String(error)}`);
             }
         })
     );
@@ -129,7 +130,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Command: Apply Suggestion
     // ==========================================================================
     context.subscriptions.push(
-        vscode.commands.registerCommand('genec.applySuggestion', async (indexOrItem?: number | any) => {
+        vscode.commands.registerCommand('genec.applySuggestion', async (indexOrItem?: number | { data?: { suggestionIndex?: number } }) => {
             let index: number;
 
             if (typeof indexOrItem === 'number') {
@@ -194,17 +195,50 @@ export function activate(context: vscode.ExtensionContext) {
 
             // Apply the refactoring
             try {
-                const targetDir = path.dirname(targetFile);
-                const newClassPath = path.join(targetDir, `${suggestion.name}.java`);
                 const repoPath = stateManager.getRepoPath();
 
+                // Validate class name BEFORE constructing any paths
+                if (!isValidJavaClassName(suggestion.name)) {
+                    vscode.window.showErrorMessage(
+                        `Invalid Java class name: "${suggestion.name}". ` +
+                        'Class names must start with a letter, underscore, or $, ' +
+                        'and cannot be a Java reserved keyword.'
+                    );
+                    return;
+                }
+
+                const targetDir = path.dirname(targetFile);
+                const newClassPath = path.join(targetDir, `${suggestion.name}.java`);
+
+                // Auto-save any dirty buffers before applying
+                const dirtyDocs = vscode.workspace.textDocuments.filter(doc => doc.isDirty);
+                if (dirtyDocs.length > 0) {
+                    const saved = await vscode.workspace.saveAll(false);
+                    if (!saved) {
+                        vscode.window.showWarningMessage('Save cancelled. Refactoring not applied.');
+                        return;
+                    }
+                }
+
                 // Validate paths are within the analysis repository
+                if (!repoPath) {
+                    vscode.window.showErrorMessage('No repository context. Please re-run analysis.');
+                    return;
+                }
                 validatePath(newClassPath, repoPath);
                 validatePath(targetFile, repoPath);
 
-                // Write files
-                fs.writeFileSync(newClassPath, suggestion.new_class_code, 'utf8');
-                fs.writeFileSync(targetFile, suggestion.modified_original_code, 'utf8');
+                // Write files atomically with rollback
+                const originalBackup = fs.readFileSync(targetFile, 'utf8');
+                try {
+                    fs.writeFileSync(newClassPath, suggestion.new_class_code, 'utf8');
+                    fs.writeFileSync(targetFile, suggestion.modified_original_code, 'utf8');
+                } catch (writeError) {
+                    // Rollback: restore original file, remove new class
+                    try { fs.writeFileSync(targetFile, originalBackup, 'utf8'); } catch { }
+                    try { fs.unlinkSync(newClassPath); } catch { }
+                    throw writeError;
+                }
 
                 // Add to history
                 await stateManager.addToHistory({
@@ -217,18 +251,19 @@ export function activate(context: vscode.ExtensionContext) {
                 // Remove only the applied suggestion (keep others for multiple extractions)
                 stateManager.removeSuggestion(index);
 
-                vscode.window.showInformationMessage(
+                const action = await vscode.window.showInformationMessage(
                     `Created ${suggestion.name}.java`,
                     'Open File'
-                ).then(action => {
-                    if (action === 'Open File') {
-                        vscode.workspace.openTextDocument(newClassPath)
-                            .then(doc => vscode.window.showTextDocument(doc));
-                    }
-                });
+                );
+                if (action === 'Open File') {
+                    try {
+                        const doc = await vscode.workspace.openTextDocument(newClassPath);
+                        await vscode.window.showTextDocument(doc);
+                    } catch { }
+                }
 
             } catch (error) {
-                vscode.window.showErrorMessage(`Failed to apply: ${(error as Error).message}`);
+                vscode.window.showErrorMessage(`Failed to apply: ${error instanceof Error ? error.message : String(error)}`);
             }
         })
     );
@@ -237,7 +272,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Command: Preview Suggestion
     // ==========================================================================
     context.subscriptions.push(
-        vscode.commands.registerCommand('genec.previewSuggestion', async (indexOrItem?: number | any) => {
+        vscode.commands.registerCommand('genec.previewSuggestion', async (indexOrItem?: number | { data?: { suggestionIndex?: number } }) => {
             let index: number;
 
             if (typeof indexOrItem === 'number') {
@@ -264,8 +299,9 @@ export function activate(context: vscode.ExtensionContext) {
             // Create temp file for diff
             const os = require('os');
             const tempDir = os.tmpdir();
-            const tempModifiedPath = path.join(tempDir, `genec_${path.basename(targetFile)}`);
-            const tempNewClassPath = path.join(tempDir, `genec_${suggestion.name}.java`);
+            const timestamp = Date.now();
+            const tempModifiedPath = path.join(tempDir, `genec_${timestamp}_${path.basename(targetFile)}`);
+            const tempNewClassPath = path.join(tempDir, `genec_${timestamp}_${suggestion.name}.java`);
 
             try {
                 // Write modified original to temp
@@ -287,12 +323,12 @@ export function activate(context: vscode.ExtensionContext) {
 
                 // Cleanup after 60s
                 setTimeout(() => {
-                    try { fs.unlinkSync(tempModifiedPath); } catch { }
-                    try { fs.unlinkSync(tempNewClassPath); } catch { }
+                    try { fs.unlinkSync(tempModifiedPath); } catch (e) { /* temp file, ok to fail */ }
+                    try { fs.unlinkSync(tempNewClassPath); } catch (e) { /* temp file, ok to fail */ }
                 }, 60000);
 
             } catch (error) {
-                vscode.window.showErrorMessage(`Preview failed: ${(error as Error).message}`);
+                vscode.window.showErrorMessage(`Preview failed: ${error instanceof Error ? error.message : String(error)}`);
             }
         })
     );
@@ -301,7 +337,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Command: Undo Last Refactoring
     // ==========================================================================
     context.subscriptions.push(
-        vscode.commands.registerCommand('genec.undoLast', async (historyItem?: any) => {
+        vscode.commands.registerCommand('genec.undoLast', async (historyItem?: { entry?: { id?: string } }) => {
             let entryId: string | undefined;
 
             if (historyItem?.entry?.id) {
@@ -335,10 +371,11 @@ export function activate(context: vscode.ExtensionContext) {
 
             if (confirm !== 'Undo') return;
 
-            // Note: Full undo would require backup files, which GenEC CLI handles
-            // For now, we just remove from history
             await stateManager.removeFromHistory(entryId);
-            vscode.window.showInformationMessage('Removed from history. Use Git to restore files if needed.');
+            vscode.window.showInformationMessage(
+                `Removed "${entry.extractedClass}" from history. ` +
+                'To restore the original code, use Git: git checkout -- <file>'
+            );
         })
     );
 
@@ -450,24 +487,50 @@ function findGitRoot(startPath: string): string {
     return workspaceFolder?.uri.fsPath || path.dirname(startPath);
 }
 
-function validatePath(filePath: string, repoPath?: string): void {
+function isValidJavaClassName(name: string): boolean {
+    // Must be non-empty, start with a letter or underscore, contain only valid chars
+    // Must not be a Java reserved keyword
+    const JAVA_KEYWORDS = new Set([
+        'abstract', 'assert', 'boolean', 'break', 'byte', 'case', 'catch', 'char',
+        'class', 'const', 'continue', 'default', 'do', 'double', 'else', 'enum',
+        'extends', 'final', 'finally', 'float', 'for', 'goto', 'if', 'implements',
+        'import', 'instanceof', 'int', 'interface', 'long', 'native', 'new',
+        'package', 'private', 'protected', 'public', 'return', 'short', 'static',
+        'strictfp', 'super', 'switch', 'synchronized', 'this', 'throw', 'throws',
+        'transient', 'try', 'void', 'volatile', 'while'
+    ]);
+    if (!name || name.length === 0 || name.length > 255) {
+        return false;
+    }
+    if (!/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name)) {
+        return false;
+    }
+    return !JAVA_KEYWORDS.has(name);
+}
+
+function validatePath(filePath: string, repoPath: string): void {
+    if (!repoPath) {
+        throw new Error(
+            'Security validation failed: No repository context. ' +
+            'Please open a folder or workspace before using GenEC.'
+        );
+    }
+
     const resolved = path.resolve(filePath);
 
     // First, validate against the repo path used for analysis
     // This is the source of truth - GenEC analyzes files within this repo
-    if (repoPath) {
-        const relative = path.relative(repoPath, resolved);
-        if (!relative.startsWith('..') && !path.isAbsolute(relative)) {
-            return; // Valid - within the analysis repo
-        }
+    const relative = path.relative(repoPath, resolved);
+    if (!relative.startsWith('..') && !path.isAbsolute(relative)) {
+        return; // Valid - within the analysis repo
     }
 
     // Fallback: check against VS Code workspace folders
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (workspaceFolders) {
         const isWithinWorkspace = workspaceFolders.some(folder => {
-            const relative = path.relative(folder.uri.fsPath, resolved);
-            return !relative.startsWith('..') && !path.isAbsolute(relative);
+            const wsRelative = path.relative(folder.uri.fsPath, resolved);
+            return !wsRelative.startsWith('..') && !path.isAbsolute(wsRelative);
         });
 
         if (isWithinWorkspace) {
@@ -475,17 +538,17 @@ function validatePath(filePath: string, repoPath?: string): void {
         }
     }
 
-    // If no repoPath and no workspace folders, allow any path within 
-    // the target file's directory (for standalone file analysis)
-    if (!repoPath && !workspaceFolders) {
-        return; // Allow - no workspace context
-    }
-
-    throw new Error('Path outside workspace');
+    throw new Error(
+        `Path outside allowed boundaries: ${resolved}. ` +
+        `File must be within the workspace or repository.`
+    );
 }
 
 export function deactivate() {
     if (genecService) {
         genecService.dispose();
+    }
+    if (stateManager) {
+        stateManager.dispose();
     }
 }

@@ -6,8 +6,13 @@ import { GenECConfig } from '../types';
 
 export class ConfigService {
     private static instance: ConfigService;
+    private secretStorage?: vscode.SecretStorage;
 
     private constructor() { }
+
+    public setContext(context: vscode.ExtensionContext): void {
+        this.secretStorage = context.secrets;
+    }
 
     public static getInstance(): ConfigService {
         if (!ConfigService.instance) {
@@ -22,22 +27,34 @@ export class ConfigService {
     public getConfig(): GenECConfig {
         const config = vscode.workspace.getConfiguration('genec');
 
+        // Validate constraints
+        const minSize = config.get<number>('clustering.minClusterSize') || 3;
+        const maxSize = config.get<number>('clustering.maxClusterSize') || 30;
+        if (minSize > maxSize) {
+            vscode.window.showWarningMessage(
+                `GenEC config: minClusterSize (${minSize}) > maxClusterSize (${maxSize}). Using defaults.`
+            );
+        }
+
         return {
             pythonPath: config.get<string>('pythonPath') || 'python3',
             apiKey: this.getApiKey(),
             autoApply: config.get<boolean>('autoApply') || false,
+            analysisTimeout: config.get<number>('analysisTimeout') || 10,
             clustering: {
-                minClusterSize: config.get<number>('clustering.minClusterSize') || 3,
-                maxClusterSize: config.get<number>('clustering.maxClusterSize') || 30,
+                minClusterSize: minSize > maxSize ? 3 : minSize,
+                maxClusterSize: minSize > maxSize ? 30 : maxSize,
                 minCohesion: config.get<number>('clustering.minCohesion') || 0.35
             }
         };
     }
 
     /**
-     * Get API key from settings or environment
+     * Get API key from settings or environment (synchronous fallback)
      */
     public getApiKey(): string | undefined {
+        // Secret storage is checked asynchronously via getApiKeyAsync
+        // Fallback to settings and env var
         const config = vscode.workspace.getConfiguration('genec');
         const settingsKey = config.get<string>('apiKey');
 
@@ -49,11 +66,26 @@ export class ConfigService {
     }
 
     /**
-     * Store API key in global settings
+     * Get API key, checking secret storage first
+     */
+    public async getApiKeyAsync(): Promise<string | undefined> {
+        if (this.secretStorage) {
+            const secretKey = await this.secretStorage.get('genec.apiKey');
+            if (secretKey) return secretKey;
+        }
+        return this.getApiKey();
+    }
+
+    /**
+     * Store API key using secret storage when available, falling back to settings
      */
     public async setApiKey(apiKey: string): Promise<void> {
-        const config = vscode.workspace.getConfiguration('genec');
-        await config.update('apiKey', apiKey, vscode.ConfigurationTarget.Global);
+        if (this.secretStorage) {
+            await this.secretStorage.store('genec.apiKey', apiKey);
+        } else {
+            const config = vscode.workspace.getConfiguration('genec');
+            await config.update('apiKey', apiKey, vscode.ConfigurationTarget.Global);
+        }
     }
 
     /**

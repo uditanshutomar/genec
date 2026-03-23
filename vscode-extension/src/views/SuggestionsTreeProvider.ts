@@ -120,14 +120,22 @@ export class SuggestionsTreeProvider implements vscode.TreeDataProvider<Suggesti
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
     private stateManager: StateManager;
+    private disposables: vscode.Disposable[] = [];
 
     constructor() {
         this.stateManager = StateManager.getInstance();
 
         // Refresh when suggestions change
-        this.stateManager.onSuggestionsChanged(() => {
-            this.refresh();
-        });
+        this.disposables.push(
+            this.stateManager.onSuggestionsChanged(() => {
+                this.refresh();
+            })
+        );
+    }
+
+    public dispose(): void {
+        this.disposables.forEach(d => d.dispose());
+        this._onDidChangeTreeData.dispose();
     }
 
     public refresh(): void {
@@ -202,10 +210,13 @@ export class SuggestionsTreeProvider implements vscode.TreeDataProvider<Suggesti
             ? allSuggestions.filter(s => s.quality_tier === tier)
             : allSuggestions;
 
-        return suggestions.map((suggestion, idx) => {
-            const globalIndex = allSuggestions.indexOf(suggestion);
+        return suggestions.map((suggestion, filterIdx) => {
+            // Calculate global index by finding position in full array
+            const globalIndex = tier
+                ? allSuggestions.findIndex(s => s === suggestion)
+                : filterIdx;
             return new SuggestionTreeItem(
-                { type: 'suggestion', suggestion, suggestionIndex: globalIndex },
+                { type: 'suggestion', suggestion, suggestionIndex: globalIndex >= 0 ? globalIndex : filterIdx },
                 vscode.TreeItemCollapsibleState.Collapsed
             );
         });

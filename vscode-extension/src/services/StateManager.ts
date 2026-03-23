@@ -90,6 +90,9 @@ export class StateManager {
     }
 
     public getSuggestion(index: number): RefactoringSuggestion | undefined {
+        if (index < 0 || index >= this.suggestions.length) {
+            return undefined;
+        }
         return this.suggestions[index];
     }
 
@@ -105,12 +108,19 @@ export class StateManager {
         return this.suggestions.filter(s => s.quality_tier === tier);
     }
 
+    public getTopRankedSuggestionIndex(): number | undefined {
+        return this.suggestions.length > 0 ? 0 : undefined;
+    }
+
     public clearSuggestions(): void {
         this.suggestions = [];
         this._onSuggestionsChanged.fire([]);
     }
 
     public removeSuggestion(index: number): void {
+        if (index < 0 || index >= this.suggestions.length) {
+            return;
+        }
         this.suggestions.splice(index, 1);
         this._onSuggestionsChanged.fire(this.suggestions);
     }

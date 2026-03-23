@@ -146,6 +146,7 @@ export interface GenECConfig {
     pythonPath: string;
     apiKey?: string;
     autoApply: boolean;
+    analysisTimeout: number;
     clustering: {
         minClusterSize: number;
         maxClusterSize: number;

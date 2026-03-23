@@ -3,7 +3,7 @@
  * Uses simple canvas-based rendering instead of vis-network to avoid module loading issues
  */
 import * as vscode from 'vscode';
-import { GraphData } from '../types';
+import { GraphData, ClusterData } from '../types';
 
 export class GraphWebviewPanel {
     public static currentPanel: GraphWebviewPanel | undefined;
@@ -52,7 +52,7 @@ export class GraphWebviewPanel {
     /**
      * Update the graph with new data
      */
-    public updateGraph(graphData: GraphData, clusters?: any[]): void {
+    public updateGraph(graphData: GraphData, clusters?: ClusterData[]): void {
         this._panel.webview.postMessage({
             type: 'updateGraph',
             graphData,
@@ -276,7 +276,7 @@ export class GraphWebviewPanel {
         });
 
         function setupGraph(graphData, clusters) {
-            if (!graphData || !graphData.nodes || graphData.nodes.length === 0) {
+            if (!graphData || !Array.isArray(graphData.nodes) || graphData.nodes.length === 0) {
                 emptyState.style.display = 'flex';
                 canvas.style.display = 'none';
                 return;
@@ -341,7 +341,7 @@ export class GraphWebviewPanel {
                 for (const edge of edges) {
                     const dx = edge.target.x - edge.source.x;
                     const dy = edge.target.y - edge.source.y;
-                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    const dist = Math.max(1, Math.sqrt(dx*dx + dy*dy));
                     const force = dist * 0.01;
                     edge.source.fx += (dx / dist) * force;
                     edge.source.fy += (dy / dist) * force;

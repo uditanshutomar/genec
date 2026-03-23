@@ -4,9 +4,8 @@
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as path from 'path';
-import * as fs from 'fs';
 import { EventEmitter } from 'events';
-import { GenECResult, ProgressEvent, GenECConfig } from '../types';
+import { GenECResult, ProgressEvent } from '../types';
 import { ConfigService } from './ConfigService';
 
 export interface GenECServiceEvents {
@@ -94,7 +93,8 @@ export class GenECService extends EventEmitter {
         this.log(`Command: ${pythonPath} ${args.join(' ')}`);
 
         return new Promise((resolve, reject) => {
-            const TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+            const config = this.configService.getConfig();
+            const TIMEOUT_MS = (config.analysisTimeout || 10) * 60 * 1000;
             let timeoutId: NodeJS.Timeout | undefined;
             let stdout = '';
             let stderr = '';
@@ -156,7 +156,11 @@ export class GenECService extends EventEmitter {
                     this.emit('complete', result);
                     resolve(result);
                 } catch (e) {
-                    reject(new Error(`Failed to parse output: ${(e as Error).message}`));
+                    const lastStderr = stderr.split('\n').filter(l => l.trim()).slice(-3).join('; ');
+                    reject(new Error(
+                        `Failed to parse GenEC output. ` +
+                        `Last error: ${lastStderr || (e instanceof Error ? e.message : String(e))}`
+                    ));
                 }
             });
         });
@@ -221,7 +225,9 @@ export class GenECService extends EventEmitter {
                 try {
                     const event = JSON.parse(trimmed) as ProgressEvent;
                     this.emit('progress', event);
-                } catch { }
+                } catch (error) {
+                    this.log(`[WARN] Failed to parse progress JSON: ${error instanceof Error ? error.message : String(error)}`);
+                }
                 continue;
             }
 
@@ -243,7 +249,9 @@ export class GenECService extends EventEmitter {
         // Try direct parse first
         try {
             return JSON.parse(output);
-        } catch { }
+        } catch {
+            // Direct parse failed, try filtering log lines below
+        }
 
         // Filter out log lines (INFO:, DEBUG:, WARNING:, etc.) and try again
         const lines = output.trim().split('\n');
@@ -265,7 +273,9 @@ export class GenECService extends EventEmitter {
         const filteredOutput = jsonLines.join('\n');
         try {
             return JSON.parse(filteredOutput);
-        } catch { }
+        } catch {
+            // Filtered parse failed, try finding JSON object below
+        }
 
         // Find the main JSON object (starts with { "status": or similar)
         const jsonStartPatterns = [
@@ -292,7 +302,9 @@ export class GenECService extends EventEmitter {
                 if (endIndex > 0) {
                     try {
                         return JSON.parse(jsonStr.substring(0, endIndex));
-                    } catch { }
+                    } catch {
+                        // Brace-matched substring parse failed, continue searching
+                    }
                 }
             }
         }
@@ -306,7 +318,9 @@ export class GenECService extends EventEmitter {
                 } catch {
                     try {
                         return JSON.parse(line);
-                    } catch { }
+                    } catch {
+                        // Single line parse also failed, continue searching backwards
+                    }
                 }
             }
         }

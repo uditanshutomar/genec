@@ -208,6 +208,13 @@
                     "type": "number",
                     "default": 0.35,
                     "description": "Minimum cohesion score (0.0-1.0)"
+                },
+                "genec.analysisTimeout": {
+                    "type": "number",
+                    "default": 10,
+                    "minimum": 1,
+                    "maximum": 60,
+                    "description": "Analysis timeout in minutes (default: 10)"
                 }
             }
         }

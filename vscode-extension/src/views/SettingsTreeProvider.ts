@@ -74,21 +74,29 @@ export class SettingTreeItem extends vscode.TreeItem {
     }
 }
 
-export class SettingsTreeProvider implements vscode.TreeDataProvider<SettingTreeItem> {
+export class SettingsTreeProvider implements vscode.TreeDataProvider<SettingTreeItem>, vscode.Disposable {
     private _onDidChangeTreeData = new vscode.EventEmitter<SettingTreeItem | undefined>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
     private configService: ConfigService;
+    private disposables: vscode.Disposable[] = [];
 
     constructor() {
         this.configService = ConfigService.getInstance();
 
-        // Refresh when settings change
-        vscode.workspace.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration('genec')) {
-                this.refresh();
-            }
-        });
+        // Refresh when settings change (track disposable to prevent memory leak)
+        this.disposables.push(
+            vscode.workspace.onDidChangeConfiguration(e => {
+                if (e.affectsConfiguration('genec')) {
+                    this.refresh();
+                }
+            })
+        );
+    }
+
+    public dispose(): void {
+        this.disposables.forEach(d => d.dispose());
+        this._onDidChangeTreeData.dispose();
     }
 
     public refresh(): void {
