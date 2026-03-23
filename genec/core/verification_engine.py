@@ -115,10 +115,12 @@ class VerificationEngine:
         self.logger.info(f"Verifying refactoring suggestion: {suggestion.proposed_class_name}")
 
         result = VerificationResult(suggestion_id=suggestion.cluster_id, status="PENDING")
+        equivalence_ran = False
 
         # Layer 0: Equivalence Checking (NEW - MOST CRITICAL)
         if self.enable_equivalence:
             self.logger.info("Layer 0: Equivalence Checking (Behavioral Preservation)")
+            equivalence_ran = True
 
             # Build refactored files dict (use os.path.join for cross-platform)
             import os
@@ -250,7 +252,7 @@ class VerificationEngine:
         # Layer 3: Behavioral Verification
         # Skip if equivalence checking already passed - they both run tests,
         # so this avoids redundant test execution
-        if self.enable_behavioral and not result.equivalence_pass:
+        if self.enable_behavioral and not equivalence_ran:
             # Only run behavioral if equivalence wasn't run or didn't pass
             self.logger.info("Layer 3: Behavioral Verification")
 
@@ -269,7 +271,7 @@ class VerificationEngine:
                 result.error_message = error
                 self.logger.warning(f"Behavioral verification failed: {error}")
                 return result
-        elif self.enable_behavioral and result.equivalence_pass:
+        elif self.enable_behavioral and equivalence_ran and result.equivalence_pass:
             # Equivalence already verified behavior - skip redundant check
             result.behavioral_pass = True
             self.logger.info("Behavioral verification skipped (equivalence already verified)")

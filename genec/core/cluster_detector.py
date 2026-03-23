@@ -107,9 +107,9 @@ def calculate_quality_tier(cluster: Cluster, evo_data=None) -> QualityTier:
     score = 0.0
     reasons = []
 
-    # Evolutionary evidence (40 points)
+    # Evolutionary evidence (30 points — reduced from 40 so clusters without
+    # git history can still pass via structural quality alone)
     if evo_data and hasattr(evo_data, "coupling_strengths"):
-        # Calculate average coupling strength for methods in cluster
         cluster_methods = cluster.get_methods()
         coupling_values = []
 
@@ -122,41 +122,49 @@ def calculate_quality_tier(cluster: Cluster, evo_data=None) -> QualityTier:
         if coupling_values:
             avg_coupling = sum(coupling_values) / len(coupling_values)
             if avg_coupling > 0.5:
-                score += 40
+                score += 30
                 reasons.append(f"Strong evolutionary coupling ({avg_coupling:.2f})")
             elif avg_coupling > 0.3:
-                score += 25
+                score += 20
                 reasons.append(f"Moderate evolutionary coupling ({avg_coupling:.2f})")
             elif avg_coupling > 0:
                 score += 10
                 reasons.append(f"Weak evolutionary coupling ({avg_coupling:.2f})")
         else:
-            reasons.append("No evolutionary coupling found")
+            # No coupling found but evo data exists — award small base points
+            score += 5
+            reasons.append("No evolutionary coupling found (base structural credit)")
     else:
-        reasons.append("No evolutionary data available")
+        # No evo data at all (shallow clone etc.) — still award base points
+        score += 5
+        reasons.append("No evolutionary data available (base structural credit)")
 
-    # Internal cohesion (30 points)
+    # Internal cohesion (35 points — increased to let structural quality drive scoring)
     if cluster.internal_cohesion > 0.7:
-        score += 30
+        score += 35
         reasons.append(f"High internal cohesion ({cluster.internal_cohesion:.2f})")
     elif cluster.internal_cohesion > 0.5:
-        score += 20
+        score += 25
         reasons.append(f"Moderate internal cohesion ({cluster.internal_cohesion:.2f})")
     elif cluster.internal_cohesion > 0.3:
-        score += 10
+        score += 15
         reasons.append(f"Low internal cohesion ({cluster.internal_cohesion:.2f})")
     else:
+        score += 5
         reasons.append(f"Very low internal cohesion ({cluster.internal_cohesion:.2f})")
 
-    # External coupling (20 points - inverted, lower is better)
+    # External coupling (25 points - inverted, lower is better)
     if cluster.external_coupling < 0.3:
-        score += 20
+        score += 25
         reasons.append(f"Low external coupling ({cluster.external_coupling:.2f})")
     elif cluster.external_coupling < 0.5:
-        score += 10
+        score += 15
         reasons.append(f"Moderate external coupling ({cluster.external_coupling:.2f})")
-    else:
+    elif cluster.external_coupling < 0.7:
+        score += 5
         reasons.append(f"High external coupling ({cluster.external_coupling:.2f})")
+    else:
+        reasons.append(f"Very high external coupling ({cluster.external_coupling:.2f})")
 
     # Cluster size (10 points)
     size = len(cluster.member_names)
@@ -292,6 +300,8 @@ class ClusterDetector:
             self.logger.warning("Empty graph, no clusters detected")
             return []
 
+        clusters: list[Cluster] = []
+
         # Check if graph has edges
         if G.number_of_edges() == 0:
             self.logger.warning(
@@ -299,18 +309,21 @@ class ClusterDetector:
                 "This typically means methods are independent with no shared fields or calls. "
                 "Creating fallback clusters for LLM-based analysis."
             )
-            return self._create_fallback_clusters(G)
+            clusters = self._create_fallback_clusters(G)
+        elif self.multi_resolution_config.get("enabled", False):
+            # Multi-resolution clustering if enabled
+            clusters = self._multi_resolution_clustering(G)
+        elif self.stability_config.get("enabled", False):
+            # Stability analysis if enabled
+            clusters = self._consensus_clustering(G)
+        else:
+            # Standard single-resolution clustering
+            clusters = self._detect_communities(G, self.resolution)
 
-        # Multi-resolution clustering if enabled
-        if self.multi_resolution_config.get("enabled", False):
-            return self._multi_resolution_clustering(G)
+        if class_deps is None:
+            return self.filter_clusters(clusters, None)
 
-        # Stability analysis if enabled
-        if self.stability_config.get("enabled", False):
-            return self._consensus_clustering(G)
-
-        # Standard single-resolution clustering
-        return self._detect_communities(G, self.resolution)
+        return clusters
 
     def _detect_communities(self, G: nx.Graph, resolution: float) -> list[Cluster]:
         """
@@ -1254,14 +1267,15 @@ class ClusterDetector:
 
         for method in methods:
             # Extract prefix
-            prefix_match = re.match(f"^({pattern_str})[A-Z]", method)
+            method_name = method.split("(", 1)[0] if "(" in method else method
+            prefix_match = re.match(f"^({pattern_str})[A-Z]", method_name)
 
             if prefix_match:
                 prefix = prefix_match.group(1)
                 groups[prefix].append(method)
             else:
                 # No clear prefix, use first word
-                words = re.findall(r"[A-Z][a-z]*", method)
+                words = re.findall(r"[A-Z][a-z]*", method_name)
                 if words:
                     groups[words[0].lower()].append(method)
                 else:

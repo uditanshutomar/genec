@@ -135,10 +135,18 @@ class JDTCodeGenerator:
 
         self.logger.info(f"Downloading JDT wrapper from {self.DEFAULT_DOWNLOAD_URL}...")
 
-        # Bypass SSL verification if needed (sometimes issues in some envs)
-        ctx = ssl.create_default_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
+        # Use default SSL context with verification enabled for security
+        # Only disable SSL verification if GENEC_DISABLE_SSL_VERIFY env var is set
+        if os.environ.get("GENEC_DISABLE_SSL_VERIFY"):
+            self.logger.warning(
+                "SSL verification disabled via GENEC_DISABLE_SSL_VERIFY. "
+                "This is not recommended for security reasons."
+            )
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+        else:
+            ctx = ssl.create_default_context()
 
         try:
             with (
@@ -147,17 +155,19 @@ class JDTCodeGenerator:
             ):
                 shutil.copyfileobj(response, out_file)
             self.logger.info("Download complete.")
+        except ssl.SSLError as e:
+            self.logger.error(
+                f"SSL error during download: {e}. "
+                "If you trust this source, set GENEC_DISABLE_SSL_VERIFY=1"
+            )
+            raise
         except Exception as e:
             # Clean up partial file
             if os.path.exists(target_path):
                 os.unlink(target_path)
             raise e
 
-        # Default to expected Maven output location (absolute)
-        return str(
-            project_root
-            / "genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar"
-        )
+        # No return value needed; caller will verify target_path existence.
 
     def generate(
         self,
@@ -397,7 +407,15 @@ class JDTCodeGenerator:
                     )
 
                 for called_name in called_names:
-                    for candidate_sig in name_to_sigs.get(called_name, []):
+                    if "(" in called_name and called_name in modifiers_by_sig:
+                        candidate_sigs = [called_name]
+                    else:
+                        base_name = (
+                            called_name.split("(", 1)[0] if "(" in called_name else called_name
+                        )
+                        candidate_sigs = name_to_sigs.get(base_name, [])
+
+                    for candidate_sig in candidate_sigs:
                         if candidate_sig in methods:
                             continue
                         modifiers = [m.lower() for m in modifiers_by_sig.get(candidate_sig, [])]
@@ -496,7 +514,8 @@ class JDTCodeGenerator:
             # Check if Java is available
             result = subprocess.run(["java", "-version"], capture_output=True, timeout=5)
             return result.returncode == 0
-        except:
+        except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as e:
+            self.logger.debug(f"Java availability check failed: {e}")
             return False
 
     _KEYWORD_BLACKLIST = {

@@ -1,21 +1,31 @@
+# Core parsing and AST analysis
 javalang==0.13.0
+
+# Git integration for evolutionary coupling analysis
 gitpython==3.1.40
+
+# Graph and clustering algorithms
 networkx>=3.2
 python-louvain==0.16
 leidenalg>=0.10.0
 python-igraph>=0.11.0
-anthropic>=0.40.0
+
+# LLM integration
+anthropic>=0.40.0,<1.0
+
+# Configuration validation
+pydantic>=2.0.0
+
+# Data science and ML
 pandas>=2.0.0
 numpy>=1.24.0
 matplotlib>=3.7.0
-pytest>=7.4.0
-pyyaml>=6.0.0
 scikit-learn>=1.3.0
-# Data science and ML
 scipy>=1.11.0
 
-# Git integration for Stage 7
-GitPython>=3.1.40
+# Configuration
+pyyaml>=6.0.0
+python-dotenv>=1.0.0
 
 # WebSocket for real-time progress (optional but recommended)
 websockets>=12.0

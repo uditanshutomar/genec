@@ -212,6 +212,11 @@ class ClusterContextBuilder:
             Set of method signatures called by cluster
         """
         cluster_sigs = set(cluster.get_methods())
+        all_methods = class_deps.get_all_methods()
+        name_to_sigs: dict[str, list[str]] = {}
+        sig_set = {m.signature for m in all_methods}
+        for method in all_methods:
+            name_to_sigs.setdefault(method.name, []).append(method.signature)
         dependencies = set()
 
         # For each method in cluster
@@ -220,12 +225,18 @@ class ClusterContextBuilder:
             called = class_deps.method_calls.get(method_sig, [])
 
             # Find signatures of called methods (not in cluster)
-            for called_name in called:
-                # Match by method name to signatures
-                for m in class_deps.get_all_methods():
-                    if m.name == called_name and m.signature not in cluster_sigs:
-                        dependencies.add(m.signature)
-                        break
+            for called_entry in called:
+                if "(" in called_entry and called_entry in sig_set:
+                    if called_entry not in cluster_sigs:
+                        dependencies.add(called_entry)
+                    continue
+
+                called_name = (
+                    called_entry.split("(", 1)[0] if "(" in called_entry else called_entry
+                )
+                for sig in name_to_sigs.get(called_name, []):
+                    if sig not in cluster_sigs:
+                        dependencies.add(sig)
 
         return dependencies
 

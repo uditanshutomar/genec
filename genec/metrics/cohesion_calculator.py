@@ -147,7 +147,12 @@ class CohesionCalculator:
         calls1 = class_deps.method_calls.get(method1.signature, [])
         calls2 = class_deps.method_calls.get(method2.signature, [])
 
-        if method2.name in calls1 or method1.name in calls2:
+        if (
+            method2.signature in calls1
+            or method2.name in calls1
+            or method1.signature in calls2
+            or method1.name in calls2
+        ):
             return True
 
         return False

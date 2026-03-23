@@ -1,5 +1,5 @@
 fusion:
-  alpha: 0.8  # Restored after ablation study
+  alpha: 0.6  # 60% static, 40% evolutionary (per paper Section 3.1, validated by ablation)
   edge_threshold: 0.05
 
   # Adaptive fusion (Stage 3 enhancement)
@@ -63,7 +63,7 @@ clustering:
   
   # Quality pre-filtering - skip low-quality clusters before LLM
   quality_metrics:
-    min_quality_score: 0.15        # Lowered from 0.3 - less aggressive filtering
+    min_quality_score: 0.0         # Disabled — let naming/verification be the quality gate
     
   # Connectivity validation
   validate_connectivity: true

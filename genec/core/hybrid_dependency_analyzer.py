@@ -13,13 +13,12 @@ Architecture:
 
 from dataclasses import dataclass
 
-import numpy as np
-
 from genec.core.dependency_analyzer import (
     ClassDependencies,
     DependencyAnalyzer,
     FieldInfo,
     MethodInfo,
+    build_dependency_matrix,
 )
 from genec.parsers.spoon_parser import SpoonParser, SpoonParserError
 from genec.utils.logging_utils import get_logger
@@ -74,11 +73,6 @@ class HybridDependencyAnalyzer:
         # Check which parser was used
         print(analyzer.metrics.get_summary())
     """
-
-    # Dependency weights (same as DependencyAnalyzer)
-    WEIGHT_METHOD_CALL = 1.0
-    WEIGHT_FIELD_ACCESS = 0.8
-    WEIGHT_SHARED_FIELD = 0.6
 
     def __init__(self, spoon_wrapper_jar: str | None = None, prefer_spoon: bool = True):
         """
@@ -242,72 +236,8 @@ class HybridDependencyAnalyzer:
         return class_deps
 
     def _build_dependency_matrix(self, class_deps: ClassDependencies):
-        """
-        Build dependency matrix for all members (same logic as DependencyAnalyzer).
-
-        Args:
-            class_deps: ClassDependencies object to populate
-        """
-        all_methods = class_deps.get_all_methods()
-
-        # Create member name list (methods first, then fields)
-        member_names = [m.signature for m in all_methods] + [f.name for f in class_deps.fields]
-        class_deps.member_names = member_names
-
-        n = len(member_names)
-        matrix = np.zeros((n, n))
-
-        # Create index maps
-        method_to_idx = {m.signature: i for i, m in enumerate(all_methods)}
-        field_to_idx = {f.name: i + len(all_methods) for i, f in enumerate(class_deps.fields)}
-
-        # Build name-to-signature mapping for overload resolution
-        name_to_methods = {}
-        for m in all_methods:
-            if m.name not in name_to_methods:
-                name_to_methods[m.name] = []
-            name_to_methods[m.name].append(m)
-
-        # Fill matrix with dependencies
-        for method in all_methods:
-            method_idx = method_to_idx[method.signature]
-
-            # Method calls
-            for called_method_name in class_deps.method_calls.get(method.signature, []):
-                # Find all overloads of the called method
-                overloaded_methods = name_to_methods.get(called_method_name, [])
-
-                if len(overloaded_methods) == 1:
-                    # No overloading, direct match
-                    called_idx = method_to_idx[overloaded_methods[0].signature]
-                    matrix[method_idx][called_idx] = self.WEIGHT_METHOD_CALL
-                else:
-                    # Multiple overloads exist
-                    weight = self.WEIGHT_METHOD_CALL * 0.9
-                    for overloaded_method in overloaded_methods:
-                        called_idx = method_to_idx[overloaded_method.signature]
-                        matrix[method_idx][called_idx] = max(matrix[method_idx][called_idx], weight)
-
-            # Field accesses
-            for field_name in class_deps.field_accesses.get(method.signature, []):
-                if field_name in field_to_idx:
-                    field_idx = field_to_idx[field_name]
-                    matrix[method_idx][field_idx] = self.WEIGHT_FIELD_ACCESS
-
-        # Add shared field dependencies
-        for field_name, field_idx in field_to_idx.items():
-            accessing_methods = []
-            for method in all_methods:
-                if field_name in class_deps.field_accesses.get(method.signature, []):
-                    accessing_methods.append(method_to_idx[method.signature])
-
-            for i in range(len(accessing_methods)):
-                for j in range(i + 1, len(accessing_methods)):
-                    idx1, idx2 = accessing_methods[i], accessing_methods[j]
-                    matrix[idx1][idx2] = max(matrix[idx1][idx2], self.WEIGHT_SHARED_FIELD)
-                    matrix[idx2][idx1] = max(matrix[idx2][idx1], self.WEIGHT_SHARED_FIELD)
-
-        class_deps.dependency_matrix = matrix
+        """Build dependency matrix — delegates to shared module-level function."""
+        build_dependency_matrix(class_deps)
 
     def get_metrics_summary(self) -> str:
         """Get human-readable metrics summary."""

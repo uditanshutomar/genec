@@ -3,7 +3,6 @@
 import json
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import networkx as nx
 
 from genec.core.dependency_analyzer import ClassDependencies
@@ -66,7 +65,7 @@ class GraphBuilder:
         return G
 
     def build_evolutionary_graph(
-        self, evo_data: EvolutionaryData, method_signatures: dict[str, str] | None = None
+        self, evo_data: EvolutionaryData, method_signatures: dict[str, str | list[str]] | None = None
     ) -> nx.Graph:
         """
         Build evolutionary coupling graph from co-change data.
@@ -85,23 +84,28 @@ class GraphBuilder:
 
         G = nx.Graph()
 
+        def expand_method(name: str) -> list[str]:
+            if method_signatures and name in method_signatures:
+                mapped = method_signatures[name]
+                if isinstance(mapped, (list, tuple, set)):
+                    return [m for m in mapped if m]
+                return [mapped]
+            return [name]
+
         # Add nodes for methods
         for method in evo_data.method_names:
-            # Try to match to full signature if provided
-            node_name = method
-            if method_signatures and method in method_signatures:
-                node_name = method_signatures[method]
-
-            G.add_node(node_name, type="method")
+            for node_name in expand_method(method):
+                G.add_node(node_name, type="method")
 
         # Add edges from coupling strengths
         for (m1, m2), strength in evo_data.coupling_strengths.items():
             # Map to signatures if provided
-            node1 = method_signatures.get(m1, m1) if method_signatures else m1
-            node2 = method_signatures.get(m2, m2) if method_signatures else m2
-
-            if node1 in G.nodes and node2 in G.nodes:
-                G.add_edge(node1, node2, weight=strength, edge_type="evolutionary")
+            for node1 in expand_method(m1):
+                for node2 in expand_method(m2):
+                    if node1 == node2:
+                        continue
+                    if node1 in G.nodes and node2 in G.nodes:
+                        G.add_edge(node1, node2, weight=strength, edge_type="evolutionary")
 
         self.logger.info(
             f"Evolutionary graph: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges"
@@ -341,6 +345,8 @@ class GraphBuilder:
             figsize: Figure size
         """
         self.logger.info(f"Visualizing graph: {title}")
+
+        import matplotlib.pyplot as plt
 
         plt.figure(figsize=figsize)
 
