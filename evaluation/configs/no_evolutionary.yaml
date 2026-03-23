@@ -1,0 +1,7 @@
+# Ablation: no evolutionary coupling data.
+# Disables git-history analysis; fusion uses 100% static weights.
+evolution:
+  window_months: 0
+
+fusion:
+  alpha: 1.0

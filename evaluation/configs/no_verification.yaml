@@ -1,0 +1,6 @@
+# Ablation: no verification stage.
+# Disables all three verification passes (syntactic, semantic, behavioral).
+verification:
+  enable_syntactic: false
+  enable_semantic: false
+  enable_behavioral: false

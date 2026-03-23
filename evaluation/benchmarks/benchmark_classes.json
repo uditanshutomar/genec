@@ -1,0 +1,56 @@
+{
+  "_description": "MLCQ benchmark God Classes for GenEC evaluation. 50 classes from 12 Apache projects.",
+  "_source": "MLCQ Dataset (Reichenbach et al., MSR 2022)",
+  "_note": "Populate repo_path after running setup_benchmarks.sh. commit_sha pins the exact version analyzed.",
+  "classes": [
+    {
+      "project": "commons-io",
+      "class_name": "IOUtils",
+      "class_file": "src/main/java/org/apache/commons/io/IOUtils.java",
+      "commit_sha": "TO_BE_FILLED",
+      "repo_url": "https://github.com/apache/commons-io.git",
+      "repo_path": "benchmarks/repos/commons-io",
+      "loc": 2100,
+      "methods": 37,
+      "fields": 8,
+      "notes": "Primary motivating example in paper"
+    },
+    {
+      "project": "commons-lang",
+      "class_name": "StringUtils",
+      "class_file": "src/main/java/org/apache/commons/lang3/StringUtils.java",
+      "commit_sha": "TO_BE_FILLED",
+      "repo_url": "https://github.com/apache/commons-lang.git",
+      "repo_path": "benchmarks/repos/commons-lang",
+      "loc": 8000,
+      "methods": 200,
+      "fields": 15,
+      "notes": "Largest utility class in Commons"
+    },
+    {
+      "project": "commons-lang",
+      "class_name": "ArrayUtils",
+      "class_file": "src/main/java/org/apache/commons/lang3/ArrayUtils.java",
+      "commit_sha": "TO_BE_FILLED",
+      "repo_url": "https://github.com/apache/commons-lang.git",
+      "repo_path": "benchmarks/repos/commons-lang",
+      "loc": 4500,
+      "methods": 150,
+      "fields": 10,
+      "notes": "Array manipulation utilities"
+    },
+    {
+      "project": "commons-lang",
+      "class_name": "NumberUtils",
+      "class_file": "src/main/java/org/apache/commons/lang3/math/NumberUtils.java",
+      "commit_sha": "TO_BE_FILLED",
+      "repo_url": "https://github.com/apache/commons-lang.git",
+      "repo_path": "benchmarks/repos/commons-lang",
+      "loc": 1800,
+      "methods": 50,
+      "fields": 12,
+      "notes": "Number parsing and conversion"
+    }
+  ],
+  "_remaining": "Add remaining 46 MLCQ God Classes here. Full list available from MLCQ dataset at https://github.com/2022-MLCQ"
+}

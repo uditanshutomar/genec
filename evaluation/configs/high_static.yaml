@@ -1,0 +1,4 @@
+# Ablation: high static weight.
+# 80% static dependency, 20% evolutionary coupling.
+fusion:
+  alpha: 0.8

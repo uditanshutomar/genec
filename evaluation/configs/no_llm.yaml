@@ -1,0 +1,4 @@
+# Ablation: no LLM naming/refinement.
+# Pipeline falls back to auto-naming when the API key is unavailable.
+llm:
+  api_key: "DISABLED"

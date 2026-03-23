@@ -1,0 +1,4 @@
+# Full GenEC configuration (production config with alpha=0.6)
+# This is the baseline "all features enabled" ablation variant.
+fusion:
+  alpha: 0.6
