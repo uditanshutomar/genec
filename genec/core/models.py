@@ -103,4 +103,4 @@ class VerificationResult:
     @property
     def is_valid(self) -> bool:
         """Return True only if overall verification status indicates pass."""
-        return self.status in ("PASS", "PASSED", "VALID")
+        return self.status in ("PASS", "PASSED", "PASSED_ALL", "VALID")

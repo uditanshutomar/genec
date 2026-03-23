@@ -73,7 +73,8 @@ class SemanticVerifier:
                 method_name = method_sig.split("(")[0]
                 if method_name == class_deps.class_name:
                     continue  # Skip constructors
-                if not any(method_name in m for m in original_members["methods"]):
+                # Exact method name match (not substring)
+                if not any(m.split("(")[0] == method_name for m in original_members["methods"]):
                     return False, f"Extracted method {method_name} not found in original class"
 
             for field in cluster_fields:
@@ -85,7 +86,8 @@ class SemanticVerifier:
                 method_name = method_sig.split("(")[0]
                 if method_name == class_deps.class_name:
                     continue  # Skip constructors
-                if not any(method_name in m for m in new_class_members["methods"]):
+                # Exact method name match (not substring)
+                if not any(m.split("(")[0] == method_name for m in new_class_members["methods"]):
                     return False, f"Method {method_name} missing from new class"
 
             for field in cluster_fields:

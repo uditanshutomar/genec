@@ -259,11 +259,16 @@ class VerificationEngine:
                 class_deps.package_name,
             )
 
-            result.behavioral_pass = behavioral_pass
-            if not behavioral_pass:
-                result.status = "FAILED_BEHAVIORAL"
-                result.error_message = error
-                self.logger.warning(f"Behavioral verification failed: {error}")
+            # Distinguish real pass from "skipped" pass (no build system)
+            if behavioral_pass and error and "skipped" in error.lower():
+                result.behavioral_pass = False  # Not a real pass — just skipped
+                self.logger.info(f"Behavioral verification skipped: {error}")
+            else:
+                result.behavioral_pass = behavioral_pass
+                if not behavioral_pass:
+                    result.status = "FAILED_BEHAVIORAL"
+                    result.error_message = error
+                    self.logger.warning(f"Behavioral verification failed: {error}")
         elif self.enable_behavioral and equivalence_ran and result.equivalence_pass:
             result.behavioral_pass = True
             self.logger.info("Behavioral verification skipped (equivalence already verified)")
