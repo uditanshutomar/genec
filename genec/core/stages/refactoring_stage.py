@@ -1,7 +1,10 @@
 from genec.core.refactoring_applicator import RefactoringApplicator
 from genec.core.stages.base_stage import PipelineContext, PipelineStage
 from genec.core.verification_engine import VerificationEngine
+from genec.utils.logging_utils import get_logger
 from genec.utils.progress_server import emit_progress
+
+logger = get_logger(__name__)
 
 
 class RefactoringStage(PipelineStage):
@@ -14,27 +17,28 @@ class RefactoringStage(PipelineStage):
 
     def run(self, context: PipelineContext) -> bool:
         app_config = context.config.get("refactoring_application", {})
-        if not app_config.get("enabled", False):
-            self.logger.info("Refactoring application disabled in config")
-            return True
+        apply_enabled = app_config.get("enabled", False) and self.applicator is not None
 
-        emit_progress(6, 6, "Applying refactorings...")
-        self.logger.info("\n[Stage 6/6] Applying and verifying refactorings...")
+        emit_progress(6, 6, "Verifying refactorings...")
+        self.logger.info("\n[Stage 6/6] Verifying refactorings...")
 
         suggestions = context.get("suggestions", [])
         if not suggestions:
-            self.logger.info("No suggestions to apply")
+            self.logger.info("No suggestions to verify")
             return True
 
-        auto_apply = app_config.get("auto_apply", False)
-        dry_run = app_config.get("dry_run", False)
+        auto_apply = app_config.get("auto_apply", False) if apply_enabled else False
+        dry_run = app_config.get("dry_run", False) if apply_enabled else False
+        should_apply = apply_enabled and not dry_run
 
-        # If dry run, we don't actually apply/verify, just log
-        if dry_run:
-            self.logger.info("Dry run enabled - skipping actual application")
-            return True
+        if apply_enabled:
+            mode = "DRY RUN" if dry_run else "LIVE"
+            self.logger.info(f"Refactoring application enabled [{mode}]")
+        else:
+            self.logger.info("Refactoring application disabled; running verification only")
 
         verified_suggestions = []
+        verification_results = []
 
         # In auto-apply mode, we might want to apply all valid ones
         # For now, implementing the logic to try them one by one
@@ -54,16 +58,52 @@ class RefactoringStage(PipelineStage):
                     suggestion.verification_status = "skipped_low_confidence"
                     continue
 
-            # Apply
-            success = self.applicator.apply_refactoring(
-                suggestion,
-                original_class_file=context.class_file,
-                repo_path=context.repo_path,
-                dry_run=dry_run
-            )
-            if not success:
-                self.logger.warning(f"Failed to apply suggestion {suggestion.proposed_class_name}")
-                continue
+            if not suggestion.new_class_code or not suggestion.modified_original_code:
+                # Try JDT code generation for suggestions with names but no code
+                # (e.g., auto-named fallback from NamingStage)
+                if suggestion.cluster and suggestion.proposed_class_name:
+                    self.logger.info(
+                        f"Generating code for {suggestion.proposed_class_name} via JDT..."
+                    )
+                    try:
+                        from genec.core.jdt_code_generator import JDTCodeGenerator
+                        jdt = JDTCodeGenerator()
+                        class_deps = context.get("class_deps")
+                        generated = jdt.generate(
+                            cluster=suggestion.cluster,
+                            new_class_name=suggestion.proposed_class_name,
+                            class_file=context.class_file,
+                            repo_path=context.repo_path,
+                            class_deps=class_deps,
+                        )
+                        suggestion.new_class_code = generated.new_class_code
+                        suggestion.modified_original_code = generated.modified_original_code
+                        self.logger.info(f"JDT code generation successful for {suggestion.proposed_class_name}")
+                    except Exception as e:
+                        self.logger.warning(
+                            f"JDT code generation failed for {suggestion.proposed_class_name}: {e}"
+                        )
+                        suggestion.verification_status = "skipped_code_gen_failed"
+                        continue
+                else:
+                    self.logger.warning(
+                        f"Skipping {suggestion.proposed_class_name} (missing code and no cluster)"
+                    )
+                    suggestion.verification_status = "skipped_missing_code"
+                    continue
+
+            if should_apply:
+                application_result = self.applicator.apply_refactoring(
+                    suggestion,
+                    original_class_file=context.class_file,
+                    repo_path=context.repo_path,
+                    dry_run=dry_run,
+                )
+                if not application_result.success:
+                    self.logger.warning(
+                        f"Failed to apply suggestion {suggestion.proposed_class_name}"
+                    )
+                    continue
 
             # Verify
             class_deps = context.get("class_deps")
@@ -72,7 +112,8 @@ class RefactoringStage(PipelineStage):
                     original_code = f.read()
             except Exception as e:
                 self.logger.error(f"Failed to read original file: {e}")
-                original_code = ""
+                suggestion.verification_status = "skipped_read_error"
+                continue
             
             verification_result = self.verification_engine.verify_refactoring(
                 suggestion=suggestion,
@@ -82,13 +123,14 @@ class RefactoringStage(PipelineStage):
                 class_deps=class_deps,
             )
             is_valid = verification_result.is_valid
+            verification_results.append(verification_result)
 
             if is_valid:
                 self.logger.info(f"Suggestion {suggestion.proposed_class_name} verified successfully")
                 verified_suggestions.append(suggestion)
                 suggestion.verification_status = "verified"
 
-                if not auto_apply:
+                if should_apply and not auto_apply:
                     # Revert if not auto-applying (just checking verification)
                     self.logger.info("Reverting changes (auto-apply disabled)...")
                     self.applicator.revert_changes()
@@ -96,7 +138,29 @@ class RefactoringStage(PipelineStage):
                 self.logger.warning(f"Suggestion {suggestion.proposed_class_name} failed verification")
                 suggestion.verification_status = "failed"
                 # Always revert failed suggestions
-                self.applicator.revert_changes()
+                if should_apply:
+                    self.applicator.revert_changes()
 
+        rejected_suggestions = [s for s in suggestions if getattr(s, 'verification_status', None) not in ("verified",)]
+        context.results["rejected_suggestions"] = rejected_suggestions
         context.results["verified_suggestions"] = verified_suggestions
+        context.results["verification_results"] = verification_results
+
+        if context.recorder:
+            context.recorder.end_stage("verification", {
+                "total_suggestions": len(suggestions),
+                "verified_count": len(verified_suggestions),
+                "rejected_count": len(suggestions) - len(verified_suggestions),
+                "verification_details": [
+                    {
+                        "name": getattr(vr, 'suggestion_id', i),
+                        "syntactic_pass": getattr(vr, 'syntactic_pass', False),
+                        "semantic_pass": getattr(vr, 'semantic_pass', False),
+                        "behavioral_pass": getattr(vr, 'behavioral_pass', False),
+                        "status": getattr(vr, 'status', 'unknown'),
+                    }
+                    for i, vr in enumerate(verification_results)
+                ],
+            })
+
         return True

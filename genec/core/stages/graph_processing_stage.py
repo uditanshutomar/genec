@@ -34,6 +34,7 @@ class GraphProcessingStage(PipelineStage):
             # Add to graph nodes if requested
             if centrality_config.get("add_to_graph", True):
                 G_fused = self.graph_builder.add_centrality_to_graph(G_fused, centrality_metrics)
+                context.set("G_fused", G_fused)
 
             context.results["centrality_metrics"] = centrality_metrics
             self.logger.info(f"Calculated {len(centrality_metrics)} centrality metrics")
@@ -83,5 +84,11 @@ class GraphProcessingStage(PipelineStage):
                     self.logger.info(f"Exported centrality metrics to {centrality_file}")
                 except Exception as e:
                     self.logger.warning(f"Failed to export centrality metrics: {e}")
+
+        if context.recorder:
+            context.recorder.end_stage("graph_processing", {
+                "centrality_computed": bool(centrality_metrics),
+                "graph_exported": bool(context.results.get("graph_data")),
+            })
 
         return True

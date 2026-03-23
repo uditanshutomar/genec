@@ -10,34 +10,13 @@ from genec.utils.logging_utils import get_logger, setup_logger
 
 logger = get_logger(__name__)
 
-import signal
 
-from dotenv import load_dotenv
-
-
-def main():
-    # Load .env file
-    load_dotenv()
-
-    # Track if we're in a cancellable state
-    _cancellation_requested = False
-
-    def handle_sigint(signum, frame):
-        """Handle SIGINT (Ctrl+C) gracefully."""
-        nonlocal _cancellation_requested
-        if _cancellation_requested:
-            # Second Ctrl+C, force exit
-            sys.exit(130)
-        _cancellation_requested = True
-        raise KeyboardInterrupt("Cancellation requested")
-
-    # Install signal handler (allow graceful cancellation)
-    signal.signal(signal.SIGINT, handle_sigint)
-    signal.signal(signal.SIGTERM, handle_sigint)
-
-    parser = argparse.ArgumentParser(description="GenEC: Generative Extract Class Refactoring Tool")
+def create_parser() -> argparse.ArgumentParser:
+    """Create and return the argument parser."""
+    parser = argparse.ArgumentParser(
+        description="GenEC: Generative Extract Class Refactoring Tool"
+    )
     parser.add_argument("--version", action="version", version="GenEC 1.0.0")
-
     parser.add_argument("--target", required=True, help="Path to the Java class file to refactor")
     parser.add_argument("--repo", required=True, help="Path to the repository root")
     parser.add_argument(
@@ -84,7 +63,84 @@ def main():
     parser.add_argument(
         "--no-build", action="store_true", help="Disable automatic building of dependencies"
     )
+    parser.add_argument(
+        "--report-dir",
+        help="Directory to save pipeline reports (default: .genec/reports in repo)",
+    )
+    return parser
 
+
+def validate_target_file(file_path: str) -> Path:
+    """
+    Validate that the target file exists and is a Java file.
+
+    Args:
+        file_path: Path to the target file
+
+    Returns:
+        Resolved Path object
+
+    Raises:
+        FileNotFoundError: If file doesn't exist
+        ValueError: If file is not a .java file
+    """
+    path = Path(file_path).resolve()
+
+    if not path.exists():
+        raise FileNotFoundError(f"Target file not found: {path}")
+
+    if path.suffix.lower() != ".java":
+        raise ValueError(f"Target must be a .java file, got: {path.suffix}")
+
+    return path
+
+
+def validate_api_key_for_llm_features() -> bool:
+    """
+    Validate that an API key is available for LLM features.
+
+    Returns:
+        True if API key is available, False otherwise
+    """
+    from genec.utils.secrets import get_anthropic_api_key
+
+    api_key = get_anthropic_api_key()
+    if not api_key:
+        return False
+
+    # Basic format validation (Anthropic keys start with sk-ant-)
+    if not api_key.startswith("sk-ant-"):
+        logger.warning("API key does not appear to be a valid Anthropic key (should start with sk-ant-)")
+        return False
+
+    return True
+
+import signal
+
+from dotenv import load_dotenv
+
+
+def main():
+    # Load .env file
+    load_dotenv()
+
+    # Track if we're in a cancellable state
+    _cancellation_requested = False
+
+    def handle_sigint(signum, frame):
+        """Handle SIGINT (Ctrl+C) gracefully."""
+        nonlocal _cancellation_requested
+        if _cancellation_requested:
+            # Second Ctrl+C, force exit
+            sys.exit(130)
+        _cancellation_requested = True
+        raise KeyboardInterrupt("Cancellation requested")
+
+    # Install signal handler (allow graceful cancellation)
+    signal.signal(signal.SIGINT, handle_sigint)
+    signal.signal(signal.SIGTERM, handle_sigint)
+
+    parser = create_parser()
     args = parser.parse_args()
 
     # Setup logging
@@ -109,25 +165,42 @@ def main():
     if args.api_key:
         os.environ["ANTHROPIC_API_KEY"] = args.api_key
 
-    # Verify API key is available (either from args, env, or .env)
-    from genec.utils.secrets import get_anthropic_api_key
-
-    if not get_anthropic_api_key():
+    # Validate API key for LLM features
+    if not validate_api_key_for_llm_features():
         logger.warning(
-            "No API key found (checked args, env, and .env). LLM features will be disabled."
+            "No valid API key found (checked args, env, and .env). "
+            "LLM-based naming and validation will be disabled. "
+            "Set ANTHROPIC_API_KEY environment variable or pass --api-key."
         )
 
-    # Validate paths
-    target_path = Path(args.target).resolve()
+    # Validate target file
+    try:
+        target_path = validate_target_file(args.target)
+    except FileNotFoundError as e:
+        error_msg = str(e)
+        if args.json:
+            print(json.dumps({"status": "error", "error": error_msg}))
+        else:
+            logger.error(error_msg)
+        sys.exit(1)
+    except ValueError as e:
+        error_msg = str(e)
+        if args.json:
+            print(json.dumps({"status": "error", "error": error_msg}))
+        else:
+            logger.error(error_msg)
+        sys.exit(1)
+
+    # Validate repository path
     repo_path = Path(args.repo).resolve()
     config_path = Path(args.config).resolve()
 
-    if not target_path.exists():
-        logger.error(f"Target file not found: {target_path}")
-        sys.exit(1)
-
     if not repo_path.exists():
-        logger.error(f"Repository path not found: {repo_path}")
+        error_msg = f"Repository path not found: {repo_path}"
+        if args.json:
+            print(json.dumps({"status": "error", "error": error_msg}))
+        else:
+            logger.error(error_msg)
         sys.exit(1)
 
     # Construct config overrides
@@ -195,6 +268,15 @@ def main():
             max_suggestions=args.max_suggestions,
         )
 
+        # Save report to custom directory if specified
+        if args.report_dir:
+            from genec.core.pipeline_recorder import PipelineRecorder
+            report_dir = Path(args.report_dir)
+            report_dir.mkdir(parents=True, exist_ok=True)
+            report_path = report_dir / f"{Path(args.target).stem}_report.json"
+            report_path.write_text(json.dumps(results.pipeline_report, indent=2, default=str))
+            logger.info(f"Pipeline report saved to {report_path}")
+
         # Stop WebSocket server
         if progress_server:
             progress_server.emit_complete(
@@ -230,6 +312,23 @@ def main():
                         "verified": s in results.verified_suggestions,
                         "new_class_code": s.new_class_code or "",
                         "modified_original_code": s.modified_original_code or "",
+                        "rationale": getattr(s, "rationale", None),
+                        "reasoning": getattr(s, "reasoning", None),
+                        "confidence_score": getattr(s, "confidence_score", None),
+                        "quality_score": (
+                            s.cluster.quality_score if getattr(s, "cluster", None) else getattr(s, "quality_score", None)
+                        ),
+                        "quality_tier": (
+                            s.cluster.quality_tier.value
+                            if getattr(s, "cluster", None) and s.cluster.quality_tier
+                            else getattr(s, "quality_tier", None)
+                        ),
+                        "quality_reasons": (
+                            s.cluster.quality_reasons if getattr(s, "cluster", None) else getattr(s, "quality_reasons", None)
+                        ),
+                        "verification_status": getattr(s, "verification_status", None),
+                        "methods": s.cluster.get_methods() if getattr(s, "cluster", None) else None,
+                        "fields": s.cluster.get_fields() if getattr(s, "cluster", None) else None,
                     }
                     for s in results.suggestions
                 ],

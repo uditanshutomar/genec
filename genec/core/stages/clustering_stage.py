@@ -33,10 +33,25 @@ class ClusteringStage(PipelineStage):
         filtered_clusters = self.cluster_detector.filter_clusters(all_clusters, class_deps)
         context.results["filtered_clusters"] = filtered_clusters
 
+        # Capture rejected clusters for downstream structural planning
+        rejected_clusters = [c for c in all_clusters if getattr(c, "rejection_issues", None)]
+        context.results["rejected_clusters"] = rejected_clusters
+        context.set("rejected_clusters", rejected_clusters)
+
         ranked_clusters = self.cluster_detector.rank_clusters(filtered_clusters)
         context.results["ranked_clusters"] = ranked_clusters
 
         context.set("ranked_clusters", ranked_clusters)
 
         self.logger.info(f"Found {len(ranked_clusters)} candidate clusters")
+
+        if context.recorder:
+            context.recorder.end_stage("clustering", {
+                "clusters_total": len(all_clusters),
+                "clusters_filtered": len(filtered_clusters),
+                "clusters_ranked": len(ranked_clusters),
+                "clusters_rejected": len(rejected_clusters),
+                "avg_cohesion": sum(getattr(c, 'cohesion', 0) for c in ranked_clusters) / max(len(ranked_clusters), 1),
+            })
+
         return True

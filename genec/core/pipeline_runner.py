@@ -23,18 +23,36 @@ class PipelineRunner:
         """
         self.logger.info(f"Starting pipeline with {len(self.stages)} stages")
 
-        for stage in self.stages:
-            self.logger.info(f"Running stage: {stage.name}")
+        for i, stage in enumerate(self.stages, 1):
+            self.logger.info(f"Running stage {i}/{len(self.stages)}: {stage.name}")
+            recorder = context.recorder
+            if recorder:
+                recorder.start_stage(stage.name)
             try:
                 success = stage.run(context)
+                if recorder:
+                    stage_metrics = context.results.get(f"_{stage.name}_metrics", {})
+                    recorder.end_stage(stage.name, stage_metrics)
                 if not success:
-                    self.logger.error(f"Stage {stage.name} failed")
+                    if recorder:
+                        recorder.record_failure(stage.name, "Stage returned False", {})
+                    self.logger.error(f"Stage {stage.name} failed (returned False)")
+                    context.results["_failed_stage"] = stage.name
+                    context.results["_failed_stage_index"] = i
                     break
+            except KeyboardInterrupt:
+                self.logger.warning(f"Pipeline cancelled at stage {stage.name}")
+                context.results["_failed_stage"] = stage.name
+                context.results["_cancelled"] = True
+                raise
             except Exception as e:
+                if recorder:
+                    recorder.record_failure(stage.name, str(e), {})
                 self.logger.error(f"Stage {stage.name} failed with exception: {e}")
                 import traceback
-
                 self.logger.debug(traceback.format_exc())
+                context.results["_failed_stage"] = stage.name
+                context.results["_error"] = str(e)
                 break
 
         return context.results

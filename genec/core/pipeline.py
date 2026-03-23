@@ -14,6 +14,7 @@ from genec.core.graph_builder import GraphBuilder
 from genec.core.hybrid_dependency_analyzer import HybridDependencyAnalyzer
 from genec.core.jdt_code_generator import JDTCodeGenerator
 from genec.core.llm_interface import LLMInterface, RefactoringSuggestion
+from genec.core.pipeline_recorder import PipelineRecorder
 from genec.core.pipeline_runner import PipelineRunner
 from genec.core.refactoring_applicator import RefactoringApplication, RefactoringApplicator
 from genec.core.stages.analysis_stage import AnalysisStage
@@ -52,6 +53,8 @@ class PipelineResult:
     graph_data: dict = field(default_factory=dict)
     execution_time: float = 0.0
     structural_actions: list[str] = field(default_factory=list)
+
+    pipeline_report: dict = field(default_factory=dict)
 
     # Confidence metrics
     avg_confidence: float = 0.0
@@ -169,14 +172,31 @@ class GenECPipeline:
             self.logger.debug(f"Java version check failed: {e}")
 
     def _load_config(self, config_file: str) -> dict:
-        """Load configuration from YAML file."""
+        """Load and validate configuration from YAML file.
+
+        Uses Pydantic models from genec.config.models for validation,
+        ensuring invalid values are caught early rather than causing
+        silent misbehavior during evaluation.
+        """
+        from genec.config.models import GenECConfig
+
         try:
             with open(config_file) as f:
-                return yaml.safe_load(f)
-        except Exception as e:
-            # Use default configuration with logger warning
+                raw = yaml.safe_load(f) or {}
+            # Validate through Pydantic then convert back to dict
+            # so the rest of the pipeline can use dict-style access.
+            validated = GenECConfig(**raw)
+            return validated.model_dump()
+        except FileNotFoundError:
             import logging
-
+            logger = logging.getLogger("genec")
+            logger.warning(
+                f"Config file not found: '{config_file}'. "
+                f"Using default configuration."
+            )
+            return self._get_default_config()
+        except Exception as e:
+            import logging
             logger = logging.getLogger("genec")
             logger.warning(
                 f"Could not load config file '{config_file}': {e}. "
@@ -187,7 +207,7 @@ class GenECPipeline:
     def _get_default_config(self) -> dict:
         """Get default configuration."""
         return {
-            "fusion": {"alpha": 0.5, "edge_threshold": 0.1},
+            "fusion": {"alpha": 0.6, "edge_threshold": 0.1},
             "evolution": {
                 "window_months": 120,
                 "min_commits": 2,
@@ -427,7 +447,7 @@ class GenECPipeline:
         syntactic_config = verification_config.get("syntactic", {})
         lenient_mode = syntactic_config.get("lenient_mode", False)
 
-        # Get project root for JDT and verification engine
+        # Get project root for JDT wrapper resolution
         project_root = self._get_project_root()
 
         self.verification_engine = VerificationEngine(
@@ -443,7 +463,7 @@ class GenECPipeline:
             maven_command=verification_config.get("maven_command", "mvn"),
             gradle_command=verification_config.get("gradle_command", "gradle"),
             build_tool=verification_config.get("build_tool", "maven"),
-            repo_path=project_root,
+            repo_path=repo_path,
             lenient_mode=lenient_mode,  # Pass lenient mode
         )
 
@@ -458,6 +478,10 @@ class GenECPipeline:
             context = PipelineContext(
                 config=self.config, repo_path=repo_path, class_file=class_file
             )
+
+            # Attach pipeline recorder for metrics collection
+            recorder = PipelineRecorder(class_name=Path(class_file).stem)
+            context.recorder = recorder
 
             # Initialize stages
             stages = [
@@ -476,6 +500,12 @@ class GenECPipeline:
             runner = PipelineRunner(stages)
             results = runner.run(context)
 
+            # Save pipeline report
+            report_dir = Path(repo_path) / ".genec" / "reports"
+            report_dir.mkdir(parents=True, exist_ok=True)
+            recorder.save(report_dir / f"{Path(class_file).stem}_report.json")
+            result.pipeline_report = recorder.get_report()
+
             # Map results back to PipelineResult object
             result.class_dependencies = results.get("class_dependencies")
             result.fused_graph = results.get("fused_graph")
@@ -487,6 +517,12 @@ class GenECPipeline:
             result.ranked_clusters = results.get("ranked_clusters", [])
             result.suggestions = results.get("suggestions", [])
             result.verified_suggestions = results.get("verified_suggestions", [])
+            result.verification_results = results.get("verification_results", [])
+
+            # Calculate original class metrics
+            class_deps = results.get("class_dependencies") or context.get("class_deps")
+            if class_deps:
+                result.original_metrics = self._calculate_class_metrics(class_deps)
 
             # Calculate confidence metrics
             suggestions = result.suggestions
@@ -504,6 +540,23 @@ class GenECPipeline:
                         f"min={result.min_confidence:.2f}, max={result.max_confidence:.2f}, "
                         f"high (>=0.8)={result.high_confidence_count}/{len(suggestions)}"
                     )
+
+            # Structural transformation stage (optional)
+            rejected_clusters = results.get("rejected_clusters", []) or []
+            class_deps = class_deps or context.get("class_deps")
+            structural_results = []
+            if class_deps:
+                structural_results = self._run_structural_stage(
+                    rejected_clusters, class_deps, repo_path, class_file
+                )
+            if structural_results:
+                result.structural_actions = [
+                    self._summarize_structural_result(r) for r in structural_results
+                ]
+                if self.structural_config.get("compile_check", True):
+                    summary = self._run_structural_compile_check(repo_path)
+                    if summary:
+                        result.structural_actions.append(summary)
 
             result.execution_time = time.time() - start_time
             self.logger.info(f"Execution time: {result.execution_time:.2f} seconds")

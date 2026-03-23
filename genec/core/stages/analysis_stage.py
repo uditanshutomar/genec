@@ -31,6 +31,9 @@ class AnalysisStage(PipelineStage):
         # Stage 1: Dependency Analysis
         try:
             class_deps = self.dependency_analyzer.analyze_class(class_file)
+            if not class_deps:
+                self.logger.error(f"Dependency analysis returned no data for {class_file}")
+                return False
             context.set("class_deps", class_deps)
             context.results["class_dependencies"] = class_deps
         except Exception as e:
@@ -69,8 +72,19 @@ class AnalysisStage(PipelineStage):
 
         G_static = self.graph_builder.build_static_graph(class_deps)
 
-        # Build method name to signature mapping for evolutionary graph
-        method_map = {m.name: m.signature for m in class_deps.get_all_methods()}
+        # Build method name/signature mapping for evolutionary graph
+        method_map: dict[str, str | list[str]] = {}
+        for m in class_deps.get_all_methods():
+            existing = method_map.get(m.name)
+            if isinstance(existing, list):
+                if m.signature not in existing:
+                    existing.append(m.signature)
+            elif existing is None:
+                method_map[m.name] = [m.signature]
+
+            method_map[m.signature] = m.signature
+            for variant in self._signature_variants(m.signature):
+                method_map.setdefault(variant, m.signature)
         G_evo = self.graph_builder.build_evolutionary_graph(evo_data, method_map)
 
         fusion_config = context.config.get("fusion", {})
@@ -100,4 +114,46 @@ class AnalysisStage(PipelineStage):
         context.set("G_fused", G_fused)
         context.results["fused_graph"] = G_fused
 
+        if context.recorder:
+            context.recorder.end_stage("analysis", {
+                "methods_found": len(class_deps.methods) if class_deps.methods else 0,
+                "fields_found": len(class_deps.fields) if class_deps.fields else 0,
+                "method_calls_count": sum(len(v) for v in class_deps.method_calls.values()) if class_deps.method_calls else 0,
+                "field_accesses_count": sum(len(v) for v in class_deps.field_accesses.values()) if class_deps.field_accesses else 0,
+                "commits_analyzed": getattr(evo_data, 'total_commits', 0),
+                "co_changes_found": len(getattr(evo_data, 'co_changes', {})),
+                "graph_nodes": G_fused.number_of_nodes() if G_fused else 0,
+                "graph_edges": G_fused.number_of_edges() if G_fused else 0,
+            })
+
         return True
+
+    @staticmethod
+    def _signature_variants(signature: str) -> set[str]:
+        """
+        Generate normalized variants of a method signature to improve matching
+        between evolutionary mining and static analysis.
+        """
+        import re
+
+        if not signature:
+            return set()
+
+        variants = {signature}
+
+        # Remove whitespace
+        compact = re.sub(r"\s+", "", signature)
+        variants.add(compact)
+
+        # Strip generic parameters within types
+        no_generics = re.sub(r"<[^>]*>", "", compact)
+        variants.add(no_generics)
+
+        # Normalize varargs and arrays
+        variants.add(no_generics.replace("...", "[]"))
+        variants.add(no_generics.replace("[]", "..."))
+
+        # Add variant with arrays stripped (fallback for parsers that omit [])
+        variants.add(no_generics.replace("[]", ""))
+
+        return {v for v in variants if v}

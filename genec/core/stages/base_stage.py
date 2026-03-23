@@ -1,5 +1,7 @@
 """Base classes for pipeline stages."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
@@ -16,6 +18,7 @@ class PipelineContext:
     class_file: str
     data: dict[str, Any] = field(default_factory=dict)
     results: dict[str, Any] = field(default_factory=dict)
+    recorder: PipelineRecorder | None = None
 
     def get(self, key: str, default: Any = None) -> Any:
         """Get data from context."""
