@@ -95,6 +95,16 @@ public class GenECRefactoringWrapper {
         if (spec.getNewClassName() == null || spec.getNewClassName().isEmpty()) {
             throw new IllegalArgumentException("New class name is required");
         }
+        // Validate class name is a valid Java identifier
+        String className = spec.getNewClassName();
+        if (!Character.isJavaIdentifierStart(className.charAt(0))) {
+            throw new IllegalArgumentException("Invalid class name (must start with letter, _ or $): " + className);
+        }
+        for (int i = 1; i < className.length(); i++) {
+            if (!Character.isJavaIdentifierPart(className.charAt(i))) {
+                throw new IllegalArgumentException("Invalid character in class name at position " + i + ": " + className);
+            }
+        }
         if (spec.getMethods() == null || spec.getMethods().isEmpty()) {
             throw new IllegalArgumentException("At least one method is required");
         }

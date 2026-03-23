@@ -27,6 +27,7 @@ public class EclipseJDTRefactoring {
     private String originalSource;
     private TypeDeclaration originalTypeDecl;
     private Map<String, FieldMetadata> extractedFieldMetadata;
+    private boolean requiresOriginalReference = false;
 
     private static class FieldMetadata {
         final String name;
@@ -199,22 +200,7 @@ public class EclipseJDTRefactoring {
             newClass.bodyDeclarations().add(fieldInfo.declaration);
         }
 
-        // Add reference to original class (for delegation pattern)
-        if (!extractedFields.isEmpty()) {
-            // Add a field to store reference to original class for accessing non-extracted
-            // members
-            String originalClassName = originalTypeDecl.getName().getIdentifier();
-            VariableDeclarationFragment fragment = newAst.newVariableDeclarationFragment();
-            fragment.setName(newAst.newSimpleName(toCamelCase(originalClassName)));
-
-            FieldDeclaration referenceField = newAst.newFieldDeclaration(fragment);
-            referenceField.setType(newAst.newSimpleType(newAst.newSimpleName(originalClassName)));
-            referenceField.modifiers().add(newAst.newModifier(Modifier.ModifierKeyword.PRIVATE_KEYWORD));
-
-            // Only add if methods need access to original class
-            // For now, we'll add it to be safe
-            // newClass.bodyDeclarations().add(0, referenceField);
-        }
+        // Reference to original class (added later if required)
 
         // Extract methods that should be moved
         List<MethodDeclaration> extractedMethods = extractMethods(newAst, methodSignatures, extractedFields.keySet());
@@ -225,25 +211,34 @@ public class EclipseJDTRefactoring {
         // Add accessors for extracted fields to maintain encapsulation
         addFieldAccessors(newAst, newClass, extractedFields);
 
-        // Qualify calls to original static helpers that remain in the source class
-        // IMPORTANT: Only qualify calls to methods that were NOT extracted
-        final Map<String, Integer> extractedMethodCounts = new HashMap<>();
-        for (MethodDeclaration method : extractedMethods) {
-            String name = method.getName().getIdentifier();
-            extractedMethodCounts.put(name, extractedMethodCounts.getOrDefault(name, 0) + 1);
-        }
-        final Map<String, Integer> originalMethodCounts = new HashMap<>();
+        // Qualify calls to remaining methods in the original class.
+        // IMPORTANT: Only qualify calls to methods that were NOT extracted.
+        final Map<String, Integer> remainingMethodCounts = new HashMap<>();
+        final Map<String, Boolean> remainingHasInstance = new HashMap<>();
+        final Map<String, Boolean> remainingHasStatic = new HashMap<>();
         for (Object decl : originalTypeDecl.bodyDeclarations()) {
             if (decl instanceof MethodDeclaration) {
                 MethodDeclaration originalMethod = (MethodDeclaration) decl;
                 String name = originalMethod.getName().getIdentifier();
-                originalMethodCounts.put(name, originalMethodCounts.getOrDefault(name, 0) + 1);
+                String signature = getMethodSignature(originalMethod);
+                if (methodSignatures.contains(signature)) {
+                    continue; // Extracted
+                }
+                remainingMethodCounts.put(name, remainingMethodCounts.getOrDefault(name, 0) + 1);
+                if (Modifier.isStatic(originalMethod.getModifiers())) {
+                    remainingHasStatic.put(name, true);
+                } else {
+                    remainingHasInstance.put(name, true);
+                }
             }
         }
         final String originalClassName = originalTypeDecl.getName().getIdentifier();
+        final String originalRefName = "genecOriginal";
+        final boolean[] needsOriginalRef = new boolean[] { false };
 
         // Visit each extracted method to qualify calls to non-extracted methods
         for (MethodDeclaration extractedMethod : extractedMethods) {
+            final boolean extractedIsStatic = Modifier.isStatic(extractedMethod.getModifiers());
             extractedMethod.accept(new ASTVisitor() {
                 @Override
                 public boolean visit(MethodInvocation node) {
@@ -251,18 +246,15 @@ public class EclipseJDTRefactoring {
                     if (node.getExpression() == null) {
                         String invokedName = node.getName().getIdentifier();
 
-                        // Check if the method exists in the original class
-                        if (originalMethodCounts.containsKey(invokedName)) {
-                            int originalCount = originalMethodCounts.get(invokedName);
-                            int extractedCount = extractedMethodCounts.getOrDefault(invokedName, 0);
-
-                            // If we haven't extracted ALL overloads of this method, we must qualify the
-                            // call
-                            // to ensure we can reach the non-extracted ones (or the delegates).
-                            // If extractedCount == originalCount, it means all overloads are moved to the
-                            // new class,
-                            // so we can use unqualified calls (they are local).
-                            if (extractedCount < originalCount) {
+                        if (remainingMethodCounts.containsKey(invokedName)) {
+                            if (remainingHasInstance.getOrDefault(invokedName, false)) {
+                                if (!extractedIsStatic) {
+                                    node.setExpression(newAst.newSimpleName(originalRefName));
+                                    needsOriginalRef[0] = true;
+                                } else if (remainingHasStatic.getOrDefault(invokedName, false)) {
+                                    node.setExpression(newAst.newSimpleName(originalClassName));
+                                }
+                            } else if (remainingHasStatic.getOrDefault(invokedName, false)) {
                                 node.setExpression(newAst.newSimpleName(originalClassName));
                             }
                         }
@@ -289,13 +281,20 @@ public class EclipseJDTRefactoring {
 
                         // Replace with qualified name
                         StructuralPropertyDescriptor location = node.getLocationInParent();
+                        if (location == null) {
+                            return true; // Safety: can't determine parent relationship
+                        }
                         if (location.isChildProperty()) {
                             parent.setStructuralProperty(location, newAst.newQualifiedName(
                                     newAst.newSimpleName(originalClassName),
                                     newAst.newSimpleName(name)));
                         } else if (location.isChildListProperty()) {
-                            List<Object> list = (List<Object>) parent.getStructuralProperty(location);
+                            Object prop = parent.getStructuralProperty(location);
+                            if (!(prop instanceof List)) return true;
+                            @SuppressWarnings("unchecked")
+                            List<Object> list = (List<Object>) prop;
                             int index = list.indexOf(node);
+                            if (index < 0) return true;
                             list.set(index, newAst.newQualifiedName(
                                     newAst.newSimpleName(originalClassName),
                                     newAst.newSimpleName(name)));
@@ -304,6 +303,44 @@ public class EclipseJDTRefactoring {
                     return true;
                 }
             });
+        }
+
+        if (needsOriginalRef[0]) {
+            requiresOriginalReference = true;
+
+            // Add reference field to original class
+            VariableDeclarationFragment fragment = newAst.newVariableDeclarationFragment();
+            fragment.setName(newAst.newSimpleName(originalRefName));
+
+            FieldDeclaration referenceField = newAst.newFieldDeclaration(fragment);
+            referenceField.setType(newAst.newSimpleType(newAst.newSimpleName(originalClassName)));
+            referenceField.modifiers().add(newAst.newModifier(Modifier.ModifierKeyword.PRIVATE_KEYWORD));
+            referenceField.modifiers().add(newAst.newModifier(Modifier.ModifierKeyword.FINAL_KEYWORD));
+
+            // Add constructor to accept original instance
+            MethodDeclaration ctor = newAst.newMethodDeclaration();
+            ctor.setConstructor(true);
+            ctor.setName(newAst.newSimpleName(spec.getNewClassName()));
+            ctor.modifiers().add(newAst.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+
+            SingleVariableDeclaration param = newAst.newSingleVariableDeclaration();
+            param.setType(newAst.newSimpleType(newAst.newSimpleName(originalClassName)));
+            param.setName(newAst.newSimpleName(originalRefName));
+            ctor.parameters().add(param);
+
+            Block ctorBody = newAst.newBlock();
+            Assignment assignment = newAst.newAssignment();
+            FieldAccess fieldAccess = newAst.newFieldAccess();
+            fieldAccess.setExpression(newAst.newThisExpression());
+            fieldAccess.setName(newAst.newSimpleName(originalRefName));
+            assignment.setLeftHandSide(fieldAccess);
+            assignment.setRightHandSide(newAst.newSimpleName(originalRefName));
+            ctorBody.statements().add(newAst.newExpressionStatement(assignment));
+            ctor.setBody(ctorBody);
+
+            // Add field and constructor to class (field first)
+            newClass.bodyDeclarations().add(0, referenceField);
+            newClass.bodyDeclarations().add(1, ctor);
         }
 
         newCu.types().add(newClass);
@@ -333,6 +370,11 @@ public class EclipseJDTRefactoring {
                 MethodDeclaration method = (MethodDeclaration) bodyDecl;
                 String signature = getMethodSignature(method);
                 if (methodSignatures.contains(signature)) {
+                    // Skip abstract methods — they can't have delegation bodies
+                    if (Modifier.isAbstract(method.getModifiers())) {
+                        continue;
+                    }
+
                     boolean isStaticMethod = Modifier.isStatic(method.getModifiers());
                     if (!isStaticMethod) {
                         needsHelperField = true;
@@ -488,6 +530,9 @@ public class EclipseJDTRefactoring {
 
             ClassInstanceCreation helperInit = ast.newClassInstanceCreation();
             helperInit.setType(ast.newSimpleType(ast.newSimpleName(spec.getNewClassName())));
+            if (requiresOriginalReference) {
+                helperInit.arguments().add(ast.newThisExpression());
+            }
             fragment.setInitializer(helperInit);
 
             FieldDeclaration newField = ast.newFieldDeclaration(fragment);

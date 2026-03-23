@@ -151,8 +151,9 @@ public class ClassInspector {
             }
 
             dto.startLine = compilationUnit.getLineNumber(method.getStartPosition());
-            dto.endLine = compilationUnit.getLineNumber(method.getStartPosition() + method.getLength());
-            dto.body = source.substring(method.getStartPosition(), method.getStartPosition() + method.getLength());
+            int endPos = Math.min(method.getStartPosition() + method.getLength(), source.length());
+            dto.endLine = compilationUnit.getLineNumber(endPos > 0 ? endPos - 1 : 0);
+            dto.body = source.substring(method.getStartPosition(), endPos);
             dto.constructor = method.isConstructor();
 
             if (method.isConstructor()) {

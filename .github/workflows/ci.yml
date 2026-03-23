@@ -41,6 +41,12 @@ jobs:
         mvn clean package -q
         cd ..
 
+    - name: Build Spoon wrapper
+      run: |
+        cd genec-spoon-wrapper
+        mvn clean package -q
+        cd ..
+
     - name: Run tests with coverage
       run: |
         pytest tests/ --cov=genec --cov-report=xml --cov-report=term -v
