@@ -1,9 +1,44 @@
 {
-  "project": "commons-collections",
   "class_name": "MapUtils",
-  "class_file": "src/main/java/org/apache/commons/collections4/MapUtils.java",
-  "status": "error",
-  "error": "[Errno 32] Broken pipe",
-  "traceback": "e \"/Users/uditanshutomar/genec/genec/core/pipeline.py\", line 450, in run_full_pipeline\n    self._emit_progress(stage=0, total=6, message=\"Initializing pipeline\")\n    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/uditanshutomar/genec/genec/core/pipeline.py\", line 417, in _emit_progress\n    print(json.dumps(progress_event), file=sys.stderr, flush=True)\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nBrokenPipeError: [Errno 32] Broken pipe\n",
-  "execution_time": 0
+  "status": "success",
+  "suggestions_total": 7,
+  "suggestions_verified": 7,
+  "execution_time": 92.4,
+  "suggestions": [
+    {
+      "name": "MapValueExtractor",
+      "verified": true,
+      "methods": 54
+    },
+    {
+      "name": "MapFormatter",
+      "verified": true,
+      "methods": 6
+    },
+    {
+      "name": "MultiValueMapFactory",
+      "verified": true,
+      "methods": 3
+    },
+    {
+      "name": "MapNumericExtractor",
+      "verified": true,
+      "methods": 24
+    },
+    {
+      "name": "MapValueRetriever",
+      "verified": true,
+      "methods": 54
+    },
+    {
+      "name": "CollectionToMapTransformer",
+      "verified": true,
+      "methods": 4
+    },
+    {
+      "name": "SafeMapAccessor",
+      "verified": true,
+      "methods": 3
+    }
+  ]
 }

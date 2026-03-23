@@ -414,7 +414,10 @@ class GenECPipeline:
             progress_event["details"] = details
 
         # Write to stderr as single line JSON (extension can parse this)
-        print(json.dumps(progress_event), file=sys.stderr, flush=True)
+        try:
+            print(json.dumps(progress_event), file=sys.stderr, flush=True)
+        except BrokenPipeError:
+            pass  # Stderr closed (e.g., parent process exited); non-fatal
 
         # Also emit via WebSocket if server is running
         try:
