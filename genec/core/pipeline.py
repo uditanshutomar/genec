@@ -452,7 +452,7 @@ class GenECPipeline:
         # Verification engine
         verification_config = self.config.get("verification", {})
         syntactic_config = verification_config.get("syntactic", {})
-        lenient_mode = syntactic_config.get("lenient_mode", False)
+        lenient_mode = syntactic_config.get("lenient_mode", True)
 
         # Get project root for JDT wrapper resolution
         project_root = self._get_project_root()

@@ -34,7 +34,7 @@ class VerificationEngine:
         gradle_command: str = "gradle",
         build_tool: str = "maven",
         repo_path: str | None = None,
-        lenient_mode: bool = False,  # NEW
+        lenient_mode: bool = True,
     ):
         """
         Initialize verification engine.

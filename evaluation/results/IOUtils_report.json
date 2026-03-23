@@ -1,0 +1,117 @@
+{
+  "class_name": "IOUtils",
+  "total_duration_ms": 88285.880542011,
+  "stages": {
+    "Analysis": {
+      "duration_ms": 0.0,
+      "metrics": {}
+    },
+    "analysis": {
+      "duration_ms": 0.007499998901039362,
+      "metrics": {
+        "methods_found": 171,
+        "fields_found": 12,
+        "method_calls_count": 170,
+        "field_accesses_count": 18,
+        "commits_analyzed": 3,
+        "co_changes_found": 253,
+        "graph_nodes": 186,
+        "graph_edges": 1378
+      }
+    },
+    "GraphProcessing": {
+      "duration_ms": 0.0,
+      "metrics": {}
+    },
+    "graph_processing": {
+      "duration_ms": 0.0017500133253633976,
+      "metrics": {
+        "centrality_computed": true,
+        "graph_exported": true
+      }
+    },
+    "Clustering": {
+      "duration_ms": 0.0,
+      "metrics": {}
+    },
+    "clustering": {
+      "duration_ms": 0.0022500171326100826,
+      "metrics": {
+        "clusters_total": 34,
+        "clusters_filtered": 10,
+        "clusters_ranked": 10,
+        "clusters_rejected": 0,
+        "avg_cohesion": 0.5404630134442209
+      }
+    },
+    "Naming": {
+      "duration_ms": 0.0,
+      "metrics": {}
+    },
+    "naming": {
+      "duration_ms": 0.004666042514145374,
+      "metrics": {
+        "suggestions_generated": 5,
+        "avg_confidence": 0.9200000000000002,
+        "min_confidence": 0.92,
+        "max_confidence": 0.92
+      }
+    },
+    "Refactoring": {
+      "duration_ms": 0.0,
+      "metrics": {}
+    },
+    "verification": {
+      "duration_ms": 0.009417010005563498,
+      "metrics": {
+        "total_suggestions": 5,
+        "verified_count": 0,
+        "rejected_count": 5,
+        "verification_details": [
+          {
+            "name": 21,
+            "syntactic_pass": false,
+            "semantic_pass": false,
+            "behavioral_pass": false,
+            "status": "FAILED_SYNTACTIC"
+          },
+          {
+            "name": 28,
+            "syntactic_pass": false,
+            "semantic_pass": false,
+            "behavioral_pass": false,
+            "status": "FAILED_SYNTACTIC"
+          },
+          {
+            "name": 9,
+            "syntactic_pass": false,
+            "semantic_pass": false,
+            "behavioral_pass": false,
+            "status": "FAILED_SYNTACTIC"
+          },
+          {
+            "name": 32,
+            "syntactic_pass": false,
+            "semantic_pass": false,
+            "behavioral_pass": false,
+            "status": "FAILED_SYNTACTIC"
+          },
+          {
+            "name": 33,
+            "syntactic_pass": false,
+            "semantic_pass": false,
+            "behavioral_pass": false,
+            "status": "FAILED_SYNTACTIC"
+          }
+        ]
+      }
+    }
+  },
+  "events": [],
+  "failures": [],
+  "summary": {
+    "total_failures": 0,
+    "total_events": 0,
+    "stages_completed": 10
+  }
+}

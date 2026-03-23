@@ -104,6 +104,9 @@ class TestCLIEnvironment:
 
     def test_api_key_from_env(self, monkeypatch):
         """Test API key is read from environment."""
+        # Reset dotenv loaded state so monkeypatch takes effect
+        import genec.utils.secrets as secrets_mod
+        secrets_mod._dotenv_loaded = True  # Prevent re-loading .env which would override
         monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test-key")
 
         from genec.utils.secrets import get_anthropic_api_key
@@ -113,6 +116,8 @@ class TestCLIEnvironment:
 
     def test_api_key_not_set(self, monkeypatch):
         """Test handling when API key is not set."""
+        import genec.utils.secrets as secrets_mod
+        secrets_mod._dotenv_loaded = True  # Prevent re-loading .env
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
         from genec.utils.secrets import get_anthropic_api_key
