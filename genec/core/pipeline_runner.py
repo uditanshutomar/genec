@@ -31,9 +31,8 @@ class PipelineRunner:
                 recorder.start_stage(stage.name)
             try:
                 success = stage.run(context)
-                if recorder:
-                    stage_metrics = context.results.get(f"_{stage.name}_metrics", {})
-                    recorder.end_stage(stage.name, stage_metrics)
+                # Note: stages call recorder.end_stage() internally, so we
+                # do NOT call it here to avoid double-recording.
                 if not success:
                     if recorder:
                         recorder.record_failure(stage.name, "Stage returned False", {})

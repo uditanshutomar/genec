@@ -1,3 +1,8 @@
+# DEPRECATED: This module is not currently used in the pipeline.
+# RollbackManager was designed for undo functionality.
+# The pipeline currently relies on git for rollback.
+# Kept for potential future undo feature.
+
 """
 Enhanced Rollback Manager for GenEC.
 

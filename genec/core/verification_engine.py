@@ -279,6 +279,33 @@ class VerificationEngine:
             result.behavioral_pass = True
             self.logger.info("Behavioral verification skipped")
 
+        # Layer 4: Performance Verification (NEW)
+        if self.enable_performance:
+            self.logger.info("Layer 4: Performance Verification")
+
+            perf_pass, perf_error = self.performance_verifier.verify(
+                original_code,
+                suggestion.new_class_code,
+                suggestion.modified_original_code,
+                repo_path,
+                class_deps.class_name,
+            )
+
+            result.performance_pass = perf_pass
+            if perf_error:
+                result.performance_regression = 1.0
+
+            if not perf_pass:
+                result.status = "FAILED_PERFORMANCE"
+                result.error_message = perf_error
+                self.logger.warning(f"Performance verification failed: {perf_error}")
+                return result
+
+            self.logger.info("✓ Performance verification passed (no regression)")
+        else:
+            result.performance_pass = True
+            self.logger.info("Performance verification skipped")
+
         # All layers passed
         result.status = "PASSED_ALL"
         self.logger.info("All verification layers PASSED")

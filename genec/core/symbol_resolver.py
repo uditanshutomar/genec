@@ -1,3 +1,7 @@
+# DEPRECATED: This module is not currently used in the pipeline.
+# SymbolResolver was designed for Java import resolution.
+# Kept for potential future type-aware dependency analysis.
+
 """Symbol resolution for Java classes."""
 
 from dataclasses import dataclass

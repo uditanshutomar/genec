@@ -49,6 +49,9 @@ class RefactoringSuggestion:
     naming_votes: list[dict] | None = None
     naming_agreement: float | None = None
 
+    # Verification status
+    verification_status: str | None = None
+
     # Quality tier metadata
     quality_tier: str | None = None  # "should", "could", or "potential"
     quality_score: float = 0.0

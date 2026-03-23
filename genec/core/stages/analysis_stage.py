@@ -141,7 +141,7 @@ class AnalysisStage(PipelineStage):
                 "method_calls_count": sum(len(v) for v in class_deps.method_calls.values()) if class_deps.method_calls else 0,
                 "field_accesses_count": sum(len(v) for v in class_deps.field_accesses.values()) if class_deps.field_accesses else 0,
                 "commits_analyzed": getattr(evo_data, 'total_commits', 0),
-                "co_changes_found": len(getattr(evo_data, 'co_changes', {})),
+                "co_changes_found": len(getattr(evo_data, 'cochange_matrix', {})),
                 "graph_nodes": G_fused.number_of_nodes() if G_fused else 0,
                 "graph_edges": G_fused.number_of_edges() if G_fused else 0,
             })

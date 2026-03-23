@@ -54,6 +54,7 @@ class PipelineResult:
     execution_time: float = 0.0
     structural_actions: list[str] = field(default_factory=list)
 
+    centrality_metrics: dict = field(default_factory=dict)
     pipeline_report: dict = field(default_factory=dict)
 
     # Confidence metrics
@@ -257,6 +258,11 @@ class GenECPipeline:
                 "create_backups": True,
                 "backup_dir": ".genec_backups",
                 "dry_run": True,
+            },
+            "naming": {
+                "min_confidence_threshold": 0.0,
+                "sort_by_confidence": True,
+                "use_llm": True,
             },
             "logging": {"level": "INFO"},
             "cache": {"enable": True, "directory": "data/outputs/cache"},

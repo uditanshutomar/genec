@@ -382,7 +382,7 @@ def main():
                 print("\nChanges that WOULD be applied:\n")
 
                 for i, s in enumerate(results.verified_suggestions, 1):
-                    methods = s.cluster.method_signatures if hasattr(s, 'cluster') and s.cluster else []
+                    methods = s.cluster.get_methods() if hasattr(s, 'cluster') and s.cluster else []
                     method_count = len(methods) if methods else "unknown"
 
                     confidence_str = f" (confidence: {s.confidence_score:.2f})" if s.confidence_score is not None else ""

@@ -1,3 +1,8 @@
+# DEPRECATED: This module is not currently used in the pipeline.
+# TransactionalApplicator wraps RefactoringApplicator with transaction semantics.
+# The pipeline uses RefactoringApplicator directly.
+# Kept for potential future atomic multi-suggestion application.
+
 """
 Transactional Applicator for safe refactoring application.
 

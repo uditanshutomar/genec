@@ -1,3 +1,7 @@
+# DEPRECATED: This module is not currently used in the pipeline.
+# The main pipeline uses genec.core.dependency_analyzer instead.
+# Kept for potential future multi-file analysis features.
+
 """
 Dependency graph for multi-file refactoring.
 

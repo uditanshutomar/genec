@@ -1,3 +1,7 @@
+# DEPRECATED: This module is not currently used in the pipeline.
+# PreviewManager was designed for diff preview but is not integrated.
+# Kept for potential VS Code extension integration.
+
 """
 Preview and Dry-Run Manager for GenEC.
 
