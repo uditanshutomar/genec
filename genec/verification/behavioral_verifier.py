@@ -92,14 +92,9 @@ class BehavioralVerifier:
             backup_data: dict[Path, str] = {}
             new_class_file: Path | None = None
             applied_hashes: dict[Path, str] = {}
+            backup_mtime: dict[Path, float] = {}
             marker_file = repo / ".genec_verification_in_progress"
             backup_dir = repo / ".genec_verification_backup"
-
-            # Initialize variables used in finally block
-            backup_data = {}
-            new_class_file = None
-            backup_mtime = None
-            applied_hashes = {}
 
             try:
                 # Step 1: Check for interrupted previous verification and recover
@@ -399,8 +394,6 @@ class BehavioralVerifier:
 
         # Check for actual test result summaries with failures
         # Format: "Tests run: 1234, Failures: 5, Errors: 2, Skipped: 3"
-        import re
-
         test_results = re.search(
             r"Tests run:\s*(\d+),\s*Failures:\s*(\d+),\s*Errors:\s*(\d+)", output, re.IGNORECASE
         )

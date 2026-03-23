@@ -188,17 +188,13 @@ class GenECPipeline:
             validated = GenECConfig(**raw)
             return validated.model_dump()
         except FileNotFoundError:
-            import logging
-            logger = logging.getLogger("genec")
-            logger.warning(
+            self.logger.warning(
                 f"Config file not found: '{config_file}'. "
                 f"Using default configuration."
             )
             return self._get_default_config()
         except Exception as e:
-            import logging
-            logger = logging.getLogger("genec")
-            logger.warning(
+            self.logger.warning(
                 f"Could not load config file '{config_file}': {e}. "
                 f"Using default configuration (evolution window: 120 months, min cluster size: 3)."
             )
@@ -305,7 +301,7 @@ class GenECPipeline:
             api_key=llm_config.get("api_key"),
             model=llm_config.get("model", "claude-sonnet-4-20250514"),
             max_tokens=llm_config.get("max_tokens", 4000),
-            temperature=llm_config.get("temperature", 0.2),
+            temperature=llm_config.get("temperature", 0.3),
             timeout=llm_config.get("timeout", 120),
             use_chunking=chunking_config.get("enabled", True),
             enable_refinement=llm_config.get("enable_refinement", False),
@@ -508,8 +504,6 @@ class GenECPipeline:
             result.pipeline_report = recorder.get_report()
 
             # Map results back to PipelineResult object
-            result.class_dependencies = results.get("class_dependencies")
-            result.fused_graph = results.get("fused_graph")
             result.centrality_metrics = results.get("centrality_metrics")
             result.graph_metrics = results.get("graph_metrics")
             result.graph_data = results.get("graph_data")
@@ -692,6 +686,7 @@ class GenECPipeline:
                 self.logger.error(
                     "Structural transformation failed for cluster %s: %s", cluster.id, exc
                 )
+                self.logger.debug(f"Exception detail: {exc}", exc_info=True)
 
         return structural_results
 

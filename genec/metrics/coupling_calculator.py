@@ -1,7 +1,6 @@
 """Coupling metrics calculator (CBO)."""
 
 from genec.core.dependency_analyzer import ClassDependencies
-from genec.parsers.java_parser import JavaParser
 from genec.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
@@ -12,7 +11,6 @@ class CouplingCalculator:
 
     def __init__(self):
         """Initialize coupling calculator."""
-        self.parser = JavaParser()
         self.logger = get_logger(self.__class__.__name__)
 
     def calculate_cbo(

@@ -15,6 +15,8 @@ from genec.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
 
+SHORT_SHA_LENGTH = 7
+
 
 @dataclass
 class GitStatus:
@@ -189,7 +191,7 @@ class GitWrapper:
             else:
                 commit = self.repo.index.commit(message)
 
-            commit_hash = commit.hexsha[:7]
+            commit_hash = commit.hexsha[:SHORT_SHA_LENGTH]
             self.logger.info(f"Created commit {commit_hash}: {message.split(chr(10))[0]}")
             return commit_hash
 

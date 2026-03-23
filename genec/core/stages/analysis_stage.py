@@ -82,7 +82,6 @@ class AnalysisStage(PipelineStage):
             elif existing is None:
                 method_map[m.name] = [m.signature]
 
-            method_map[m.signature] = m.signature
             for variant in self._signature_variants(m.signature):
                 method_map.setdefault(variant, m.signature)
         G_evo = self.graph_builder.build_evolutionary_graph(evo_data, method_map)

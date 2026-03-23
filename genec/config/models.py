@@ -148,6 +148,8 @@ class CodeGenerationConfig(BaseModel):
     """Configuration for code generation."""
 
     engine: str = Field(default="eclipse_jdt", description="Code generation engine to use.")
+    # NOTE: This default JAR path is also hardcoded in pipeline.py.
+    # TODO: Centralize this path into a single constant to avoid drift.
     jdt_wrapper_jar: str = Field(
         default="genec-jdt-wrapper/target/genec-jdt-wrapper-1.0.0-jar-with-dependencies.jar",
         description="Path to Eclipse JDT wrapper JAR file.",

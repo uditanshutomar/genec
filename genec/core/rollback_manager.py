@@ -250,8 +250,7 @@ class RollbackManager:
                     self.logger.warning(f"No backup found for: {original_file}")
                     continue
 
-                if backups:
-                    # Use most recent backup
+                # Use most recent backup
                     backup_file = max(backups, key=lambda p: p.stat().st_mtime)
                     shutil.copy2(backup_file, original_file)
                     files_restored.append(original_file)
@@ -278,6 +277,14 @@ class RollbackManager:
         cutoff = datetime.now() - timedelta(days=days_to_keep)
         deleted_count = 0
 
+        # Clean backup files BEFORE removing metadata (so metadata can still
+        # reference backups during cleanup if needed)
+        for backup_file in self.backup_dir.glob("*.java"):
+            mtime = datetime.fromtimestamp(backup_file.stat().st_mtime)
+            if mtime < cutoff:
+                backup_file.unlink()
+                deleted_count += 1
+
         # Clean metadata
         for metadata_file in self.metadata_dir.glob("*.json"):
             try:
@@ -290,13 +297,6 @@ class RollbackManager:
                     deleted_count += 1
             except Exception as e:
                 self.logger.warning(f"Failed to process {metadata_file}: {e}")
-
-        # Clean backups
-        for backup_file in self.backup_dir.glob("*.java"):
-            mtime = datetime.fromtimestamp(backup_file.stat().st_mtime)
-            if mtime < cutoff:
-                backup_file.unlink()
-                deleted_count += 1
 
         if deleted_count > 0:
             self.logger.info(f"Cleaned up {deleted_count} old backups")

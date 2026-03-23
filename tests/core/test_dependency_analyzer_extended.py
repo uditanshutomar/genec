@@ -292,8 +292,8 @@ class TestModuleLevelConstants:
     def test_weight_shared_field(self):
         assert WEIGHT_SHARED_FIELD == 0.9
 
-    def test_analyzer_class_constants_match(self):
-        """DependencyAnalyzer class constants should match module-level."""
-        assert DependencyAnalyzer.WEIGHT_METHOD_CALL == WEIGHT_METHOD_CALL
-        assert DependencyAnalyzer.WEIGHT_FIELD_ACCESS == WEIGHT_FIELD_ACCESS
-        assert DependencyAnalyzer.WEIGHT_SHARED_FIELD == WEIGHT_SHARED_FIELD
+    def test_module_level_constants_accessible(self):
+        """Module-level weight constants should be importable and correct."""
+        assert WEIGHT_METHOD_CALL == 1.0
+        assert WEIGHT_FIELD_ACCESS == 0.8
+        assert WEIGHT_SHARED_FIELD == 0.9

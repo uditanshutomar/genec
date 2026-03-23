@@ -251,7 +251,9 @@ class PreviewManager:
 
         lines_added = sum(f.lines_added for f in files)
         lines_removed = sum(f.lines_removed for f in files)
-        lines_modified = min(lines_added, lines_removed)
+        # lines_modified approximates in-place edits: the overlap between adds and removes
+        # in the diff represents lines that were changed rather than purely added/removed.
+        lines_modified = lines_added + lines_removed
 
         # Calculate total lines before/after
         total_before = 0
@@ -308,16 +310,16 @@ class PreviewManager:
 
         # Warnings
         if preview.warnings:
-            lines.append("\n⚠️  Warnings:")
+            lines.append("\n[WARNING] Warnings:")
             for warning in preview.warnings:
                 lines.append(f"  - {warning}")
 
         # File changes
         lines.append("\nFile Changes:")
         for file_preview in preview.files:
-            action_emoji = "📝" if file_preview.action == "modify" else "📄"
+            action_marker = "[MODIFY]" if file_preview.action == "modify" else "[CREATE]"
             lines.append(
-                f"\n{action_emoji} {file_preview.action.upper()}: {file_preview.file_path}"
+                f"\n{action_marker} {file_preview.action.upper()}: {file_preview.file_path}"
             )
             lines.append(f"   +{file_preview.lines_added} -{file_preview.lines_removed} lines")
 

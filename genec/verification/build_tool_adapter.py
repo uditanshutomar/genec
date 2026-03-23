@@ -36,7 +36,7 @@ class BuildToolAdapter(ABC):
             repo_path: Path to repository root
         """
         self.repo_path = Path(repo_path)
-        self.logger = logger
+        self.logger = get_logger(__name__)
 
     @abstractmethod
     def run_tests(
@@ -246,6 +246,9 @@ class GradleAdapter(BuildToolAdapter):
                     class_name = self._extract_class_name(test_file)
                     patterns.append(class_name)
 
+        # Fallback: ["*Test"] is used as a wildcard pattern so Gradle runs all
+        # test classes whose name ends with "Test" when no specific patterns
+        # were discovered, ensuring at least some tests execute.
         return patterns if patterns else ["*Test"]
 
     def _extract_class_name(self, file_path: str) -> str:

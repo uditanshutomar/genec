@@ -1,3 +1,4 @@
+import traceback
 from typing import Any
 
 from genec.core.stages.base_stage import PipelineContext, PipelineStage
@@ -23,8 +24,8 @@ class PipelineRunner:
         """
         self.logger.info(f"Starting pipeline with {len(self.stages)} stages")
 
-        for i, stage in enumerate(self.stages, 1):
-            self.logger.info(f"Running stage {i}/{len(self.stages)}: {stage.name}")
+        for stage_idx, stage in enumerate(self.stages, 1):
+            self.logger.info(f"Running stage {stage_idx}/{len(self.stages)}: {stage.name}")
             recorder = context.recorder
             if recorder:
                 recorder.start_stage(stage.name)
@@ -38,7 +39,7 @@ class PipelineRunner:
                         recorder.record_failure(stage.name, "Stage returned False", {})
                     self.logger.error(f"Stage {stage.name} failed (returned False)")
                     context.results["_failed_stage"] = stage.name
-                    context.results["_failed_stage_index"] = i
+                    context.results["_failed_stage_index"] = stage_idx
                     break
             except KeyboardInterrupt:
                 self.logger.warning(f"Pipeline cancelled at stage {stage.name}")
@@ -49,7 +50,6 @@ class PipelineRunner:
                 if recorder:
                     recorder.record_failure(stage.name, str(e), {})
                 self.logger.error(f"Stage {stage.name} failed with exception: {e}")
-                import traceback
                 self.logger.debug(traceback.format_exc())
                 context.results["_failed_stage"] = stage.name
                 context.results["_error"] = str(e)

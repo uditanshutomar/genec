@@ -70,7 +70,7 @@ class TestDiscoveryEngine:
         Returns:
             TestSelection with discovered tests and metadata
         """
-        self.logger.info("🔍 Discovering relevant tests...")
+        self.logger.info("[DISCOVER] Discovering relevant tests...")
 
         # Try strategies in order of accuracy
         strategies = [

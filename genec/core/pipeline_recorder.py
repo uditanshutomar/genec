@@ -1,10 +1,13 @@
 """Records per-stage metrics, timing, and diagnostics for the GenEC pipeline."""
 
 import json
+import logging
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+_logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -55,6 +58,11 @@ class PipelineRecorder:
         """Mark the end of a pipeline stage with collected metrics."""
         record = self._stages.get(name)
         if record is None:
+            _logger.warning(
+                "end_stage('%s') called without matching start_stage(); "
+                "creating a fallback record with current time as start",
+                name,
+            )
             record = StageRecord(name=name, start_time=time.monotonic())
             self._stages[name] = record
         record.end_time = time.monotonic()

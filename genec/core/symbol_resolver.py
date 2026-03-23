@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from genec.utils.logging_utils import get_logger
+
 
 @dataclass
 class ImportInfo:
@@ -22,6 +24,7 @@ class SymbolResolver:
         Args:
             imports: List of import dictionaries from JavaParser
         """
+        self.logger = get_logger(self.__class__.__name__)
         self.imports = [
             ImportInfo(
                 path=i["path"], static=i.get("static", False), wildcard=i.get("wildcard", False)
@@ -101,7 +104,7 @@ class SymbolResolver:
                     # import static java.lang.Math.*;
                     # We can't be sure without checking the class, but we can return the class path
                     # as a potential source.
-                    pass
+                    self.logger.debug(f"Cannot resolve wildcard static import: {imp.path}")
                 elif imp.path.endswith(f".{member_name}"):
                     # import static java.lang.Math.max;
                     self._static_cache[member_name] = imp.path

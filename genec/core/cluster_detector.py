@@ -1293,9 +1293,6 @@ class ClusterDetector:
 
             cluster_member_types = {name: member_types[name] for name in cluster_members}
 
-            if len(cluster_members) < self.min_cluster_size:
-                continue
-
             cluster = Cluster(
                 id=cluster_id,
                 member_names=cluster_members,

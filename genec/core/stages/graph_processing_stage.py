@@ -44,17 +44,21 @@ class GraphProcessingStage(PipelineStage):
         context.results["graph_metrics"] = graph_metrics
         self.logger.info(f"Graph metrics: {graph_metrics}")
 
-        # Generate graph data for JSON output
-        # NetworkX 3.x uses 'link' parameter instead of 'edges'
+        # Generate graph data for JSON output.
+        # NetworkX 3.x changed `node_link_data` signature:
+        #   - 3.x accepts `link=` keyword (default "links")
+        #   - 2.x used `edges=` keyword
+        #   - Very old 2.x had neither keyword at all
+        # The try/except chain ensures we work across all supported versions.
         try:
             # NetworkX 3.x API
             context.results["graph_data"] = json_graph.node_link_data(G_fused, link="links")
         except TypeError:
-            # Fallback for older NetworkX versions (< 3.0)
+            # Fallback for NetworkX 2.x (edges= keyword)
             try:
                 context.results["graph_data"] = json_graph.node_link_data(G_fused, edges="links")
             except TypeError:
-                # Last resort - use default parameters
+                # Last resort for very old NetworkX 2.x - use default parameters
                 context.results["graph_data"] = json_graph.node_link_data(G_fused)
 
         # Export graph if requested

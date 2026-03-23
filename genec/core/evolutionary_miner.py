@@ -942,7 +942,8 @@ class EvolutionaryMiner:
             evo_data: EvolutionaryData object
             top_n: If specified, return only top N methods. If None, return all.
 
-```
+        Returns:
+            List of (method, sum_of_coupling) tuples sorted by coupling descending.
         """
         sum_of_coupling: dict[str, float] = {}
 

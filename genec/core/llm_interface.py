@@ -1,8 +1,11 @@
 """LLM interface for generating refactoring suggestions using Claude API."""
 
+import concurrent.futures
 import hashlib
+import itertools
 import json
 import re
+import threading
 import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
@@ -41,6 +44,10 @@ class RefactoringSuggestion:
     cluster: Cluster | None = None
     confidence_score: float | None = None  # NEW: 0-1 confidence rating
     reasoning: str | None = None  # NEW: Chain-of-thought reasoning
+
+    # Naming diversity vote metadata
+    naming_votes: list[dict] | None = None
+    naming_agreement: float | None = None
 
     # Quality tier metadata
     quality_tier: str | None = None  # "should", "could", or "potential"
@@ -175,8 +182,6 @@ class LLMInterface:
             return None
 
         # Generate cache key from cluster methods and class name
-        import hashlib
-
         cache_key_data = f"{class_deps.class_name}:{sorted(cluster.get_methods())}"
         cache_key = hashlib.md5(cache_key_data.encode()).hexdigest()
 
@@ -491,8 +496,8 @@ class LLMInterface:
             reasoning=f"Prompt diversity vote ({len(votes)} framings, {agreement:.0%} agreement)",
         )
         # Attach vote metadata for downstream analysis
-        suggestion.naming_votes = votes  # type: ignore[attr-defined]
-        suggestion.naming_agreement = agreement  # type: ignore[attr-defined]
+        suggestion.naming_votes = votes
+        suggestion.naming_agreement = agreement
 
         return suggestion
 
@@ -812,9 +817,6 @@ class LLMInterface:
             f"Generating suggestions for {total} clusters (max_workers={safe_max_workers}, rate-limited)..."
         )
 
-        import concurrent.futures
-        import threading
-
         # Semaphore for rate limiting (max 2 concurrent requests)
         rate_limiter = threading.Semaphore(2)
 
@@ -974,8 +976,6 @@ class LLMInterface:
         total_co_changes = 0
 
         # Iterate over all pairs in the cluster
-        import itertools
-
         for m1, m2 in itertools.combinations(method_names, 2):
             # Check both orders
             pair1 = (m1, m2)

@@ -1,13 +1,12 @@
 """Conceptual similarity analysis using method name and body token similarity."""
 
 import re
-import logging
-from typing import Any
 
 import networkx as nx
-import numpy as np
 
-logger = logging.getLogger(__name__)
+from genec.utils.logging_utils import get_logger
+
+logger = get_logger(__name__)
 
 try:
     from sklearn.feature_extraction.text import TfidfVectorizer
@@ -55,7 +54,10 @@ def _extract_method_tokens(method) -> str:
     if hasattr(method, 'body') and method.body:
         # Extract Java identifiers from body
         identifiers = re.findall(r'\b[a-zA-Z_]\w*\b', method.body)
-        # Filter out Java keywords and very short names
+        # Filter out Java keywords and very short names.
+        # NOTE: This keyword set is intentionally scoped to body-token extraction
+        # and kept separate from other keyword lists (e.g., in parsers) because
+        # each module needs a different subset for its specific filtering purpose.
         java_keywords = {'if', 'else', 'for', 'while', 'return', 'new', 'this', 'null',
                          'true', 'false', 'int', 'long', 'double', 'float', 'boolean',
                          'void', 'String', 'public', 'private', 'protected', 'static',

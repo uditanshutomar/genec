@@ -155,11 +155,6 @@ def build_dependency_matrix(
 class DependencyAnalyzer:
     """Analyzes static dependencies in Java classes."""
 
-    # Dependency weights (module-level constants are authoritative)
-    WEIGHT_METHOD_CALL = WEIGHT_METHOD_CALL
-    WEIGHT_FIELD_ACCESS = WEIGHT_FIELD_ACCESS
-    WEIGHT_SHARED_FIELD = WEIGHT_SHARED_FIELD
-
     def __init__(self):
         """Initialize the dependency analyzer."""
         self.parser = JavaParser()

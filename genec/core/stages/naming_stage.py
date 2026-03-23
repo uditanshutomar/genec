@@ -140,9 +140,11 @@ class NamingStage(PipelineStage):
         context.set("suggestions", suggestions)
         context.results["suggestions"] = suggestions
 
+        # Compute confidence scores once for both logging and recorder
+        confidence_scores = [s.confidence_score for s in suggestions if s.confidence_score is not None]
+
         # Log confidence statistics
         if suggestions:
-            confidence_scores = [s.confidence_score for s in suggestions if s.confidence_score is not None]
             if confidence_scores:
                 avg_confidence = sum(confidence_scores) / len(confidence_scores)
                 max_conf = max(confidence_scores)
@@ -157,12 +159,11 @@ class NamingStage(PipelineStage):
             self.logger.warning("No suggestions passed confidence filtering")
 
         if context.recorder:
-            confidences = [s.confidence_score for s in suggestions if s.confidence_score is not None]
             context.recorder.end_stage("naming", {
                 "suggestions_generated": len(suggestions),
-                "avg_confidence": sum(confidences) / max(len(confidences), 1),
-                "min_confidence": min(confidences) if confidences else 0,
-                "max_confidence": max(confidences) if confidences else 0,
+                "avg_confidence": sum(confidence_scores) / max(len(confidence_scores), 1),
+                "min_confidence": min(confidence_scores) if confidence_scores else 0,
+                "max_confidence": max(confidence_scores) if confidence_scores else 0,
             })
 
         return True

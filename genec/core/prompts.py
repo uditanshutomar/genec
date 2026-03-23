@@ -222,7 +222,8 @@ Respond with:
 
 DESIGN_PATTERN_PROMPT_TEMPLATE = """Analyze these methods from class '{class_name}' and suggest a name for the extracted class based on the DESIGN PATTERN it follows.
 
-Focus on: Do these methods follow a recognizable pattern (Helper, Handler, Processor, Factory, Builder, Validator, etc.)? Name the class to reflect its architectural role.
+Focus on: Do these methods follow a recognizable pattern (Factory, Builder, Validator, etc.)? Name the class to reflect its architectural role.
+NOTE: Terms like Handler, Processor are acceptable ONLY when they describe a concrete design pattern role (e.g., "RequestHandler" in a Chain-of-Responsibility). Avoid them as generic catch-all suffixes.
 
 Methods to extract:
 {methods_section}

@@ -382,7 +382,7 @@ def main():
                 print("\nChanges that WOULD be applied:\n")
 
                 for i, s in enumerate(results.verified_suggestions, 1):
-                    methods = s.methods if hasattr(s, "methods") else []
+                    methods = s.cluster.method_signatures if hasattr(s, 'cluster') and s.cluster else []
                     method_count = len(methods) if methods else "unknown"
 
                     confidence_str = f" (confidence: {s.confidence_score:.2f})" if s.confidence_score is not None else ""
@@ -393,8 +393,9 @@ def main():
                             print(f"       - {m}")
                         if len(methods) > 5:
                             print(f"       ... and {len(methods) - 5} more")
-                    if hasattr(s, "reasoning") and s.reasoning:
-                        print(f"     Reason: {s.reasoning[:100]}...")
+                    reasoning = getattr(s, "reasoning", None)
+                    if reasoning:
+                        print(f"     Reason: {reasoning[:100]}...")
                     print()
 
                 print("-" * 60)

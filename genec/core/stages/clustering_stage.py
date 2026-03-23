@@ -51,7 +51,7 @@ class ClusteringStage(PipelineStage):
                 "clusters_filtered": len(filtered_clusters),
                 "clusters_ranked": len(ranked_clusters),
                 "clusters_rejected": len(rejected_clusters),
-                "avg_cohesion": sum(getattr(c, 'cohesion', 0) for c in ranked_clusters) / max(len(ranked_clusters), 1),
+                "avg_cohesion": sum(getattr(c, 'internal_cohesion', 0) for c in ranked_clusters) / max(len(ranked_clusters), 1),
             })
 
         return True

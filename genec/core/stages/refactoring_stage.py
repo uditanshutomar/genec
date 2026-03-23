@@ -1,10 +1,7 @@
 from genec.core.refactoring_applicator import RefactoringApplicator
 from genec.core.stages.base_stage import PipelineContext, PipelineStage
 from genec.core.verification_engine import VerificationEngine
-from genec.utils.logging_utils import get_logger
 from genec.utils.progress_server import emit_progress
-
-logger = get_logger(__name__)
 
 
 class RefactoringStage(PipelineStage):
@@ -153,7 +150,7 @@ class RefactoringStage(PipelineStage):
                 "rejected_count": len(suggestions) - len(verified_suggestions),
                 "verification_details": [
                     {
-                        "name": getattr(vr, 'suggestion_id', i),
+                        "name": vr.suggestion_id,
                         "syntactic_pass": getattr(vr, 'syntactic_pass', False),
                         "semantic_pass": getattr(vr, 'semantic_pass', False),
                         "behavioral_pass": getattr(vr, 'behavioral_pass', False),

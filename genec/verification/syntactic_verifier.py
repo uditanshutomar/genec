@@ -167,8 +167,6 @@ class SyntacticVerifier:
         existing_classes: set
     ) -> dict[str, str]:
         """Generate stub classes for any referenced but undefined classes."""
-        import re
-        
         # Find all class references (excluding primitives and java.*)
         # Pattern: new ClassName() or ClassName variable
         pattern = r'\b([A-Z][a-zA-Z0-9]*)\s*(?:\(|[a-z]|\s*=)'
@@ -228,8 +226,6 @@ public class {class_name} {{
         Returns:
             Class name or None
         """
-        import re
-        
         # First, strip comments to avoid matching "class" in comments
         # Remove single-line comments
         code_no_comments = re.sub(r'//.*$', '', code, flags=re.MULTILINE)
@@ -388,6 +384,10 @@ public class {class_name} {{
         """
         Compile using Maven (runs full project compilation).
 
+        TODO: This method is not currently called. It is reserved for future use
+        when full-project compilation via Maven is needed (e.g., when classpath
+        resolution from the build system is available). Not dead code.
+
         Args:
             java_files: List of Java file paths (logged for info)
 
@@ -445,6 +445,10 @@ public class {class_name} {{
     def _compile_with_gradle(self, java_files: list) -> tuple[bool, str | None]:
         """
         Compile using Gradle (runs full project compilation).
+
+        TODO: This method is not currently called. It is reserved for future use
+        when full-project compilation via Gradle is needed (e.g., when classpath
+        resolution from the build system is available). Not dead code.
 
         Args:
             java_files: List of Java file paths (logged for info)

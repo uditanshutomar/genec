@@ -44,6 +44,7 @@ class ExtractionValidator:
         self.auto_fix = auto_fix
         self.use_llm = use_llm
         self.suggest_patterns = suggest_patterns
+        self._known_inner_classes: set[str] = set()  # Per-instance, populated during validation
 
         # Initialize LLM validator if enabled
         self.llm_validator = None
@@ -331,9 +332,6 @@ class ExtractionValidator:
                     calls.add(method_name)
 
         return calls
-
-    # Known inner class names discovered from class_deps, populated per-validation
-    _known_inner_classes: set[str] = set()
 
     def _find_inner_class_references(self, method_info: MethodInfo) -> set[str]:
         """Find references to *actual* inner classes of the enclosing class.

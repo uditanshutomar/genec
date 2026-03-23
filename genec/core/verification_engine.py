@@ -1,5 +1,6 @@
 """Multi-layer verification engine for refactoring suggestions."""
 
+import os
 from dataclasses import dataclass
 
 from genec.core.dependency_analyzer import ClassDependencies
@@ -123,8 +124,6 @@ class VerificationEngine:
             equivalence_ran = True
 
             # Build refactored files dict (use os.path.join for cross-platform)
-            import os
-
             package_path = class_deps.package_name.replace(".", os.sep)
             new_class_path = os.path.join(
                 "src", "main", "java", package_path, f"{suggestion.proposed_class_name}.java"
@@ -153,8 +152,9 @@ class VerificationEngine:
 
             self.logger.info(f"✓ Equivalence verified ({equiv_result.tests_run} tests passed)")
         else:
-            result.equivalence_pass = True
-            self.logger.info("Equivalence checking skipped")
+            # Do not claim equivalence passed when it was never checked.
+            # Leave equivalence_pass as default False; note that it was skipped.
+            self.logger.info("Equivalence checking skipped (equivalence_pass left as False)")
 
         # Layer 1: Syntactic Verification
         if self.enable_syntactic:

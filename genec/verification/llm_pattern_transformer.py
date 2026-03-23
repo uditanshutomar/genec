@@ -122,11 +122,11 @@ class LLMPatternTransformer:
 **Original Class**: {class_deps.class_name} (package: {class_deps.package_name})
 
 **Methods to Extract** ({len(cluster_methods)} methods):
-{chr(10).join(method_details[:8])}
+{"\n".join(method_details[:8])}
 {'... and ' + str(len(cluster_methods) - 8) + ' more' if len(cluster_methods) > 8 else ''}
 
 **Blocking Issues**:
-{chr(10).join('- ' + issue for issue in blocking_issues)}
+{"\n".join('- ' + issue for issue in blocking_issues)}
 
 **Your Task**:
 Suggest a design pattern transformation that would enable this extraction. Consider:

@@ -133,11 +133,11 @@ class LLMSemanticValidator:
 **Package**: {class_deps.package_name}
 
 **Cluster to Extract** ({len(cluster_methods)} methods):
-{chr(10).join(method_details[:10])}
+{"\n".join(method_details[:10])}
 {'... and ' + str(len(cluster_methods) - 10) + ' more methods' if len(cluster_methods) > 10 else ''}
 
 **Static Analysis Issues Found**:
-{chr(10).join('- ' + issue for issue in identified_issues) if identified_issues else '- No issues found'}
+{"\n".join('- ' + issue for issue in identified_issues) if identified_issues else '- No issues found'}
 
 **Your Task**:
 Analyze whether this extraction can be made valid by:

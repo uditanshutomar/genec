@@ -70,7 +70,7 @@ class PerformanceVerifier:
     def verify(
         self,
         original_code: str,
-        refactored_code_new: str,
+        refactored_code_new: str,  # TODO: reserved for future separate-file benchmarking
         refactored_code_modified: str,
         repo_path: str,
         test_class: str,
@@ -135,6 +135,13 @@ class PerformanceVerifier:
     ) -> PerformanceMetrics:
         """
         Benchmark code execution time.
+
+        Args:
+            code: Source code to benchmark (TODO: not yet used; reserved for
+                  future in-memory compilation and benchmarking without disk writes)
+            repo_path: Repository root path
+            test_class: Test class to benchmark
+            label: Human-readable label for logging
 
         Returns:
             PerformanceMetrics with timing data

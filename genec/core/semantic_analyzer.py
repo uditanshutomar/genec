@@ -334,7 +334,7 @@ class SemanticAnalyzer:
         metrics.num_parameters = len(method.parameters)
 
         # Return type
-        return_type = method.return_type if hasattr(method, "return_type") else "void"
+        return_type = method.return_type
         metrics.is_void = return_type == "void" or return_type is None
         metrics.has_return_value = not metrics.is_void
 
