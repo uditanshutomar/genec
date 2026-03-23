@@ -32,7 +32,10 @@ public class GenECSpoonWrapper {
             // Parse specification
             @SuppressWarnings("unchecked")
             Map<String, Object> spec = gson.fromJson(specJson, Map.class);
-            String classFile = (String) spec.get("classFile");
+            if (spec == null) {
+                throw new IllegalArgumentException("Failed to parse spec JSON");
+            }
+            String classFile = spec.get("classFile") != null ? (String) spec.get("classFile") : null;
 
             if (classFile == null || classFile.isEmpty()) {
                 throw new IllegalArgumentException("classFile is required in specification");
@@ -86,7 +89,9 @@ public class GenECSpoonWrapper {
         Map<String, List<String>> methodCalls = new HashMap<>();
         Map<String, List<String>> fieldAccesses = new HashMap<>();
 
-        for (CtMethod<?> method : mainClass.getMethods()) {
+        List<CtMethod<?>> safeMethods = mainClass.getMethods() != null ?
+            new ArrayList<>(mainClass.getMethods()) : Collections.emptyList();
+        for (CtMethod<?> method : safeMethods) {
             Map<String, Object> methodInfo = extractMethodInfo(method);
             methods.add(methodInfo);
 
@@ -99,7 +104,8 @@ public class GenECSpoonWrapper {
 
         // Extract constructors - using getElements with TypeFilter
         List<Map<String, Object>> constructors = new ArrayList<>();
-        List<CtConstructor<?>> ctorList = mainClass.getElements(new TypeFilter<>(CtConstructor.class));
+        List<CtConstructor<?>> ctorList = mainClass.getElements(new TypeFilter<>(CtConstructor.class)) != null ?
+            mainClass.getElements(new TypeFilter<>(CtConstructor.class)) : Collections.emptyList();
         for (CtConstructor<?> ctor : ctorList) {
             Map<String, Object> ctorInfo = extractConstructorInfo(ctor);
             constructors.add(ctorInfo);
@@ -113,7 +119,9 @@ public class GenECSpoonWrapper {
 
         // Extract fields
         List<Map<String, Object>> fields = new ArrayList<>();
-        for (CtField<?> field : mainClass.getFields()) {
+        List<CtField<?>> safeFields = mainClass.getFields() != null ?
+            new ArrayList<>(mainClass.getFields()) : Collections.emptyList();
+        for (CtField<?> field : safeFields) {
             Map<String, Object> fieldInfo = new HashMap<>();
             fieldInfo.put("name", field.getSimpleName());
             fieldInfo.put("type", field.getType().getSimpleName());

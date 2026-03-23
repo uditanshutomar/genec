@@ -1258,7 +1258,7 @@ public class EclipseJDTRefactoring {
      * Read file contents.
      */
     private String readFile(String filePath) throws IOException {
-        return new String(Files.readAllBytes(Path.of(filePath)));
+        return new String(Files.readAllBytes(Path.of(filePath)), java.nio.charset.StandardCharsets.UTF_8);
     }
 
     /**

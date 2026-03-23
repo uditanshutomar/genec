@@ -122,10 +122,14 @@ export class GenECService extends EventEmitter {
                 stdout += dataStr;
             });
 
-            this.currentProcess.stderr?.on('data', (data) => {
-                const dataStr = data.toString();
-                stderr += dataStr;
-                this.parseStderr(dataStr);
+            this.currentProcess.stderr?.on('data', (data: Buffer) => {
+                try {
+                    const dataStr = data.toString();
+                    stderr += dataStr;
+                    this.parseStderr(dataStr);
+                } catch (e) {
+                    // Don't let parsing errors kill the process
+                }
             });
 
             this.currentProcess.on('error', (err) => {

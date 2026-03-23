@@ -152,18 +152,18 @@ export class StateManager {
             history.pop();
         }
 
-        await this.context.workspaceState.update(this.getHistoryKey(), history);
+        await this.context.workspaceState.update(this.getHistoryKey(), history).then(undefined, () => {});
         this._onHistoryChanged.fire(history);
     }
 
     public async removeFromHistory(id: string): Promise<void> {
         const history = this.getHistory().filter(h => h.id !== id);
-        await this.context.workspaceState.update(this.getHistoryKey(), history);
+        await this.context.workspaceState.update(this.getHistoryKey(), history).then(undefined, () => {});
         this._onHistoryChanged.fire(history);
     }
 
     public async clearHistory(): Promise<void> {
-        await this.context.workspaceState.update(this.getHistoryKey(), []);
+        await this.context.workspaceState.update(this.getHistoryKey(), []).then(undefined, () => {});
         this._onHistoryChanged.fire([]);
     }
 

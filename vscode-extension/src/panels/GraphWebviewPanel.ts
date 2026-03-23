@@ -231,14 +231,14 @@ export class GraphWebviewPanel {
             render();
         });
 
-        // Mouse interactions
-        canvas.addEventListener('mousedown', (e) => {
+        // Mouse interactions (named functions for cleanup)
+        const onMouseDown = (e) => {
             isDragging = true;
             dragStartX = e.clientX - offsetX;
             dragStartY = e.clientY - offsetY;
-        });
+        };
 
-        canvas.addEventListener('mousemove', (e) => {
+        const onMouseMove = (e) => {
             if (isDragging) {
                 offsetX = e.clientX - dragStartX;
                 offsetY = e.clientY - dragStartY;
@@ -262,17 +262,31 @@ export class GraphWebviewPanel {
                 infoDiv.textContent = hoveredNode ? hoveredNode.id : 'Hover over nodes to see details';
                 canvas.style.cursor = hoveredNode ? 'pointer' : 'grab';
             }
-        });
+        };
 
-        canvas.addEventListener('mouseup', () => isDragging = false);
-        canvas.addEventListener('mouseleave', () => isDragging = false);
+        const onMouseUp = () => isDragging = false;
 
-        canvas.addEventListener('wheel', (e) => {
+        const onWheel = (e) => {
             e.preventDefault();
             const delta = e.deltaY > 0 ? 0.9 : 1.1;
             scale *= delta;
             scale = Math.max(0.1, Math.min(5, scale));
             render();
+        };
+
+        canvas.addEventListener('mousedown', onMouseDown);
+        canvas.addEventListener('mousemove', onMouseMove);
+        canvas.addEventListener('mouseup', onMouseUp);
+        canvas.addEventListener('mouseleave', onMouseUp);
+        canvas.addEventListener('wheel', onWheel);
+
+        // Cleanup on dispose
+        window.addEventListener('beforeunload', () => {
+            canvas.removeEventListener('mousedown', onMouseDown);
+            canvas.removeEventListener('mousemove', onMouseMove);
+            canvas.removeEventListener('mouseup', onMouseUp);
+            canvas.removeEventListener('wheel', onWheel);
+            window.removeEventListener('resize', resizeCanvas);
         });
 
         function setupGraph(graphData, clusters) {

@@ -72,6 +72,11 @@ export function activate(context: vscode.ExtensionContext) {
     // ==========================================================================
     context.subscriptions.push(
         vscode.commands.registerCommand('genec.analyzeClass', async () => {
+            if (genecService.isRunning()) {
+                vscode.window.showWarningMessage('GenEC analysis is already running. Please wait for it to complete.');
+                return;
+            }
+
             const editor = vscode.window.activeTextEditor;
             if (!editor) {
                 vscode.window.showErrorMessage('No active editor');
