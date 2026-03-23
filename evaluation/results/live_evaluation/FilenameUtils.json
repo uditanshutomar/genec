@@ -3,39 +3,53 @@
   "class_name": "FilenameUtils",
   "class_file": "src/main/java/org/apache/commons/io/FilenameUtils.java",
   "status": "success",
-  "execution_time": 51.0,
+  "execution_time": 55.7,
   "original_metrics": {
     "lcom5": 0.9668,
-    "tcc": 0.1241,
+    "tcc": 0.1259,
     "cbo": 0,
     "num_methods": 48,
     "num_fields": 16
   },
-  "clusters_found": 8,
-  "clusters_filtered": 3,
-  "suggestions_total": 3,
-  "suggestions_verified": 3,
+  "clusters_found": 9,
+  "clusters_filtered": 4,
+  "clusters_rejected": 5,
+  "filter_pass_rate": 44.4,
+  "suggestions_total": 4,
+  "suggestions_verified": 4,
   "suggestions": [
     {
       "name": "NetworkAddressValidator",
       "methods": 5,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive network address validation unit that validates IPv4, IPv6, and hostname formats. They share network-specific validation patterns and constants, representing a clear separ"
+      "rationale": "These methods form a cohesive network address validation unit that validates IPv4 addresses, IPv6 addresses, and RFC3986 hostnames. Extracting them into a NetworkAddressValidator class separates netwo"
+    },
+    {
+      "name": "FilePathParser",
+      "methods": 33,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit responsible for parsing file paths and extracting their components (name, extension, path segments). They share common constants for separators and implement related"
     },
     {
       "name": "FilenameComparator",
-      "methods": 33,
+      "methods": 18,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for comparing and matching filenames using various strategies (case sensitivity, normalization, wildcards). Extracting them into a FilenameComparator cla"
+      "rationale": "These methods form a cohesive unit focused exclusively on comparing filenames for equality using different strategies (normalized, case-sensitive, system-aware). Extracting them into a FilenameCompara"
     },
     {
-      "name": "PathProcessor",
-      "methods": 27,
+      "name": "PathManipulator",
+      "methods": 24,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for processing and manipulating file system paths. They handle path parsing, normalization, validation, and component extraction operations that work tog"
+      "rationale": "These methods form a cohesive unit responsible for manipulating file system paths - normalizing, concatenating, extracting components, and validating path structures across different operating systems"
     }
-  ]
+  ],
+  "post_refactoring": {
+    "methods_extracted": 80,
+    "methods_remaining": 0,
+    "extraction_coverage": 166.7
+  }
 }

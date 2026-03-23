@@ -1,34 +1,97 @@
 {
+  "project": "commons-collections",
   "class_name": "IteratorUtils",
+  "class_file": "src/main/java/org/apache/commons/collections4/IteratorUtils.java",
   "status": "success",
-  "suggestions_total": 5,
-  "suggestions_verified": 5,
-  "execution_time": 78.4,
+  "execution_time": 146.2,
+  "original_metrics": {
+    "lcom5": 1.0,
+    "tcc": 0.0223,
+    "cbo": 0,
+    "num_methods": 78,
+    "num_fields": 6
+  },
+  "clusters_found": 46,
+  "clusters_filtered": 10,
+  "clusters_rejected": 36,
+  "filter_pass_rate": 21.7,
+  "suggestions_total": 10,
+  "suggestions_verified": 10,
   "suggestions": [
     {
-      "name": "IteratorFactory",
+      "name": "ArrayIteratorFactory",
+      "methods": 6,
       "verified": true,
-      "methods": 3
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive factory unit responsible for creating ResettableIterator instances from arrays. They share the same creation pattern, handle related array types, and encapsulate the logi"
+    },
+    {
+      "name": "ArrayIteratorFactory",
+      "methods": 6,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive factory unit responsible for creating ResettableListIterator instances from arrays. They encapsulate the logic for selecting appropriate iterator implementations based on"
+    },
+    {
+      "name": "ZippingIteratorFactory",
+      "methods": 3,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive factory unit responsible exclusively for creating ZippingIterator instances with different parameter configurations. Extracting them into a dedicated factory class improv"
+    },
+    {
+      "name": "IteratorFactory",
+      "methods": 3,
+      "verified": true,
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive factory responsible for creating Iterator instances from various object types. They encapsulate complex type detection and conversion logic, providing a unified interface"
+    },
+    {
+      "name": "IteratorChainFactory",
+      "methods": 4,
+      "verified": true,
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive factory for creating chained iterators that traverse multiple iterator sources sequentially. They share the single responsibility of iterator chain construction through d"
     },
     {
       "name": "IteratorConverter",
+      "methods": 8,
       "verified": true,
-      "methods": 8
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive conversion unit that transforms Iterator objects into various collection types (List, Set, Array). They share the common responsibility of materializing lazy iteration in"
+    },
+    {
+      "name": "IteratorCollator",
+      "methods": 3,
+      "verified": true,
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive unit focused on collating (merging and sorting) multiple iterators into a single sorted iterator. They share the same algorithmic responsibility and work together to prov"
     },
     {
       "name": "IteratorFormatter",
+      "methods": 3,
       "verified": true,
-      "methods": 3
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive formatting unit responsible for converting iterator contents into formatted strings with customizable delimiters, prefixes, and suffixes. Extracting them into an Iterator"
     },
     {
-      "name": "IteratorMatcher",
+      "name": "IteratorSearcher",
+      "methods": 3,
       "verified": true,
-      "methods": 3
+      "confidence": 0.88,
+      "rationale": "These methods form a cohesive unit focused on searching through iterators using different criteria (exact match, predicate-based search, and existence checking). Extracting them into an IteratorSearch"
     },
     {
-      "name": "IteratorNavigator",
+      "name": "IteratorIndexAccessor",
+      "methods": 3,
       "verified": true,
-      "methods": 3
+      "confidence": 0.88,
+      "rationale": "These methods form a cohesive unit responsible for providing indexed access to iterator elements. They share the common purpose of converting sequential iterator traversal into positional element retr"
     }
-  ]
+  ],
+  "post_refactoring": {
+    "methods_extracted": 42,
+    "methods_remaining": 36,
+    "extraction_coverage": 53.8
+  }
 }

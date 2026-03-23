@@ -3,88 +3,102 @@
   "class_name": "IOUtils",
   "class_file": "src/main/java/org/apache/commons/io/IOUtils.java",
   "status": "success",
-  "execution_time": 143.6,
+  "execution_time": 162.6,
   "original_metrics": {
     "lcom5": 1.0,
-    "tcc": 0.0543,
+    "tcc": 0.0613,
     "cbo": 0,
-    "num_methods": 174,
+    "num_methods": 172,
     "num_fields": 12
   },
-  "clusters_found": 34,
-  "clusters_filtered": 10,
-  "suggestions_total": 10,
-  "suggestions_verified": 10,
+  "clusters_found": 25,
+  "clusters_filtered": 11,
+  "clusters_rejected": 14,
+  "filter_pass_rate": 44.0,
+  "suggestions_total": 11,
+  "suggestions_verified": 11,
   "suggestions": [
     {
-      "name": "StreamSkipper",
-      "methods": 4,
+      "name": "StreamBufferFactory",
+      "methods": 8,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused on reliably skipping data from input streams and readers. They share the same core responsibility of ensuring complete data skipping operations and should be"
+      "rationale": "These methods form a cohesive factory for creating buffered I/O streams and readers/writers. They share the common responsibility of ensuring optimal buffering while preventing double-wrapping, making"
+    },
+    {
+      "name": "LargeStreamCopier",
+      "methods": 8,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit focused specifically on copying large amounts of data between streams and readers/writers. They represent different overloaded variants of the same core responsibili"
     },
     {
       "name": "ResourceCloser",
       "methods": 18,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for safely closing various types of resources with different exception handling strategies. Extracting them into a ResourceCloser class centralizes resou"
+      "rationale": "These methods form a cohesive unit responsible for safely closing and releasing system resources. They provide consistent resource cleanup patterns with different error handling strategies (throwing v"
+    },
+    {
+      "name": "LineReader",
+      "methods": 7,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit focused on reading text input and parsing it into lines, regardless of the input source type. Extracting them into a LineReader class creates a specialized component"
     },
     {
       "name": "StreamSkipper",
       "methods": 4,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused solely on skipping data in input streams and readers. They share the same operational domain (stream navigation) and delegate to the same underlying implemen"
+      "rationale": "These methods form a cohesive unit focused solely on skipping data in various stream types. Extracting them into a StreamSkipper class creates a specialized component with a single, clear responsibili"
     },
     {
-      "name": "CharArrayConverter",
+      "name": "StreamSkipper",
       "methods": 4,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused on converting various input sources (InputStreams and Readers) into character arrays. Extracting them into a CharArrayConverter class creates a specialized c"
+      "rationale": "These methods form a cohesive unit focused on the single responsibility of reliably skipping data from various input streams. Extracting them into a StreamSkipper class improves separation of concerns"
+    },
+    {
+      "name": "StreamToCharArrayConverter",
+      "methods": 4,
+      "verified": true,
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive conversion unit that transforms various input streams and readers into character arrays. Extracting them into a dedicated converter class improves separation of concerns "
     },
     {
       "name": "LineIteratorFactory",
       "methods": 3,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive factory for creating LineIterator instances from different input sources (InputStream with various charset specifications and Reader). Extracting them into a dedicated fa"
+      "rationale": "These methods form a cohesive factory for creating LineIterator instances from different input sources. They share the single responsibility of LineIterator creation and handle charset conversion comp"
     },
     {
-      "name": "LineReader",
-      "methods": 7,
+      "name": "DataWriter",
+      "methods": 40,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused on reading text content line-by-line from various input sources and returning them as List<String> collections. Extracting them into a LineReader class creat"
+      "rationale": "These methods form a cohesive unit responsible for writing various data types to output streams and writers. They share common concerns around charset handling, chunked writing, and formatted output o"
     },
     {
       "name": "DataConverter",
       "methods": 24,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive conversion unit that transforms various input sources (resources, streams, URLs) into strings or input streams while handling character encoding. Extracting them improves"
+      "rationale": "These methods form a cohesive conversion unit that transforms between different data representations (strings, streams, resources, URLs) while handling character encoding. Extracting them into a DataC"
     },
     {
-      "name": "DataWriter",
-      "methods": 40,
-      "verified": true,
-      "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit responsible for writing various data types to output streams and writers with encoding support. Extracting them into a DataWriter class improves separation of concer"
-    },
-    {
-      "name": "StreamReader",
+      "name": "SafeIOOperations",
       "methods": 79,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit responsible for reading data from various input sources (streams, readers, buffers) with proper validation and comparison capabilities. Extracting them into a Stream"
-    },
-    {
-      "name": "LargeCopyDelegator",
-      "methods": 8,
-      "verified": true,
-      "confidence": 0.82,
-      "rationale": "These methods form a cohesive delegation layer that forwards large copying operations to StreamCopier. They represent a single responsibility of providing a unified interface for large-scale data copy"
+      "rationale": "These methods form a cohesive unit focused on providing safe, bounds-checked I/O operations with guaranteed complete reads and content comparison capabilities. Extracting them into SafeIOOperations im"
     }
-  ]
+  ],
+  "post_refactoring": {
+    "methods_extracted": 199,
+    "methods_remaining": 0,
+    "extraction_coverage": 115.7
+  }
 }

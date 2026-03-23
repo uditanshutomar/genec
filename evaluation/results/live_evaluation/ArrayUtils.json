@@ -3,7 +3,7 @@
   "class_name": "ArrayUtils",
   "class_file": "src/main/java/org/apache/commons/lang3/ArrayUtils.java",
   "status": "success",
-  "execution_time": 83.6,
+  "execution_time": 78.5,
   "original_metrics": {
     "lcom5": 0.9897,
     "tcc": 0.0913,
@@ -13,6 +13,8 @@
   },
   "clusters_found": 19,
   "clusters_filtered": 4,
+  "clusters_rejected": 15,
+  "filter_pass_rate": 21.1,
   "suggestions_total": 4,
   "suggestions_verified": 4,
   "suggestions": [
@@ -21,28 +23,33 @@
       "methods": 18,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused exclusively on reversing array elements in-place. They share identical algorithmic logic, consistent error handling, and operate on the same domain concept o"
+      "rationale": "These methods form a cohesive unit focused exclusively on reversing array elements, implementing the same core algorithm across all primitive and object array types. Extracting them into an ArrayRever"
     },
     {
       "name": "PrimitiveArrayConverter",
       "methods": 14,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for converting primitive arrays to their corresponding wrapper object arrays. They share common conversion logic, empty array constants, and array popula"
+      "rationale": "These methods form a cohesive unit responsible for converting primitive arrays to their corresponding wrapper object arrays. They share common conversion patterns, utilize the same empty array constan"
     },
     {
       "name": "ArrayInspector",
       "methods": 22,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused on inspecting and analyzing array properties without modification. They share common patterns for null-safe array analysis, length comparison, and ordering v"
+      "rationale": "These methods form a cohesive unit focused on inspecting and analyzing array properties without modification. They provide comprehensive array analysis capabilities including length checking, bounds v"
     },
     {
       "name": "ArrayElementRemover",
       "methods": 47,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused exclusively on removing multiple elements from arrays by index positions. They share identical behavior across different array types and delegate to a common"
+      "rationale": "These methods form a cohesive unit focused exclusively on removing multiple elements from arrays by index positions. They share identical behavior across different array types and delegate to common r"
     }
-  ]
+  ],
+  "post_refactoring": {
+    "methods_extracted": 101,
+    "methods_remaining": 287,
+    "extraction_coverage": 26.0
+  }
 }

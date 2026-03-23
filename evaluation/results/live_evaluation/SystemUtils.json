@@ -3,7 +3,7 @@
   "class_name": "SystemUtils",
   "class_file": "src/main/java/org/apache/commons/lang3/SystemUtils.java",
   "status": "success",
-  "execution_time": 50.9,
+  "execution_time": 46.2,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.0435,
@@ -13,6 +13,8 @@
   },
   "clusters_found": 137,
   "clusters_filtered": 3,
+  "clusters_rejected": 134,
+  "filter_pass_rate": 2.2,
   "suggestions_total": 3,
   "suggestions_verified": 3,
   "suggestions": [
@@ -21,21 +23,26 @@
       "methods": 5,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for matching operating system names and versions against specified criteria. They share OS system properties and implement progressively sophisticated ma"
-    },
-    {
-      "name": "JavaVersionChecker",
-      "methods": 2,
-      "verified": true,
-      "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for checking Java version compatibility against specified requirements. They operate exclusively on Java version data and provide focused comparison func"
+      "rationale": "These methods form a cohesive unit responsible for matching operating system names and versions against specified criteria. They share common OS information fields and implement complementary matching"
     },
     {
       "name": "JavaVersionMatcher",
       "methods": 2,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused on matching Java version strings against prefixes. Extracting them into a JavaVersionMatcher class isolates version detection logic and improves reusability "
+      "rationale": "These methods form a cohesive unit responsible for matching Java version strings against specified prefixes. Extracting them into a JavaVersionMatcher class isolates version comparison logic and impro"
+    },
+    {
+      "name": "JavaVersionComparator",
+      "methods": 2,
+      "verified": true,
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive unit focused on comparing Java versions against requirements. They share the same field dependency and provide complementary comparison operations (minimum and maximum ve"
     }
-  ]
+  ],
+  "post_refactoring": {
+    "methods_extracted": 9,
+    "methods_remaining": 14,
+    "extraction_coverage": 39.1
+  }
 }

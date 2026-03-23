@@ -1,267 +1,318 @@
 {
   "total_classes": 11,
-  "successful": 9,
-  "failed": 2,
-  "total_suggestions": 49,
-  "total_verified": 49,
-  "verification_rate": 100.0,
-  "total_time": 799.8,
-  "avg_time_per_class": 72.7,
+  "successful": 11,
+  "failed": 0,
+  "total_clusters_found": 390,
+  "filter_pass_rate": 17.4,
+  "total_suggestions": 68,
+  "total_verified": 65,
+  "verification_rate": 95.6,
+  "total_time": 1030.4,
+  "avg_time_per_class": 93.7,
   "per_class": [
     {
       "project": "commons-io",
       "class_name": "IOUtils",
       "class_file": "src/main/java/org/apache/commons/io/IOUtils.java",
       "status": "success",
-      "execution_time": 143.6,
+      "execution_time": 162.6,
       "original_metrics": {
         "lcom5": 1.0,
-        "tcc": 0.0543,
+        "tcc": 0.0613,
         "cbo": 0,
-        "num_methods": 174,
+        "num_methods": 172,
         "num_fields": 12
       },
-      "clusters_found": 34,
-      "clusters_filtered": 10,
-      "suggestions_total": 10,
-      "suggestions_verified": 10,
+      "clusters_found": 25,
+      "clusters_filtered": 11,
+      "clusters_rejected": 14,
+      "filter_pass_rate": 44.0,
+      "suggestions_total": 11,
+      "suggestions_verified": 11,
       "suggestions": [
         {
-          "name": "StreamSkipper",
-          "methods": 4,
+          "name": "StreamBufferFactory",
+          "methods": 8,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit focused on reliably skipping data from input streams and readers. They share the same core responsibility of ensuring complete data skipping operations and should be"
+          "rationale": "These methods form a cohesive factory for creating buffered I/O streams and readers/writers. They share the common responsibility of ensuring optimal buffering while preventing double-wrapping, making"
+        },
+        {
+          "name": "LargeStreamCopier",
+          "methods": 8,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit focused specifically on copying large amounts of data between streams and readers/writers. They represent different overloaded variants of the same core responsibili"
         },
         {
           "name": "ResourceCloser",
           "methods": 18,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit responsible for safely closing various types of resources with different exception handling strategies. Extracting them into a ResourceCloser class centralizes resou"
+          "rationale": "These methods form a cohesive unit responsible for safely closing and releasing system resources. They provide consistent resource cleanup patterns with different error handling strategies (throwing v"
+        },
+        {
+          "name": "LineReader",
+          "methods": 7,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit focused on reading text input and parsing it into lines, regardless of the input source type. Extracting them into a LineReader class creates a specialized component"
         },
         {
           "name": "StreamSkipper",
           "methods": 4,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused solely on skipping data in input streams and readers. They share the same operational domain (stream navigation) and delegate to the same underlying implemen"
+          "rationale": "These methods form a cohesive unit focused solely on skipping data in various stream types. Extracting them into a StreamSkipper class creates a specialized component with a single, clear responsibili"
         },
         {
-          "name": "CharArrayConverter",
+          "name": "StreamSkipper",
           "methods": 4,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused on converting various input sources (InputStreams and Readers) into character arrays. Extracting them into a CharArrayConverter class creates a specialized c"
+          "rationale": "These methods form a cohesive unit focused on the single responsibility of reliably skipping data from various input streams. Extracting them into a StreamSkipper class improves separation of concerns"
+        },
+        {
+          "name": "StreamToCharArrayConverter",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive conversion unit that transforms various input streams and readers into character arrays. Extracting them into a dedicated converter class improves separation of concerns "
         },
         {
           "name": "LineIteratorFactory",
           "methods": 3,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive factory for creating LineIterator instances from different input sources (InputStream with various charset specifications and Reader). Extracting them into a dedicated fa"
+          "rationale": "These methods form a cohesive factory for creating LineIterator instances from different input sources. They share the single responsibility of LineIterator creation and handle charset conversion comp"
         },
         {
-          "name": "LineReader",
-          "methods": 7,
+          "name": "DataWriter",
+          "methods": 40,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused on reading text content line-by-line from various input sources and returning them as List<String> collections. Extracting them into a LineReader class creat"
+          "rationale": "These methods form a cohesive unit responsible for writing various data types to output streams and writers. They share common concerns around charset handling, chunked writing, and formatted output o"
         },
         {
           "name": "DataConverter",
           "methods": 24,
           "verified": true,
           "confidence": 0.88,
-          "rationale": "These methods form a cohesive conversion unit that transforms various input sources (resources, streams, URLs) into strings or input streams while handling character encoding. Extracting them improves"
+          "rationale": "These methods form a cohesive conversion unit that transforms between different data representations (strings, streams, resources, URLs) while handling character encoding. Extracting them into a DataC"
         },
         {
-          "name": "DataWriter",
-          "methods": 40,
-          "verified": true,
-          "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit responsible for writing various data types to output streams and writers with encoding support. Extracting them into a DataWriter class improves separation of concer"
-        },
-        {
-          "name": "StreamReader",
+          "name": "SafeIOOperations",
           "methods": 79,
           "verified": true,
           "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit responsible for reading data from various input sources (streams, readers, buffers) with proper validation and comparison capabilities. Extracting them into a Stream"
-        },
-        {
-          "name": "LargeCopyDelegator",
-          "methods": 8,
-          "verified": true,
-          "confidence": 0.82,
-          "rationale": "These methods form a cohesive delegation layer that forwards large copying operations to StreamCopier. They represent a single responsibility of providing a unified interface for large-scale data copy"
+          "rationale": "These methods form a cohesive unit focused on providing safe, bounds-checked I/O operations with guaranteed complete reads and content comparison capabilities. Extracting them into SafeIOOperations im"
         }
-      ]
+      ],
+      "post_refactoring": {
+        "methods_extracted": 199,
+        "methods_remaining": 0,
+        "extraction_coverage": 115.7
+      }
     },
     {
       "project": "commons-io",
       "class_name": "FileUtils",
       "class_file": "src/main/java/org/apache/commons/io/FileUtils.java",
       "status": "success",
-      "execution_time": 135.7,
+      "execution_time": 103.3,
       "original_metrics": {
         "lcom5": 0.9958,
-        "tcc": 0.0428,
+        "tcc": 0.0462,
         "cbo": 0,
         "num_methods": 159,
         "num_fields": 18
       },
-      "clusters_found": 26,
-      "clusters_filtered": 8,
-      "suggestions_total": 8,
-      "suggestions_verified": 8,
+      "clusters_found": 22,
+      "clusters_filtered": 6,
+      "clusters_rejected": 16,
+      "filter_pass_rate": 27.3,
+      "suggestions_total": 6,
+      "suggestions_verified": 6,
       "suggestions": [
+        {
+          "name": "FileLineReader",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit responsible for reading text files line-by-line into String collections. They handle the same core operation with different charset handling approaches, making them "
+        },
         {
           "name": "ByteSizeFormatter",
           "methods": 3,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods and constants form a cohesive unit responsible for converting byte counts into human-readable display formats with appropriate units. Extracting them into a ByteSizeFormatter class separ"
+          "rationale": "These methods and constants form a cohesive unit responsible for formatting byte counts into human-readable display strings with appropriate units. Extracting them into a ByteSizeFormatter class impro"
         },
         {
           "name": "LineWriter",
           "methods": 9,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit focused specifically on writing collections of text lines to files with various encoding and formatting options. Extracting them into a LineWriter class creates a sp"
+          "rationale": "These methods form a cohesive unit focused on writing collections as lines to files. They share the same core responsibility of converting collection elements to text lines and writing them to files w"
         },
         {
-          "name": "FileAgeComparator",
-          "methods": 12,
-          "verified": true,
-          "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit responsible for comparing file modification times against various temporal references. They share the same core responsibility of determining file age relationships "
-        },
-        {
-          "name": "FileContentReader",
+          "name": "FileReader",
           "methods": 3,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused on reading file contents and converting them to strings with different charset handling approaches. Extracting them into a FileContentReader class creates a "
-        },
-        {
-          "name": "FileLineReader",
-          "methods": 3,
-          "verified": true,
-          "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused on reading file contents as lines of text with different charset handling approaches. Extracting them into a FileLineReader class creates a specialized compo"
+          "rationale": "These methods form a cohesive unit focused exclusively on reading file contents and converting them to strings with various charset handling options. Extracting them into a FileReader class improves s"
         },
         {
           "name": "FileWriter",
           "methods": 17,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit responsible for writing various data types to files with different encoding and append options. Extracting them into a FileWriter class creates a focused component t"
+          "rationale": "These methods form a cohesive unit focused exclusively on writing data to files, handling different data types (strings, byte arrays) with consistent encoding and append support. Extracting them into "
         },
         {
-          "name": "StreamCopier",
-          "methods": 9,
+          "name": "FileSystemNavigator",
+          "methods": 34,
           "verified": true,
           "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit responsible for copying data from various input streams to file destinations. They share common patterns of resource management, stream handling, and data transfer o"
-        },
-        {
-          "name": "FileConverter",
-          "methods": 8,
-          "verified": true,
-          "confidence": 0.88,
-          "rationale": "These methods form a cohesive conversion unit that transforms various representations (URLs, string paths) into File objects. They share URL decoding logic, protocol validation, and path construction "
+          "rationale": "These methods form a cohesive unit responsible for navigating and discovering files within the file system. They handle directory traversal, file listing, iteration, and conversion between different f"
         }
-      ]
+      ],
+      "post_refactoring": {
+        "methods_extracted": 69,
+        "methods_remaining": 90,
+        "extraction_coverage": 43.4
+      }
     },
     {
       "project": "commons-io",
       "class_name": "FilenameUtils",
       "class_file": "src/main/java/org/apache/commons/io/FilenameUtils.java",
       "status": "success",
-      "execution_time": 51.0,
+      "execution_time": 55.7,
       "original_metrics": {
         "lcom5": 0.9668,
-        "tcc": 0.1241,
+        "tcc": 0.1259,
         "cbo": 0,
         "num_methods": 48,
         "num_fields": 16
       },
-      "clusters_found": 8,
-      "clusters_filtered": 3,
-      "suggestions_total": 3,
-      "suggestions_verified": 3,
+      "clusters_found": 9,
+      "clusters_filtered": 4,
+      "clusters_rejected": 5,
+      "filter_pass_rate": 44.4,
+      "suggestions_total": 4,
+      "suggestions_verified": 4,
       "suggestions": [
         {
           "name": "NetworkAddressValidator",
           "methods": 5,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive network address validation unit that validates IPv4, IPv6, and hostname formats. They share network-specific validation patterns and constants, representing a clear separ"
+          "rationale": "These methods form a cohesive network address validation unit that validates IPv4 addresses, IPv6 addresses, and RFC3986 hostnames. Extracting them into a NetworkAddressValidator class separates netwo"
+        },
+        {
+          "name": "FilePathParser",
+          "methods": 33,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit responsible for parsing file paths and extracting their components (name, extension, path segments). They share common constants for separators and implement related"
         },
         {
           "name": "FilenameComparator",
-          "methods": 33,
+          "methods": 18,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit responsible for comparing and matching filenames using various strategies (case sensitivity, normalization, wildcards). Extracting them into a FilenameComparator cla"
+          "rationale": "These methods form a cohesive unit focused exclusively on comparing filenames for equality using different strategies (normalized, case-sensitive, system-aware). Extracting them into a FilenameCompara"
         },
         {
-          "name": "PathProcessor",
-          "methods": 27,
+          "name": "PathManipulator",
+          "methods": 24,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit responsible for processing and manipulating file system paths. They handle path parsing, normalization, validation, and component extraction operations that work tog"
+          "rationale": "These methods form a cohesive unit responsible for manipulating file system paths - normalizing, concatenating, extracting components, and validating path structures across different operating systems"
         }
-      ]
+      ],
+      "post_refactoring": {
+        "methods_extracted": 80,
+        "methods_remaining": 0,
+        "extraction_coverage": 166.7
+      }
     },
     {
       "project": "commons-lang",
       "class_name": "StringUtils",
       "class_file": "src/main/java/org/apache/commons/lang3/StringUtils.java",
       "status": "success",
-      "execution_time": 54.3,
+      "execution_time": 95.6,
       "original_metrics": {
         "lcom5": 0.9695,
-        "tcc": 0.0633,
+        "tcc": 0.0643,
         "cbo": 0,
         "num_methods": 244,
         "num_fields": 10
       },
-      "clusters_found": 26,
-      "clusters_filtered": 3,
-      "suggestions_total": 3,
-      "suggestions_verified": 3,
+      "clusters_found": 25,
+      "clusters_filtered": 6,
+      "clusters_rejected": 19,
+      "filter_pass_rate": 24.0,
+      "suggestions_total": 6,
+      "suggestions_verified": 6,
       "suggestions": [
         {
           "name": "StringReplacer",
           "methods": 13,
           "verified": true,
-          "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused exclusively on string replacement operations with different strategies (case-sensitive, case-insensitive, character-based, with occurrence limits). Extractin"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit focused exclusively on string replacement operations with different strategies (case-sensitive, case-insensitive, character-based, bounded). Extracting them into a S"
         },
         {
           "name": "StringComparator",
           "methods": 4,
           "verified": true,
-          "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit responsible for comparing strings using different strategies (case-sensitive, case-insensitive, null-safe). Extracting them into a StringComparator class isolates co"
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive comparison unit that handles null-safe string comparison with various options (case sensitivity, null ordering). Extracting them into a StringComparator class isolates co"
         },
         {
-          "name": "StringAbbreviator",
+          "name": "StringSplitter",
+          "methods": 19,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit responsible for splitting strings into arrays based on various separator criteria. They share common splitting algorithms, work with the same data types (String inpu"
+        },
+        {
+          "name": "TextAbbreviator",
           "methods": 8,
           "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit focused on abbreviating text strings with ellipsis markers. They share the same core responsibility and work together to provide a complete API for text truncation, "
+        },
+        {
+          "name": "StringAligner",
+          "methods": 22,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit responsible for string alignment and padding operations. They share common padding logic, alignment algorithms, and formatting constants, making them ideal candidate"
+        },
+        {
+          "name": "StringPrefixRemover",
+          "methods": 7,
+          "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused on abbreviating strings with ellipsis markers to fit specified width constraints. They share the same abbreviation logic and ellipsis constant, representing "
+          "rationale": "These methods form a cohesive unit focused exclusively on removing prefixes from strings with different sensitivity options. Extracting them into a specialized class improves code organization by isol"
         }
-      ]
+      ],
+      "post_refactoring": {
+        "methods_extracted": 73,
+        "methods_remaining": 171,
+        "extraction_coverage": 29.9
+      }
     },
     {
       "project": "commons-lang",
       "class_name": "ArrayUtils",
       "class_file": "src/main/java/org/apache/commons/lang3/ArrayUtils.java",
       "status": "success",
-      "execution_time": 83.6,
+      "execution_time": 78.5,
       "original_metrics": {
         "lcom5": 0.9897,
         "tcc": 0.0913,
@@ -271,6 +322,8 @@
       },
       "clusters_found": 19,
       "clusters_filtered": 4,
+      "clusters_rejected": 15,
+      "filter_pass_rate": 21.1,
       "suggestions_total": 4,
       "suggestions_verified": 4,
       "suggestions": [
@@ -279,92 +332,111 @@
           "methods": 18,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit focused exclusively on reversing array elements in-place. They share identical algorithmic logic, consistent error handling, and operate on the same domain concept o"
+          "rationale": "These methods form a cohesive unit focused exclusively on reversing array elements, implementing the same core algorithm across all primitive and object array types. Extracting them into an ArrayRever"
         },
         {
           "name": "PrimitiveArrayConverter",
           "methods": 14,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit responsible for converting primitive arrays to their corresponding wrapper object arrays. They share common conversion logic, empty array constants, and array popula"
+          "rationale": "These methods form a cohesive unit responsible for converting primitive arrays to their corresponding wrapper object arrays. They share common conversion patterns, utilize the same empty array constan"
         },
         {
           "name": "ArrayInspector",
           "methods": 22,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit focused on inspecting and analyzing array properties without modification. They share common patterns for null-safe array analysis, length comparison, and ordering v"
+          "rationale": "These methods form a cohesive unit focused on inspecting and analyzing array properties without modification. They provide comprehensive array analysis capabilities including length checking, bounds v"
         },
         {
           "name": "ArrayElementRemover",
           "methods": 47,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused exclusively on removing multiple elements from arrays by index positions. They share identical behavior across different array types and delegate to a common"
+          "rationale": "These methods form a cohesive unit focused exclusively on removing multiple elements from arrays by index positions. They share identical behavior across different array types and delegate to common r"
         }
-      ]
+      ],
+      "post_refactoring": {
+        "methods_extracted": 101,
+        "methods_remaining": 287,
+        "extraction_coverage": 26.0
+      }
     },
     {
       "project": "commons-lang",
       "class_name": "NumberUtils",
       "class_file": "src/main/java/org/apache/commons/lang3/math/NumberUtils.java",
       "status": "success",
-      "execution_time": 82.2,
+      "execution_time": 87.7,
       "original_metrics": {
         "lcom5": 1.0,
-        "tcc": 0.05,
+        "tcc": 0.09,
         "cbo": 0,
         "num_methods": 68,
         "num_fields": 21
       },
-      "clusters_found": 32,
-      "clusters_filtered": 5,
-      "suggestions_total": 5,
-      "suggestions_verified": 5,
+      "clusters_found": 33,
+      "clusters_filtered": 6,
+      "clusters_rejected": 27,
+      "filter_pass_rate": 18.2,
+      "suggestions_total": 6,
+      "suggestions_verified": 6,
       "suggestions": [
-        {
-          "name": "NumberParser",
-          "methods": 14,
-          "verified": true,
-          "confidence": 0.92,
-          "rationale": "These methods form a cohesive parsing unit responsible for converting string representations into appropriate numeric types and validating numeric string formats. They share complex parsing logic, han"
-        },
         {
           "name": "BigDecimalConverter",
           "methods": 9,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive conversion unit that transforms various numeric types into scaled BigDecimal objects with consistent rounding behavior. They share common scaling defaults, null-safety ha"
+          "rationale": "These methods form a cohesive conversion unit that transforms various numeric types into scaled BigDecimal objects with consistent precision and rounding behavior. Extracting them into a BigDecimalCon"
+        },
+        {
+          "name": "NumericStringParser",
+          "methods": 14,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive parsing unit responsible for converting string representations into various numeric types. They share complex parsing logic, validation rules, and format detection capabi"
+        },
+        {
+          "name": "MaxCalculator",
+          "methods": 13,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit focused exclusively on calculating maximum values across all primitive numeric types. They share common validation logic and implement the same mathematical operatio"
+        },
+        {
+          "name": "MinimumCalculator",
+          "methods": 13,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit focused on calculating minimum values across all primitive numeric types. They share the same algorithmic responsibility and validation logic, making them ideal cand"
         },
         {
           "name": "DoubleConverter",
           "methods": 4,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit responsible for safely converting various input types to double values with fallback handling. They share the common responsibility of type conversion with null safe"
+          "rationale": "These methods form a cohesive unit responsible for safely converting different input types to double values with default fallback behavior. Extracting them into a DoubleConverter class improves separa"
         },
         {
-          "name": "NumericComparator",
+          "name": "PrimitiveComparator",
           "methods": 4,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused exclusively on comparing primitive numeric types using standardized three-way comparison semantics. Extracting them into a NumericComparator class isolates c"
-        },
-        {
-          "name": "NumberComparator",
-          "methods": 25,
-          "verified": true,
-          "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused on comparing numeric values to find minimum and maximum values across different primitive types. Extracting them into a NumberComparator class improves code "
+          "rationale": "These methods form a cohesive unit focused solely on comparing primitive numeric types using three-way comparison semantics. Extracting them into a PrimitiveComparator class isolates comparison logic "
         }
-      ]
+      ],
+      "post_refactoring": {
+        "methods_extracted": 57,
+        "methods_remaining": 11,
+        "extraction_coverage": 83.8
+      }
     },
     {
       "project": "commons-lang",
       "class_name": "DateUtils",
       "class_file": "src/main/java/org/apache/commons/lang3/time/DateUtils.java",
       "status": "success",
-      "execution_time": 92.9,
+      "execution_time": 91.1,
       "original_metrics": {
         "lcom5": 1.0,
         "tcc": 0.0466,
@@ -374,6 +446,8 @@
       },
       "clusters_found": 11,
       "clusters_filtered": 6,
+      "clusters_rejected": 5,
+      "filter_pass_rate": 54.5,
       "suggestions_total": 6,
       "suggestions_verified": 6,
       "suggestions": [
@@ -382,51 +456,56 @@
           "methods": 5,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive date parsing unit that converts string representations to Date objects using configurable patterns and strictness levels. Extracting them into a DateParser class improves"
+          "rationale": "These methods form a cohesive date parsing unit that should be extracted into a DateParser class. They share the single responsibility of converting date strings to Date objects using various patterns"
         },
         {
           "name": "DateToTemporalConverter",
           "methods": 7,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive conversion unit that transforms legacy Date objects to modern temporal types. They share the same conversion pattern and represent a single responsibility of bridging leg"
-        },
-        {
-          "name": "TimeFragmentCalculator",
-          "methods": 13,
-          "verified": true,
-          "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit responsible for calculating time fragments from dates and calendars. They share the same core algorithm and provide different granularities of the same calculation, "
+          "rationale": "These methods form a cohesive conversion unit that transforms legacy Date objects into modern Java 8+ temporal types. They share common conversion patterns and helper methods, representing a single re"
         },
         {
           "name": "DateCalculator",
           "methods": 18,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit focused on performing arithmetic calculations on Date objects. They share common implementation patterns through the private add() and set() helper methods and repre"
+          "rationale": "These methods form a cohesive unit focused on performing arithmetic calculations on Date objects, including both addition/subtraction and field-setting operations. Extracting them into a DateCalculato"
+        },
+        {
+          "name": "TimeFragmentCalculator",
+          "methods": 13,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive computational unit focused on calculating time fragments from dates and calendars. They share the same core algorithm and provide different time unit views of fragment ca"
         },
         {
           "name": "DateCalculator",
           "methods": 20,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused on performing mathematical operations on dates and calendars, including arithmetic, rounding, and field-level modifications. Extracting them into a DateCalcu"
+          "rationale": "These methods form a cohesive unit focused on performing mathematical operations and calculations on date/time values. They handle arithmetic operations (add, set), precision-based rounding (round, ce"
         },
         {
           "name": "CalendarFieldManipulator",
           "methods": 16,
           "verified": true,
           "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit focused on manipulating dates at the calendar field level - truncating, modifying, comparing, and iterating based on specific calendar field boundaries. They share c"
+          "rationale": "These methods form a cohesive unit responsible for manipulating dates at specific calendar field granularities - truncating, comparing, iterating, and modifying dates based on field boundaries. Extrac"
         }
-      ]
+      ],
+      "post_refactoring": {
+        "methods_extracted": 79,
+        "methods_remaining": 0,
+        "extraction_coverage": 117.9
+      }
     },
     {
       "project": "commons-lang",
       "class_name": "SystemUtils",
       "class_file": "src/main/java/org/apache/commons/lang3/SystemUtils.java",
       "status": "success",
-      "execution_time": 50.9,
+      "execution_time": 46.2,
       "original_metrics": {
         "lcom5": 1.0,
         "tcc": 0.0435,
@@ -436,6 +515,8 @@
       },
       "clusters_found": 137,
       "clusters_filtered": 3,
+      "clusters_rejected": 134,
+      "filter_pass_rate": 2.2,
       "suggestions_total": 3,
       "suggestions_verified": 3,
       "suggestions": [
@@ -444,110 +525,263 @@
           "methods": 5,
           "verified": true,
           "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit responsible for matching operating system names and versions against specified criteria. They share OS system properties and implement progressively sophisticated ma"
-        },
-        {
-          "name": "JavaVersionChecker",
-          "methods": 2,
-          "verified": true,
-          "confidence": 0.92,
-          "rationale": "These methods form a cohesive unit responsible for checking Java version compatibility against specified requirements. They operate exclusively on Java version data and provide focused comparison func"
+          "rationale": "These methods form a cohesive unit responsible for matching operating system names and versions against specified criteria. They share common OS information fields and implement complementary matching"
         },
         {
           "name": "JavaVersionMatcher",
           "methods": 2,
           "verified": true,
           "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit focused on matching Java version strings against prefixes. Extracting them into a JavaVersionMatcher class isolates version detection logic and improves reusability "
+          "rationale": "These methods form a cohesive unit responsible for matching Java version strings against specified prefixes. Extracting them into a JavaVersionMatcher class isolates version comparison logic and impro"
+        },
+        {
+          "name": "JavaVersionComparator",
+          "methods": 2,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit focused on comparing Java versions against requirements. They share the same field dependency and provide complementary comparison operations (minimum and maximum ve"
         }
-      ]
+      ],
+      "post_refactoring": {
+        "methods_extracted": 9,
+        "methods_remaining": 14,
+        "extraction_coverage": 39.1
+      }
     },
     {
       "project": "commons-collections",
       "class_name": "CollectionUtils",
       "class_file": "src/main/java/org/apache/commons/collections4/CollectionUtils.java",
       "status": "success",
-      "execution_time": 105.6,
+      "execution_time": 89.3,
       "original_metrics": {
         "lcom5": 1.0,
-        "tcc": 0.03,
+        "tcc": 0.0314,
         "cbo": 0,
-        "num_methods": 74,
+        "num_methods": 71,
         "num_fields": 6
       },
-      "clusters_found": 38,
-      "clusters_filtered": 7,
-      "suggestions_total": 7,
-      "suggestions_verified": 7,
+      "clusters_found": 34,
+      "clusters_filtered": 6,
+      "clusters_rejected": 28,
+      "filter_pass_rate": 17.6,
+      "suggestions_total": 6,
+      "suggestions_verified": 6,
       "suggestions": [
         {
           "name": "CollectionMerger",
           "methods": 5,
           "verified": true,
-          "confidence": 0.9,
-          "rationale": "These methods form a cohesive unit responsible for merging two sorted collections into a single sorted result. They implement variations of the collation algorithm with different parameters for compar"
+          "confidence": 0.92,
+          "rationale": "These methods implement the classic two-way merge algorithm for combining sorted iterables into a single sorted result. They form a cohesive algorithmic unit focused solely on merging/collating operat"
         },
         {
           "name": "CollectionStateInspector",
           "methods": 4,
           "verified": true,
           "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit focused on inspecting and evaluating the state of collections and collection-like objects. They provide read-only queries about emptiness, containment relationships,"
+          "rationale": "These methods form a cohesive unit focused on inspecting the state of collections and container objects to determine emptiness and containment relationships. They share the common responsibility of pr"
         },
         {
-          "name": "IndexedAccessor",
+          "name": "ElementAccessor",
           "methods": 6,
           "verified": true,
           "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit responsible for providing indexed access to elements across different collection types (Map, arrays, Iterator, Iterable, Enumeration). They encapsulate the complexit"
+          "rationale": "These methods form a cohesive unit responsible for accessing and analyzing elements across different collection types. They provide uniform indexed access and element counting functionality, abstracti"
         },
         {
           "name": "EmptyCollectionProvider",
           "methods": 2,
           "verified": true,
           "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit responsible for providing empty collection instances and converting null collections to empty ones. Extracting them into an EmptyCollectionProvider class isolates th"
-        },
-        {
-          "name": "CollectionAugmenter",
-          "methods": 11,
-          "verified": true,
-          "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit responsible for augmenting collections by adding elements from various sources or transforming existing elements in-place. They share common patterns of null validat"
+          "rationale": "These methods form a cohesive unit responsible for providing empty collection instances and null-safe collection handling. Extracting them creates a focused provider that encapsulates empty collection"
         },
         {
           "name": "CollectionAnalyzer",
           "methods": 13,
           "verified": true,
           "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit focused on analyzing and manipulating collections based on specific criteria, relationships, and constraints. They perform sophisticated operations like intersection"
+          "rationale": "These methods form a cohesive unit focused on analyzing collections - determining relationships between collections, extracting elements based on criteria, and querying collection properties. Extracti"
         },
         {
-          "name": "EquatorCollectionOperator",
-          "methods": 11,
+          "name": "CollectionBulkOperator",
+          "methods": 16,
           "verified": true,
           "confidence": 0.88,
-          "rationale": "These methods form a cohesive unit responsible for performing collection operations using custom equality semantics via Equator instances. They share the common pattern of wrapping elements in Equator"
+          "rationale": "These methods form a cohesive unit focused on bulk operations that manipulate entire collections or large portions of them. They share common patterns of null safety, generic type handling, and collec"
         }
-      ]
+      ],
+      "post_refactoring": {
+        "methods_extracted": 46,
+        "methods_remaining": 25,
+        "extraction_coverage": 64.8
+      }
     },
     {
       "project": "commons-collections",
       "class_name": "MapUtils",
       "class_file": "src/main/java/org/apache/commons/collections4/MapUtils.java",
-      "status": "error",
-      "error": "[Errno 32] Broken pipe",
-      "traceback": "e \"/Users/uditanshutomar/genec/genec/core/pipeline.py\", line 450, in run_full_pipeline\n    self._emit_progress(stage=0, total=6, message=\"Initializing pipeline\")\n    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/uditanshutomar/genec/genec/core/pipeline.py\", line 417, in _emit_progress\n    print(json.dumps(progress_event), file=sys.stderr, flush=True)\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nBrokenPipeError: [Errno 32] Broken pipe\n",
-      "execution_time": 0
+      "status": "success",
+      "execution_time": 74.2,
+      "original_metrics": {
+        "lcom5": 1.0,
+        "tcc": 0.0343,
+        "cbo": 0,
+        "num_methods": 94,
+        "num_fields": 2
+      },
+      "clusters_found": 29,
+      "clusters_filtered": 6,
+      "clusters_rejected": 23,
+      "filter_pass_rate": 20.7,
+      "suggestions_total": 6,
+      "suggestions_verified": 3,
+      "suggestions": [
+        {
+          "name": "MapPopulator",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive unit responsible for populating maps from iterable collections using transformation functions. They share the same algorithmic pattern and domain concept of building maps"
+        },
+        {
+          "name": "MultiValueMapFactory",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive factory unit responsible for creating MultiValueMap instances from existing maps using different strategies. They share the single responsibility of MultiValueMap constru"
+        },
+        {
+          "name": "MapFormatter",
+          "methods": 6,
+          "verified": false,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit responsible for formatting and displaying Map data structures in readable formats. They share formatting logic, indentation handling, and circular reference detectio"
+        },
+        {
+          "name": "BooleanExtractor",
+          "methods": 9,
+          "verified": false,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit responsible for extracting and converting boolean values from maps with type safety and default handling. They share common conversion logic and fallback strategies,"
+        },
+        {
+          "name": "MapValueConverter",
+          "methods": 24,
+          "verified": false,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit responsible for converting map values to specific numeric types with null safety and default value handling. Extracting them creates a focused converter that encapsu"
+        },
+        {
+          "name": "MapAccessor",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit focused on safe map data access and retrieval operations. They share the common responsibility of providing null-safe access to map values and converting data struct"
+        }
+      ],
+      "post_refactoring": {
+        "methods_extracted": 10,
+        "methods_remaining": 84,
+        "extraction_coverage": 10.6
+      }
     },
     {
       "project": "commons-collections",
       "class_name": "IteratorUtils",
       "class_file": "src/main/java/org/apache/commons/collections4/IteratorUtils.java",
-      "status": "error",
-      "error": "[Errno 32] Broken pipe",
-      "traceback": "e \"/Users/uditanshutomar/genec/genec/core/pipeline.py\", line 450, in run_full_pipeline\n    self._emit_progress(stage=0, total=6, message=\"Initializing pipeline\")\n    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/uditanshutomar/genec/genec/core/pipeline.py\", line 417, in _emit_progress\n    print(json.dumps(progress_event), file=sys.stderr, flush=True)\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nBrokenPipeError: [Errno 32] Broken pipe\n",
-      "execution_time": 0
+      "status": "success",
+      "execution_time": 146.2,
+      "original_metrics": {
+        "lcom5": 1.0,
+        "tcc": 0.0223,
+        "cbo": 0,
+        "num_methods": 78,
+        "num_fields": 6
+      },
+      "clusters_found": 46,
+      "clusters_filtered": 10,
+      "clusters_rejected": 36,
+      "filter_pass_rate": 21.7,
+      "suggestions_total": 10,
+      "suggestions_verified": 10,
+      "suggestions": [
+        {
+          "name": "ArrayIteratorFactory",
+          "methods": 6,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive factory unit responsible for creating ResettableIterator instances from arrays. They share the same creation pattern, handle related array types, and encapsulate the logi"
+        },
+        {
+          "name": "ArrayIteratorFactory",
+          "methods": 6,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive factory unit responsible for creating ResettableListIterator instances from arrays. They encapsulate the logic for selecting appropriate iterator implementations based on"
+        },
+        {
+          "name": "ZippingIteratorFactory",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.92,
+          "rationale": "These methods form a cohesive factory unit responsible exclusively for creating ZippingIterator instances with different parameter configurations. Extracting them into a dedicated factory class improv"
+        },
+        {
+          "name": "IteratorFactory",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive factory responsible for creating Iterator instances from various object types. They encapsulate complex type detection and conversion logic, providing a unified interface"
+        },
+        {
+          "name": "IteratorChainFactory",
+          "methods": 4,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive factory for creating chained iterators that traverse multiple iterator sources sequentially. They share the single responsibility of iterator chain construction through d"
+        },
+        {
+          "name": "IteratorConverter",
+          "methods": 8,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive conversion unit that transforms Iterator objects into various collection types (List, Set, Array). They share the common responsibility of materializing lazy iteration in"
+        },
+        {
+          "name": "IteratorCollator",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive unit focused on collating (merging and sorting) multiple iterators into a single sorted iterator. They share the same algorithmic responsibility and work together to prov"
+        },
+        {
+          "name": "IteratorFormatter",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.9,
+          "rationale": "These methods form a cohesive formatting unit responsible for converting iterator contents into formatted strings with customizable delimiters, prefixes, and suffixes. Extracting them into an Iterator"
+        },
+        {
+          "name": "IteratorSearcher",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit focused on searching through iterators using different criteria (exact match, predicate-based search, and existence checking). Extracting them into an IteratorSearch"
+        },
+        {
+          "name": "IteratorIndexAccessor",
+          "methods": 3,
+          "verified": true,
+          "confidence": 0.88,
+          "rationale": "These methods form a cohesive unit responsible for providing indexed access to iterator elements. They share the common purpose of converting sequential iterator traversal into positional element retr"
+        }
+      ],
+      "post_refactoring": {
+        "methods_extracted": 42,
+        "methods_remaining": 36,
+        "extraction_coverage": 53.8
+      }
     }
   ]
 }

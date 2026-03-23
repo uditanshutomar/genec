@@ -3,7 +3,7 @@
   "class_name": "DateUtils",
   "class_file": "src/main/java/org/apache/commons/lang3/time/DateUtils.java",
   "status": "success",
-  "execution_time": 92.9,
+  "execution_time": 91.1,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.0466,
@@ -13,6 +13,8 @@
   },
   "clusters_found": 11,
   "clusters_filtered": 6,
+  "clusters_rejected": 5,
+  "filter_pass_rate": 54.5,
   "suggestions_total": 6,
   "suggestions_verified": 6,
   "suggestions": [
@@ -21,42 +23,47 @@
       "methods": 5,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive date parsing unit that converts string representations to Date objects using configurable patterns and strictness levels. Extracting them into a DateParser class improves"
+      "rationale": "These methods form a cohesive date parsing unit that should be extracted into a DateParser class. They share the single responsibility of converting date strings to Date objects using various patterns"
     },
     {
       "name": "DateToTemporalConverter",
       "methods": 7,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive conversion unit that transforms legacy Date objects to modern temporal types. They share the same conversion pattern and represent a single responsibility of bridging leg"
-    },
-    {
-      "name": "TimeFragmentCalculator",
-      "methods": 13,
-      "verified": true,
-      "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for calculating time fragments from dates and calendars. They share the same core algorithm and provide different granularities of the same calculation, "
+      "rationale": "These methods form a cohesive conversion unit that transforms legacy Date objects into modern Java 8+ temporal types. They share common conversion patterns and helper methods, representing a single re"
     },
     {
       "name": "DateCalculator",
       "methods": 18,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused on performing arithmetic calculations on Date objects. They share common implementation patterns through the private add() and set() helper methods and repre"
+      "rationale": "These methods form a cohesive unit focused on performing arithmetic calculations on Date objects, including both addition/subtraction and field-setting operations. Extracting them into a DateCalculato"
+    },
+    {
+      "name": "TimeFragmentCalculator",
+      "methods": 13,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive computational unit focused on calculating time fragments from dates and calendars. They share the same core algorithm and provide different time unit views of fragment ca"
     },
     {
       "name": "DateCalculator",
       "methods": 20,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused on performing mathematical operations on dates and calendars, including arithmetic, rounding, and field-level modifications. Extracting them into a DateCalcu"
+      "rationale": "These methods form a cohesive unit focused on performing mathematical operations and calculations on date/time values. They handle arithmetic operations (add, set), precision-based rounding (round, ce"
     },
     {
       "name": "CalendarFieldManipulator",
       "methods": 16,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit focused on manipulating dates at the calendar field level - truncating, modifying, comparing, and iterating based on specific calendar field boundaries. They share c"
+      "rationale": "These methods form a cohesive unit responsible for manipulating dates at specific calendar field granularities - truncating, comparing, iterating, and modifying dates based on field boundaries. Extrac"
     }
-  ]
+  ],
+  "post_refactoring": {
+    "methods_extracted": 79,
+    "methods_remaining": 0,
+    "extraction_coverage": 117.9
+  }
 }

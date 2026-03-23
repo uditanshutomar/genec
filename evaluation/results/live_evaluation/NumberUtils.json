@@ -3,53 +3,67 @@
   "class_name": "NumberUtils",
   "class_file": "src/main/java/org/apache/commons/lang3/math/NumberUtils.java",
   "status": "success",
-  "execution_time": 82.2,
+  "execution_time": 87.7,
   "original_metrics": {
     "lcom5": 1.0,
-    "tcc": 0.05,
+    "tcc": 0.09,
     "cbo": 0,
     "num_methods": 68,
     "num_fields": 21
   },
-  "clusters_found": 32,
-  "clusters_filtered": 5,
-  "suggestions_total": 5,
-  "suggestions_verified": 5,
+  "clusters_found": 33,
+  "clusters_filtered": 6,
+  "clusters_rejected": 27,
+  "filter_pass_rate": 18.2,
+  "suggestions_total": 6,
+  "suggestions_verified": 6,
   "suggestions": [
-    {
-      "name": "NumberParser",
-      "methods": 14,
-      "verified": true,
-      "confidence": 0.92,
-      "rationale": "These methods form a cohesive parsing unit responsible for converting string representations into appropriate numeric types and validating numeric string formats. They share complex parsing logic, han"
-    },
     {
       "name": "BigDecimalConverter",
       "methods": 9,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive conversion unit that transforms various numeric types into scaled BigDecimal objects with consistent rounding behavior. They share common scaling defaults, null-safety ha"
+      "rationale": "These methods form a cohesive conversion unit that transforms various numeric types into scaled BigDecimal objects with consistent precision and rounding behavior. Extracting them into a BigDecimalCon"
+    },
+    {
+      "name": "NumericStringParser",
+      "methods": 14,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive parsing unit responsible for converting string representations into various numeric types. They share complex parsing logic, validation rules, and format detection capabi"
+    },
+    {
+      "name": "MaxCalculator",
+      "methods": 13,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit focused exclusively on calculating maximum values across all primitive numeric types. They share common validation logic and implement the same mathematical operatio"
+    },
+    {
+      "name": "MinimumCalculator",
+      "methods": 13,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit focused on calculating minimum values across all primitive numeric types. They share the same algorithmic responsibility and validation logic, making them ideal cand"
     },
     {
       "name": "DoubleConverter",
       "methods": 4,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for safely converting various input types to double values with fallback handling. They share the common responsibility of type conversion with null safe"
+      "rationale": "These methods form a cohesive unit responsible for safely converting different input types to double values with default fallback behavior. Extracting them into a DoubleConverter class improves separa"
     },
     {
-      "name": "NumericComparator",
+      "name": "PrimitiveComparator",
       "methods": 4,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused exclusively on comparing primitive numeric types using standardized three-way comparison semantics. Extracting them into a NumericComparator class isolates c"
-    },
-    {
-      "name": "NumberComparator",
-      "methods": 25,
-      "verified": true,
-      "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused on comparing numeric values to find minimum and maximum values across different primitive types. Extracting them into a NumberComparator class improves code "
+      "rationale": "These methods form a cohesive unit focused solely on comparing primitive numeric types using three-way comparison semantics. Extracting them into a PrimitiveComparator class isolates comparison logic "
     }
-  ]
+  ],
+  "post_refactoring": {
+    "methods_extracted": 57,
+    "methods_remaining": 11,
+    "extraction_coverage": 83.8
+  }
 }

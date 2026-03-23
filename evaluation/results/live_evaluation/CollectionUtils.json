@@ -3,67 +3,67 @@
   "class_name": "CollectionUtils",
   "class_file": "src/main/java/org/apache/commons/collections4/CollectionUtils.java",
   "status": "success",
-  "execution_time": 105.6,
+  "execution_time": 89.3,
   "original_metrics": {
     "lcom5": 1.0,
-    "tcc": 0.03,
+    "tcc": 0.0314,
     "cbo": 0,
-    "num_methods": 74,
+    "num_methods": 71,
     "num_fields": 6
   },
-  "clusters_found": 38,
-  "clusters_filtered": 7,
-  "suggestions_total": 7,
-  "suggestions_verified": 7,
+  "clusters_found": 34,
+  "clusters_filtered": 6,
+  "clusters_rejected": 28,
+  "filter_pass_rate": 17.6,
+  "suggestions_total": 6,
+  "suggestions_verified": 6,
   "suggestions": [
     {
       "name": "CollectionMerger",
       "methods": 5,
       "verified": true,
-      "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for merging two sorted collections into a single sorted result. They implement variations of the collation algorithm with different parameters for compar"
+      "confidence": 0.92,
+      "rationale": "These methods implement the classic two-way merge algorithm for combining sorted iterables into a single sorted result. They form a cohesive algorithmic unit focused solely on merging/collating operat"
     },
     {
       "name": "CollectionStateInspector",
       "methods": 4,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit focused on inspecting and evaluating the state of collections and collection-like objects. They provide read-only queries about emptiness, containment relationships,"
+      "rationale": "These methods form a cohesive unit focused on inspecting the state of collections and container objects to determine emptiness and containment relationships. They share the common responsibility of pr"
     },
     {
-      "name": "IndexedAccessor",
+      "name": "ElementAccessor",
       "methods": 6,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit responsible for providing indexed access to elements across different collection types (Map, arrays, Iterator, Iterable, Enumeration). They encapsulate the complexit"
+      "rationale": "These methods form a cohesive unit responsible for accessing and analyzing elements across different collection types. They provide uniform indexed access and element counting functionality, abstracti"
     },
     {
       "name": "EmptyCollectionProvider",
       "methods": 2,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit responsible for providing empty collection instances and converting null collections to empty ones. Extracting them into an EmptyCollectionProvider class isolates th"
-    },
-    {
-      "name": "CollectionAugmenter",
-      "methods": 11,
-      "verified": true,
-      "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit responsible for augmenting collections by adding elements from various sources or transforming existing elements in-place. They share common patterns of null validat"
+      "rationale": "These methods form a cohesive unit responsible for providing empty collection instances and null-safe collection handling. Extracting them creates a focused provider that encapsulates empty collection"
     },
     {
       "name": "CollectionAnalyzer",
       "methods": 13,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit focused on analyzing and manipulating collections based on specific criteria, relationships, and constraints. They perform sophisticated operations like intersection"
+      "rationale": "These methods form a cohesive unit focused on analyzing collections - determining relationships between collections, extracting elements based on criteria, and querying collection properties. Extracti"
     },
     {
-      "name": "EquatorCollectionOperator",
-      "methods": 11,
+      "name": "CollectionBulkOperator",
+      "methods": 16,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit responsible for performing collection operations using custom equality semantics via Equator instances. They share the common pattern of wrapping elements in Equator"
+      "rationale": "These methods form a cohesive unit focused on bulk operations that manipulate entire collections or large portions of them. They share common patterns of null safety, generic type handling, and collec"
     }
-  ]
+  ],
+  "post_refactoring": {
+    "methods_extracted": 46,
+    "methods_remaining": 25,
+    "extraction_coverage": 64.8
+  }
 }
