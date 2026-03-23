@@ -69,9 +69,12 @@ def run_single_class(entry: dict) -> dict:
     }
 
     try:
+        # Cache LLM responses for reproducibility and cost savings
+        cache_dir = str(Path("evaluation/results/llm_cache"))
         pipeline = GenECPipeline(
             config_overrides={
                 "refactoring_application": {"enabled": False},
+                "llm": {"cache_dir": cache_dir, "use_cache": True},
             }
         )
 
