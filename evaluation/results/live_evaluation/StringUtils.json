@@ -3,7 +3,7 @@
   "class_name": "StringUtils",
   "class_file": "src/main/java/org/apache/commons/lang3/StringUtils.java",
   "status": "success",
-  "execution_time": 66.5,
+  "execution_time": 63.6,
   "original_metrics": {
     "lcom5": 0.9695,
     "tcc": 0.0643,
@@ -19,29 +19,29 @@
   "suggestions_verified": 3,
   "suggestions": [
     {
-      "name": "StringComparator",
-      "methods": 4,
-      "verified": true,
-      "confidence": 0.92,
-      "rationale": "These methods form a cohesive comparison unit that implements various string comparison strategies with null-safe handling. They share the common responsibility of comparing strings and returning stan",
-      "post_lcom5": 0.9695,
-      "post_tcc": 0.0642
-    },
-    {
       "name": "StringReplacer",
       "methods": 13,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused exclusively on string replacement operations with various strategies (case-sensitive/insensitive, limited occurrences, character vs substring). Extracting th",
+      "rationale": "These methods form a cohesive unit focused exclusively on string replacement operations with different strategies (case-sensitive/insensitive, character/substring, limited occurrences). Extracting the",
       "post_lcom5": 0.9704,
       "post_tcc": 0.0627
     },
     {
-      "name": "StringFormatter",
+      "name": "StringComparator",
+      "methods": 4,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit focused solely on string comparison operations with various strategies (case-sensitive/insensitive, null handling). Extracting them into a StringComparator class iso",
+      "post_lcom5": 0.9695,
+      "post_tcc": 0.0642
+    },
+    {
+      "name": "TextAligner",
       "methods": 22,
       "verified": true,
-      "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for string formatting operations including padding, centering, and alignment. They share common formatting logic and work together to transform strings f",
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit responsible for text alignment and padding operations. They share the common purpose of formatting strings within specified widths through left padding, right paddin",
       "post_lcom5": 0.9726,
       "post_tcc": 0.0574
     }
@@ -50,7 +50,10 @@
     "methods_extracted": 39,
     "methods_remaining": 205,
     "extraction_coverage": 16.0,
-    "lcom5": 0.9726,
-    "tcc": 0.0574
+    "single_extraction_lcom5": 0.9726,
+    "single_extraction_tcc": 0.0574,
+    "cumulative_methods_remaining": 207,
+    "cumulative_lcom5": 0.9725,
+    "cumulative_tcc": 0.0635
   }
 }

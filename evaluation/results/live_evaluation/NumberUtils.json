@@ -3,7 +3,7 @@
   "class_name": "NumberUtils",
   "class_file": "src/main/java/org/apache/commons/lang3/math/NumberUtils.java",
   "status": "success",
-  "execution_time": 89.2,
+  "execution_time": 91.6,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.09,
@@ -23,7 +23,7 @@
       "methods": 9,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive conversion unit that transforms various numeric types into scaled BigDecimal objects with consistent null handling and default precision. Extracting them into a BigDecima",
+      "rationale": "These methods form a cohesive conversion unit that transforms various numeric types (Double, Float, String, BigDecimal) into scaled BigDecimal instances with consistent null-handling and rounding beha",
       "post_lcom5": 1.0,
       "post_tcc": 0.0896
     },
@@ -32,43 +32,43 @@
       "methods": 14,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for parsing string representations into various numeric types with comprehensive format validation and error handling. They share the single responsibili",
+      "rationale": "These methods form a cohesive string-to-number parsing unit that should be extracted into a NumberParser class. They share the responsibility of converting string representations to various numeric ty",
       "post_lcom5": 1.0,
       "post_tcc": 0.0838
-    },
-    {
-      "name": "MaximumFinder",
-      "methods": 13,
-      "verified": true,
-      "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused on finding maximum values across all primitive numeric types. Extracting them into a MaximumFinder class improves code organization by isolating this specifi",
-      "post_lcom5": 1.0,
-      "post_tcc": 0.0874
     },
     {
       "name": "MinimumFinder",
       "methods": 13,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused on finding minimum values across all primitive numeric types. Extracting them into a MinimumFinder class creates a specialized mathematical component with a ",
+      "rationale": "These methods form a cohesive unit focused on finding minimum values across all primitive numeric types. They share common algorithmic patterns, validation logic, and represent a single mathematical o",
       "post_lcom5": 1.0,
       "post_tcc": 0.0874
     },
     {
-      "name": "DoubleConverter",
-      "methods": 4,
+      "name": "MaxValueCalculator",
+      "methods": 13,
       "verified": true,
-      "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for safely converting different input types to double values with default fallback behavior. Extracting them into a DoubleConverter class improves separa",
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit dedicated to calculating maximum values across all primitive numeric types. They share common validation logic, follow consistent algorithmic patterns, and represent",
       "post_lcom5": 1.0,
-      "post_tcc": 0.09
+      "post_tcc": 0.0874
     },
     {
       "name": "PrimitiveComparator",
       "methods": 4,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused solely on comparing primitive numeric types using standardized three-way comparison semantics. Extracting them into a PrimitiveComparator class improves sepa",
+      "rationale": "These methods form a cohesive unit focused solely on comparing primitive numeric types using standardized three-way comparison semantics. Extracting them into a PrimitiveComparator class isolates comp",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.09
+    },
+    {
+      "name": "DoubleConverter",
+      "methods": 4,
+      "verified": true,
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive unit responsible for safely converting different input types to double values with default fallbacks. They share the same conversion pattern and error handling strategy, ",
       "post_lcom5": 1.0,
       "post_tcc": 0.09
     }
@@ -77,7 +77,10 @@
     "methods_extracted": 57,
     "methods_remaining": 11,
     "extraction_coverage": 83.8,
-    "lcom5": 1.0,
-    "tcc": 0.09
+    "single_extraction_lcom5": 1.0,
+    "single_extraction_tcc": 0.09,
+    "cumulative_methods_remaining": 12,
+    "cumulative_lcom5": 1.0,
+    "cumulative_tcc": 0.0769
   }
 }

@@ -3,7 +3,7 @@
   "class_name": "StringSubstitutor",
   "class_file": "src/main/java/org/apache/commons/text/StringSubstitutor.java",
   "status": "success",
-  "execution_time": 19.4,
+  "execution_time": 20.0,
   "original_metrics": {
     "lcom5": 0.9529,
     "tcc": 0.2152,
@@ -23,7 +23,7 @@
       "methods": 25,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive variable substitution system that handles placeholder resolution, cyclic detection, and nested variable processing. Extracting them creates a focused engine responsible s",
+      "rationale": "These methods form a cohesive substitution engine that handles the core algorithm for variable interpolation in text. They share substitution configuration fields and work together to parse, resolve, ",
       "post_lcom5": 0.9402,
       "post_tcc": 0.2147
     }
@@ -32,7 +32,10 @@
     "methods_extracted": 25,
     "methods_remaining": 37,
     "extraction_coverage": 40.3,
-    "lcom5": 0.9402,
-    "tcc": 0.2147
+    "single_extraction_lcom5": 0.9402,
+    "single_extraction_tcc": 0.2147,
+    "cumulative_methods_remaining": 26,
+    "cumulative_lcom5": 0.9809,
+    "cumulative_tcc": 0.0706
   }
 }

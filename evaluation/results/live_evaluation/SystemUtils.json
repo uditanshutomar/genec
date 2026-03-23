@@ -3,7 +3,7 @@
   "class_name": "SystemUtils",
   "class_file": "src/main/java/org/apache/commons/lang3/SystemUtils.java",
   "status": "success",
-  "execution_time": 48.4,
+  "execution_time": 48.9,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.0435,
@@ -23,7 +23,7 @@
       "methods": 5,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for matching and comparing operating system names and versions against specified criteria. They share the common purpose of OS detection and work togethe",
+      "rationale": "These methods form a cohesive unit responsible for matching and comparing operating system names and versions against specified criteria. They encapsulate the complex logic of OS detection including s",
       "post_lcom5": 1.0,
       "post_tcc": 0.0237
     },
@@ -32,7 +32,7 @@
       "methods": 2,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused on comparing Java runtime versions against requirements. They share the same domain concept (version comparison) and operate on the same version data, making",
+      "rationale": "These methods form a cohesive unit focused exclusively on comparing Java versions against requirements. Extracting them into a JavaVersionComparator class isolates version comparison logic from other ",
       "post_lcom5": 1.0,
       "post_tcc": 0.0395
     },
@@ -40,7 +40,7 @@
       "name": "JavaVersionMatcher",
       "methods": 2,
       "verified": true,
-      "confidence": 0.88,
+      "confidence": 0.9,
       "rationale": "These methods form a cohesive unit responsible for matching Java version strings against version prefixes. Extracting them into a JavaVersionMatcher class isolates version detection logic and improves",
       "post_lcom5": 1.0,
       "post_tcc": 0.0395
@@ -50,7 +50,10 @@
     "methods_extracted": 9,
     "methods_remaining": 14,
     "extraction_coverage": 39.1,
-    "lcom5": 1.0,
-    "tcc": 0.0395
+    "single_extraction_lcom5": 1.0,
+    "single_extraction_tcc": 0.0395,
+    "cumulative_methods_remaining": 13,
+    "cumulative_lcom5": 1.0,
+    "cumulative_tcc": 0.044
   }
 }

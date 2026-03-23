@@ -3,7 +3,7 @@
   "class_name": "StringLookupFactory",
   "class_file": "src/main/java/org/apache/commons/text/lookup/StringLookupFactory.java",
   "status": "success",
-  "execution_time": 39.0,
+  "execution_time": 39.5,
   "original_metrics": {
     "lcom5": 0.9982,
     "tcc": 0.1878,
@@ -14,34 +14,46 @@
   "clusters_found": 38,
   "clusters_filtered": 4,
   "clusters_rejected": 34,
-  "filter_pass_rate": 5.3,
-  "suggestions_total": 2,
-  "suggestions_verified": 2,
+  "filter_pass_rate": 7.9,
+  "suggestions_total": 3,
+  "suggestions_verified": 3,
   "suggestions": [
+    {
+      "name": "InterpolatorStringLookupFactory",
+      "methods": 4,
+      "verified": true,
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive factory unit specifically for creating InterpolatorStringLookup instances with different configuration options. Extracting them into a specialized factory improves separa",
+      "post_lcom5": 0.9966,
+      "post_tcc": 0.1695
+    },
     {
       "name": "StringLookupRegistry",
       "methods": 24,
       "verified": true,
-      "confidence": 0.92,
-      "rationale": "These methods form a cohesive registry of StringLookup instances, providing centralized access to various lookup implementations. Extracting them into a StringLookupRegistry improves separation of con",
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive registry of StringLookup implementations, providing centralized access to various lookup types (date, DNS, file, XML, etc.). Extracting them into a StringLookupRegistry i",
       "post_lcom5": 0.9875,
       "post_tcc": 0.35
     },
     {
-      "name": "Base64DecoderFactory",
+      "name": "Base64DecoderProvider",
       "methods": 2,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit focused solely on providing Base64 decoding string lookup instances. Extracting them into a specialized factory improves separation of concerns by isolating Base64 d",
+      "rationale": "These methods form a cohesive unit responsible for providing base64 decoding string lookup functionality. Extracting them into a specialized provider improves separation of concerns and allows the bas",
       "post_lcom5": 0.9982,
       "post_tcc": 0.1878
     }
   ],
   "post_refactoring": {
-    "methods_extracted": 26,
-    "methods_remaining": 15,
-    "extraction_coverage": 63.4,
-    "lcom5": 0.9982,
-    "tcc": 0.1878
+    "methods_extracted": 30,
+    "methods_remaining": 11,
+    "extraction_coverage": 73.2,
+    "single_extraction_lcom5": 0.9982,
+    "single_extraction_tcc": 0.1878,
+    "cumulative_methods_remaining": 13,
+    "cumulative_lcom5": 1.0,
+    "cumulative_tcc": 0.0
   }
 }

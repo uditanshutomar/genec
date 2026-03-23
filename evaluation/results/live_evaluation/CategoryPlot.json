@@ -3,7 +3,7 @@
   "class_name": "CategoryPlot",
   "class_file": "src/main/java/org/jfree/chart/plot/CategoryPlot.java",
   "status": "success",
-  "execution_time": 44.7,
+  "execution_time": 41.6,
   "original_metrics": {
     "lcom5": 0.9771,
     "tcc": 0.0488,
@@ -23,25 +23,25 @@
       "methods": 26,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive marker management system that maintains collections of domain and range markers organized by layer and index. Extracting them into a MarkerRegistry centralizes all marker",
+      "rationale": "These methods form a cohesive unit responsible for registering, organizing, and managing collections of chart markers across different layers and indices. The registry pattern is appropriate here as i",
       "post_lcom5": 0.9761,
       "post_tcc": 0.062
     },
     {
-      "name": "DomainAxisLocationRegistry",
+      "name": "AxisLocationRegistry",
       "methods": 4,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit responsible for registering and managing domain axis locations within a plot. They share the same data structure and validation logic, representing a clear \"registry",
+      "rationale": "These methods form a cohesive unit responsible for registering and managing axis location mappings. They share the same data structure (domainAxisLocations map) and implement a consistent pattern of s",
       "post_lcom5": 0.9773,
       "post_tcc": 0.0486
     },
     {
-      "name": "DomainZoomConstraint",
+      "name": "DomainZoomHandler",
       "methods": 3,
       "verified": true,
       "confidence": 0.75,
-      "rationale": "These methods represent a cohesive constraint behavior - the inability to perform domain axis zooming in category plots. Extracting them into a DomainZoomConstraint class encapsulates this specific in",
+      "rationale": "These overloaded zoomDomainAxes methods form a cohesive unit responsible for handling domain axis zoom operations, even though they implement no-op behavior for CategoryPlot. Extracting them into a Do",
       "post_lcom5": 0.9773,
       "post_tcc": 0.0488
     }
@@ -50,7 +50,10 @@
     "methods_extracted": 33,
     "methods_remaining": 192,
     "extraction_coverage": 14.7,
-    "lcom5": 0.9773,
-    "tcc": 0.0488
+    "single_extraction_lcom5": 0.9773,
+    "single_extraction_tcc": 0.0488,
+    "cumulative_methods_remaining": 190,
+    "cumulative_lcom5": 0.979,
+    "cumulative_tcc": 0.0543
   }
 }

@@ -3,7 +3,7 @@
   "class_name": "ChartPanel",
   "class_file": "src/main/java/org/jfree/chart/swing/ChartPanel.java",
   "status": "success",
-  "execution_time": 25.9,
+  "execution_time": 24.1,
   "original_metrics": {
     "lcom5": 0.9751,
     "tcc": 0.1515,
@@ -11,28 +11,28 @@
     "num_methods": 115,
     "num_fields": 78
   },
-  "clusters_found": 11,
+  "clusters_found": 10,
   "clusters_filtered": 2,
-  "clusters_rejected": 9,
-  "filter_pass_rate": 18.2,
+  "clusters_rejected": 8,
+  "filter_pass_rate": 20.0,
   "suggestions_total": 2,
   "suggestions_verified": 2,
   "suggestions": [
     {
-      "name": "TooltipDelayOverride",
+      "name": "ToolTipDelayConfiguration",
       "methods": 8,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These members form a cohesive unit responsible for temporarily overriding system tooltip delays with custom values during mouse interactions. They encapsulate the complete lifecycle of storing origina",
+      "rationale": "These members form a cohesive unit responsible for managing custom tooltip delay settings and their temporary application during mouse interactions. Extracting them creates a focused class that encaps",
       "post_lcom5": 0.9737,
       "post_tcc": 0.1539
     },
     {
-      "name": "MouseWheelFeatureToggle",
+      "name": "MouseWheelCapability",
       "methods": 2,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit responsible for managing the enabled/disabled state of mouse wheel functionality. They encapsulate the logic for lazy initialization and cleanup of the mouse wheel h",
+      "rationale": "These methods form a cohesive unit responsible for managing the mouse wheel interaction capability of the chart panel. They encapsulate the logic for enabling/disabling this specific feature, includin",
       "post_lcom5": 0.9751,
       "post_tcc": 0.1515
     }
@@ -41,7 +41,10 @@
     "methods_extracted": 10,
     "methods_remaining": 105,
     "extraction_coverage": 8.7,
-    "lcom5": 0.9751,
-    "tcc": 0.1515
+    "single_extraction_lcom5": 0.9751,
+    "single_extraction_tcc": 0.1515,
+    "cumulative_methods_remaining": 100,
+    "cumulative_lcom5": 0.9809,
+    "cumulative_tcc": 0.1418
   }
 }

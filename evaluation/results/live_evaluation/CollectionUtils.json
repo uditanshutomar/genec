@@ -3,7 +3,7 @@
   "class_name": "CollectionUtils",
   "class_file": "src/main/java/org/apache/commons/collections4/CollectionUtils.java",
   "status": "success",
-  "execution_time": 87.0,
+  "execution_time": 87.2,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.0314,
@@ -19,40 +19,40 @@
   "suggestions_verified": 6,
   "suggestions": [
     {
-      "name": "CollectionMerger",
+      "name": "IterableCollator",
       "methods": 5,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods implement a cohesive merge algorithm that combines two sorted iterables into a single sorted list. Extracting them into a CollectionMerger class isolates this specific algorithmic respon",
+      "rationale": "These methods implement the classic two-way merge algorithm for combining sorted iterables into a single sorted result. They form a cohesive unit focused exclusively on collation operations with multi",
       "post_lcom5": 1.0,
       "post_tcc": 0.031
     },
     {
-      "name": "EmptyCollectionProvider",
+      "name": "EmptyCollectionFactory",
       "methods": 2,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for providing empty collection instances and handling null collection scenarios safely. Extracting them into an EmptyCollectionProvider class centralizes",
+      "rationale": "These methods form a cohesive factory for creating and managing empty collection instances. They share the singleton EMPTY_COLLECTION field and provide related functionality for null-safe empty collec",
       "post_lcom5": 1.0,
       "post_tcc": 0.031
+    },
+    {
+      "name": "CollectionElementAccessor",
+      "methods": 6,
+      "verified": true,
+      "confidence": 0.88,
+      "rationale": "These methods form a cohesive unit responsible for accessing elements from various collection types by index and computing element frequencies. They provide a unified interface for element retrieval o",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0294
     },
     {
       "name": "CollectionStateInspector",
       "methods": 4,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit focused on inspecting the state of collections and collection-like objects without modifying them. They provide consistent emptiness and containment checking across ",
+      "rationale": "These methods form a cohesive unit focused on inspecting the state of collections and collection-like objects, specifically determining emptiness and containment relationships. Extracting them creates",
       "post_lcom5": 1.0,
       "post_tcc": 0.0302
-    },
-    {
-      "name": "ElementAccessor",
-      "methods": 6,
-      "verified": true,
-      "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit responsible for accessing and analyzing elements across different collection types. They provide unified indexed access and element counting functionality, abstracti",
-      "post_lcom5": 1.0,
-      "post_tcc": 0.0294
     },
     {
       "name": "CollectionAnalyzer",
@@ -64,11 +64,11 @@
       "post_tcc": 0.0274
     },
     {
-      "name": "CollectionOperator",
+      "name": "CollectionBulkOperator",
       "methods": 16,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit focused on bulk collection operations including adding multiple elements, transforming collections, equality checking, and set operations. They represent a distinct ",
+      "rationale": "These methods form a cohesive unit focused on bulk operations across entire collections - adding multiple elements, transforming collections, comparing collections, and performing set operations. Extr",
       "post_lcom5": 1.0,
       "post_tcc": 0.0225
     }
@@ -77,7 +77,10 @@
     "methods_extracted": 46,
     "methods_remaining": 25,
     "extraction_coverage": 64.8,
-    "lcom5": 1.0,
-    "tcc": 0.0225
+    "single_extraction_lcom5": 1.0,
+    "single_extraction_tcc": 0.0225,
+    "cumulative_methods_remaining": 26,
+    "cumulative_lcom5": 1.0,
+    "cumulative_tcc": 0.0114
   }
 }

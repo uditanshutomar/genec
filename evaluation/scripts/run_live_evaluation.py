@@ -195,7 +195,12 @@ def run_single_class(entry: dict) -> dict:
             "extraction_coverage": round(extracted_methods / max(original_methods, 1) * 100, 1),
         }
 
-        # Compute post-refactoring cohesion metrics on the modified original class
+        # Compute post-refactoring cohesion: what happens if ALL verified
+        # suggestions are applied cumulatively?
+        #
+        # Each suggestion extracts different methods. We simulate cumulative
+        # extraction by collecting all extracted method names, then computing
+        # LCOM5/TCC on the original class minus those methods.
         if result.verified_suggestions:
             try:
                 import os
@@ -204,8 +209,7 @@ def run_single_class(entry: dict) -> dict:
                 from genec.core.dependency_analyzer import DependencyAnalyzer
                 from genec.metrics.cohesion_calculator import CohesionCalculator
 
-                # Use the last verified suggestion's modified original as a
-                # reasonable approximation for the aggregate post-refactoring state
+                # Single-suggestion metrics (last verified, as before)
                 last_verified = result.verified_suggestions[-1]
                 if last_verified.modified_original_code:
                     with tempfile.NamedTemporaryFile(
@@ -220,14 +224,75 @@ def run_single_class(entry: dict) -> dict:
                         if modified_deps:
                             calc = CohesionCalculator()
                             post_metrics = calc.calculate_cohesion_metrics(modified_deps)
-                            result_data["post_refactoring"]["lcom5"] = round(
+                            result_data["post_refactoring"]["single_extraction_lcom5"] = round(
                                 post_metrics.get("lcom5", 0), 4
                             )
-                            result_data["post_refactoring"]["tcc"] = round(
+                            result_data["post_refactoring"]["single_extraction_tcc"] = round(
                                 post_metrics.get("tcc", 0), 4
                             )
                     finally:
                         os.unlink(temp_file)
+
+                # Cumulative metrics: compute what LCOM5 would be if ALL
+                # verified suggestions were applied (all extracted methods removed)
+                all_extracted_methods = set()
+                for s in result.verified_suggestions:
+                    if s.cluster:
+                        all_extracted_methods.update(s.cluster.get_methods())
+
+                # Parse original class to get full dependency info
+                original_deps = None
+                try:
+                    orig_analyzer = DependencyAnalyzer()
+                    original_path = str(Path(entry["repo_path"]) / entry["class_file"])
+                    original_deps = orig_analyzer.analyze_class(original_path)
+                except Exception:
+                    pass
+
+                if original_deps and all_extracted_methods:
+                    # Build set of extracted method names (normalized)
+                    extracted_names = {m.split("(")[0] for m in all_extracted_methods}
+
+                    remaining_methods = [
+                        m for m in original_deps.methods
+                        if m.signature not in all_extracted_methods
+                        and m.name not in extracted_names
+                    ]
+
+                    remaining_count = len(remaining_methods)
+                    result_data["post_refactoring"]["cumulative_methods_remaining"] = remaining_count
+
+                    if remaining_count >= 2:
+                        # Create a filtered ClassDependencies for remaining methods
+                        from copy import deepcopy
+                        filtered_deps = deepcopy(original_deps)
+                        filtered_deps.methods = remaining_methods
+
+                        # Filter method_calls and field_accesses to remaining methods
+                        remaining_sigs = {m.signature for m in remaining_methods}
+                        remaining_names = {m.name for m in remaining_methods}
+                        filtered_deps.method_calls = {
+                            sig: calls for sig, calls in (original_deps.method_calls or {}).items()
+                            if sig in remaining_sigs or sig.split("(")[0] in remaining_names
+                        }
+                        filtered_deps.field_accesses = {
+                            sig: fields for sig, fields in (original_deps.field_accesses or {}).items()
+                            if sig in remaining_sigs or sig.split("(")[0] in remaining_names
+                        }
+
+                        # Rebuild dependency matrix for remaining methods
+                        from genec.core.dependency_analyzer import build_dependency_matrix
+                        build_dependency_matrix(filtered_deps)  # Populates in-place
+
+                        calc = CohesionCalculator()
+                        cumulative_lcom5 = calc.calculate_lcom5(filtered_deps)
+                        cumulative_tcc = calc.calculate_tcc(filtered_deps)
+                        result_data["post_refactoring"]["cumulative_lcom5"] = round(cumulative_lcom5, 4)
+                        result_data["post_refactoring"]["cumulative_tcc"] = round(cumulative_tcc, 4)
+                    else:
+                        result_data["post_refactoring"]["cumulative_lcom5"] = 0.0
+                        result_data["post_refactoring"]["cumulative_tcc"] = 1.0
+
             except Exception as e:
                 logger.warning(f"Failed to compute post-refactoring metrics: {e}")
 

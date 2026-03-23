@@ -3,7 +3,7 @@
   "class_name": "AccurateMath",
   "class_file": "commons-math-core/src/main/java/org/apache/commons/math4/core/jdkmath/AccurateMath.java",
   "status": "success",
-  "execution_time": 162.8,
+  "execution_time": 158.4,
   "original_metrics": {
     "lcom5": 0.9857,
     "tcc": 0.0878,
@@ -23,34 +23,34 @@
       "methods": 6,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for navigating between adjacent floating-point values in IEEE 754 representation. They handle the complex bit-level operations needed to move precisely t",
+      "rationale": "These methods form a cohesive unit responsible for navigating between adjacent floating-point values in the IEEE 754 representation. They handle the specialized task of finding the next representable ",
       "post_lcom5": 0.9857,
       "post_tcc": 0.0857
-    },
-    {
-      "name": "OverflowSafeArithmetic",
-      "methods": 11,
-      "verified": true,
-      "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for performing basic arithmetic operations with overflow protection. They share common overflow detection patterns and error handling, representing a dis",
-      "post_lcom5": 0.9878,
-      "post_tcc": 0.0747
     },
     {
       "name": "FloorArithmeticCalculator",
       "methods": 4,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for floor-based arithmetic operations (division and modulo). They share common mathematical algorithms, error handling patterns, and operate on the same ",
+      "rationale": "These methods form a cohesive unit implementing mathematical floor division and modulo operations that handle negative numbers correctly. They share common logic, error handling, and represent a speci",
       "post_lcom5": 0.9862,
       "post_tcc": 0.0867
+    },
+    {
+      "name": "OverflowSafeCalculator",
+      "methods": 11,
+      "verified": true,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit responsible for performing arithmetic operations while preventing integer overflow. They share common overflow detection patterns and error handling, representing a ",
+      "post_lcom5": 0.9878,
+      "post_tcc": 0.0747
     },
     {
       "name": "LogarithmCalculator",
       "methods": 7,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit for computing logarithmic functions including natural logarithms, arbitrary base logarithms, and inverse hyperbolic functions (which are mathematically defined using",
+      "rationale": "These methods form a cohesive unit responsible for computing logarithmic functions and logarithm-based inverse hyperbolic functions using high-precision mathematical algorithms. They share mathematica",
       "post_lcom5": 0.986,
       "post_tcc": 0.0797
     },
@@ -59,7 +59,7 @@
       "methods": 8,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for comparing numeric values and finding minimum/maximum results across all primitive numeric types. They share specialized logic for handling floating-p",
+      "rationale": "These methods form a cohesive unit responsible for comparing numeric values to find minimum and maximum values across different primitive types. They share the same conceptual responsibility (extrema ",
       "post_lcom5": 0.9857,
       "post_tcc": 0.0857
     },
@@ -68,7 +68,7 @@
       "methods": 16,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit responsible for precise floating-point arithmetic operations that require direct bit manipulation of IEEE 754 representations. Extracting them creates a specialized ",
+      "rationale": "These methods form a cohesive unit focused on precise floating-point arithmetic operations that require direct bit manipulation of IEEE 754 representations. They share common bit-masking constants and",
       "post_lcom5": 0.9854,
       "post_tcc": 0.0815
     }
@@ -77,7 +77,10 @@
     "methods_extracted": 52,
     "methods_remaining": 36,
     "extraction_coverage": 59.1,
-    "lcom5": 0.9854,
-    "tcc": 0.0815
+    "single_extraction_lcom5": 0.9854,
+    "single_extraction_tcc": 0.0815,
+    "cumulative_methods_remaining": 35,
+    "cumulative_lcom5": 0.9931,
+    "cumulative_tcc": 0.2556
   }
 }

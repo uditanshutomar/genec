@@ -3,7 +3,7 @@
   "class_name": "FileUtils",
   "class_file": "src/main/java/org/apache/commons/io/FileUtils.java",
   "status": "success",
-  "execution_time": 100.9,
+  "execution_time": 105.4,
   "original_metrics": {
     "lcom5": 0.9958,
     "tcc": 0.0462,
@@ -19,21 +19,21 @@
   "suggestions_verified": 6,
   "suggestions": [
     {
-      "name": "LineReader",
+      "name": "FileLineReader",
       "methods": 3,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused on reading text files line by line into String collections. Extracting them into a LineReader class creates a specialized component with a single, clear resp",
+      "rationale": "These methods form a cohesive unit responsible for reading text files line by line into String collections. They share the same core functionality with different encoding parameter variations, making ",
       "post_lcom5": 0.9958,
       "post_tcc": 0.0462
     },
     {
-      "name": "ByteSizeFormatter",
+      "name": "FileContentReader",
       "methods": 3,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods and constants form a cohesive unit responsible for formatting byte counts into human-readable display strings with appropriate units. Extracting them into a ByteSizeFormatter class impro",
-      "post_lcom5": 0.9905,
+      "rationale": "These methods form a cohesive unit focused exclusively on reading file contents and converting them to strings with various charset handling options. Extracting them into a FileContentReader class imp",
+      "post_lcom5": 0.9958,
       "post_tcc": 0.0462
     },
     {
@@ -41,17 +41,17 @@
       "methods": 9,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused on writing collections as lines to files with various encoding and formatting options. Extracting them into a LineWriter class creates a specialized componen",
+      "rationale": "These methods form a cohesive unit responsible for writing collections as line-delimited text to files. They share the same core responsibility (line-based file output) and handle various formatting o",
       "post_lcom5": 0.9961,
       "post_tcc": 0.0447
     },
     {
-      "name": "FileContentReader",
+      "name": "ByteSizeFormatter",
       "methods": 3,
       "verified": true,
-      "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused specifically on reading file contents and converting them to strings with various charset handling options. Extracting them into a FileContentReader class im",
-      "post_lcom5": 0.9958,
+      "confidence": 0.92,
+      "rationale": "These methods and constants form a cohesive unit responsible for converting byte counts into human-readable display strings with appropriate units. Extracting them into a ByteSizeFormatter class separ",
+      "post_lcom5": 0.9905,
       "post_tcc": 0.0462
     },
     {
@@ -59,16 +59,16 @@
       "methods": 17,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive file writing unit that handles all aspects of writing data to files with different encodings and modes. Extracting them into a FileWriter class creates a focused componen",
+      "rationale": "These methods form a cohesive unit responsible for writing various data types (strings, character sequences, byte arrays) to files with different encoding and append options. Extracting them into a Fi",
       "post_lcom5": 0.9961,
       "post_tcc": 0.0433
     },
     {
-      "name": "FileNavigator",
+      "name": "FileSystemNavigator",
       "methods": 34,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit focused on navigating and discovering files within the file system. They handle directory traversal, file listing, iteration, and conversion between different file r",
+      "rationale": "These methods form a cohesive unit responsible for navigating and traversing file system structures. They provide various ways to list, iterate, and access files and directories, along with utility me",
       "post_lcom5": 0.9974,
       "post_tcc": 0.0356
     }
@@ -77,7 +77,10 @@
     "methods_extracted": 69,
     "methods_remaining": 90,
     "extraction_coverage": 43.4,
-    "lcom5": 0.9974,
-    "tcc": 0.0356
+    "single_extraction_lcom5": 0.9974,
+    "single_extraction_tcc": 0.0356,
+    "cumulative_methods_remaining": 90,
+    "cumulative_lcom5": 1.0,
+    "cumulative_tcc": 0.0794
   }
 }

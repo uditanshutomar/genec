@@ -3,7 +3,7 @@
   "class_name": "IOUtils",
   "class_file": "src/main/java/org/apache/commons/io/IOUtils.java",
   "status": "success",
-  "execution_time": 125.2,
+  "execution_time": 124.8,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.0613,
@@ -22,8 +22,8 @@
       "name": "StreamCopier",
       "methods": 8,
       "verified": true,
-      "confidence": 0.95,
-      "rationale": "These methods form a cohesive unit responsible for copying data between streams efficiently. They already delegate to a `StreamCopier` class, indicating this extraction is the natural completion of se",
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit responsible for copying data between streams efficiently. They share the same core responsibility of transferring large amounts of data with various configuration op",
       "post_lcom5": 1.0,
       "post_tcc": 0.0613
     },
@@ -32,7 +32,7 @@
       "methods": 8,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for intelligently wrapping I/O streams and readers/writers with buffering capabilities. They share the same algorithmic pattern of checking for existing ",
+      "rationale": "These methods form a cohesive unit responsible for wrapping I/O streams and readers/writers with buffered implementations. They share the same behavioral pattern of checking for existing buffering and",
       "post_lcom5": 1.0,
       "post_tcc": 0.0613
     },
@@ -41,7 +41,7 @@
       "methods": 4,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused solely on skipping data in input streams. They share the same operational responsibility and work with related input types, making them ideal candidates for ",
+      "rationale": "These methods form a cohesive unit focused solely on skipping data in various input streams without reading content into memory. Extracting them into a StreamSkipper class improves separation of conce",
       "post_lcom5": 1.0,
       "post_tcc": 0.0613
     },
@@ -50,7 +50,7 @@
       "methods": 18,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for safely closing and disposing of various system resources. They share common patterns for null-checking, exception handling, and resource cleanup. Ext",
+      "rationale": "These methods form a cohesive unit responsible for safely closing and disposing of various system resources. They share common patterns for null-safe resource cleanup with different exception handling",
       "post_lcom5": 1.0,
       "post_tcc": 0.0594
     },
@@ -59,7 +59,7 @@
       "methods": 4,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused on skipping data from various input streams with guaranteed completion. Extracting them into a StreamSkipper class isolates this specific I/O operation, impr",
+      "rationale": "These methods form a cohesive unit responsible for guaranteed stream skipping operations across different input types. Extracting them into a StreamSkipper class creates a focused utility that encapsu",
       "post_lcom5": 1.0,
       "post_tcc": 0.0613
     },
@@ -68,7 +68,7 @@
       "methods": 4,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused on converting input streams and readers into character arrays. Extracting them into a CharArrayConverter class isolates this specific transformation responsi",
+      "rationale": "These methods form a cohesive unit focused on converting various input sources (InputStreams and Readers) into character arrays. Extracting them into a CharArrayConverter class isolates this specific ",
       "post_lcom5": 1.0,
       "post_tcc": 0.0613
     },
@@ -77,7 +77,7 @@
       "methods": 3,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive factory for creating LineIterator instances from various input sources (InputStream and Reader). Extracting them into a dedicated factory class improves separation of con",
+      "rationale": "These methods form a cohesive factory for creating LineIterator instances from various input sources. They share the single responsibility of LineIterator creation and handle charset conversion comple",
       "post_lcom5": 1.0,
       "post_tcc": 0.0613
     },
@@ -86,7 +86,7 @@
       "methods": 40,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for writing various data types to output streams and writers with encoding support. They share the common responsibility of data output operations and ca",
+      "rationale": "These methods form a cohesive unit responsible for writing various data types to output streams and writers with proper charset handling and formatting. Extracting them into a DataWriter class improve",
       "post_lcom5": 1.0,
       "post_tcc": 0.0528
     }
@@ -95,7 +95,10 @@
     "methods_extracted": 89,
     "methods_remaining": 83,
     "extraction_coverage": 51.7,
-    "lcom5": 1.0,
-    "tcc": 0.0528
+    "single_extraction_lcom5": 1.0,
+    "single_extraction_tcc": 0.0528,
+    "cumulative_methods_remaining": 82,
+    "cumulative_lcom5": 1.0,
+    "cumulative_tcc": 0.0882
   }
 }

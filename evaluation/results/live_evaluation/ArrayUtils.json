@@ -3,7 +3,7 @@
   "class_name": "ArrayUtils",
   "class_file": "src/main/java/org/apache/commons/lang3/ArrayUtils.java",
   "status": "success",
-  "execution_time": 63.8,
+  "execution_time": 62.9,
   "original_metrics": {
     "lcom5": 0.9897,
     "tcc": 0.0913,
@@ -23,7 +23,7 @@
       "methods": 18,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit focused exclusively on reversing array elements, either for entire arrays or specific ranges. They share identical algorithmic patterns and parameter validation logi",
+      "rationale": "These methods form a cohesive unit focused exclusively on reversing array element order across all primitive types and Object arrays. They share identical algorithms, consistent null-safety handling, ",
       "post_lcom5": 0.9897,
       "post_tcc": 0.0913
     },
@@ -32,7 +32,7 @@
       "methods": 18,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for converting wrapper object arrays to primitive arrays across all Java primitive types. They share common conversion patterns, null-handling logic, and",
+      "rationale": "These methods form a cohesive unit responsible for converting wrapper object arrays to primitive arrays. They share common conversion logic, null-handling patterns, and empty array constants. Extracti",
       "post_lcom5": 0.9912,
       "post_tcc": 0.0908
     },
@@ -41,7 +41,7 @@
       "methods": 22,
       "verified": true,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused on inspecting and analyzing array properties without modification. They provide read-only operations for examining array characteristics like length, bounds ",
+      "rationale": "These methods form a cohesive unit focused on inspecting and analyzing array properties without modification. They provide essential array metadata operations (length, bounds checking, comparison, sor",
       "post_lcom5": 0.9897,
       "post_tcc": 0.091
     }
@@ -50,7 +50,10 @@
     "methods_extracted": 58,
     "methods_remaining": 330,
     "extraction_coverage": 14.9,
-    "lcom5": 0.9897,
-    "tcc": 0.091
+    "single_extraction_lcom5": 0.9897,
+    "single_extraction_tcc": 0.091,
+    "cumulative_methods_remaining": 329,
+    "cumulative_lcom5": 0.9896,
+    "cumulative_tcc": 0.1177
   }
 }

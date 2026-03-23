@@ -3,7 +3,7 @@
   "class_name": "Dfp",
   "class_file": "commons-math-legacy-core/src/main/java/org/apache/commons/math4/legacy/core/dfp/Dfp.java",
   "status": "success",
-  "execution_time": 31.7,
+  "execution_time": 27.2,
   "original_metrics": {
     "lcom5": 0.9255,
     "tcc": 0.3273,
@@ -23,7 +23,7 @@
       "methods": 21,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive computational unit that should be extracted into a DfpCalculator class. They share mathematical operations, computational algorithms, and error handling for decimal float",
+      "rationale": "These methods form a cohesive mathematical computation unit that should be extracted into a DfpCalculator class. They share the responsibility of performing various mathematical operations on Dfp numb",
       "post_lcom5": 0.9279,
       "post_tcc": 0.2968
     }
@@ -32,7 +32,10 @@
     "methods_extracted": 21,
     "methods_remaining": 92,
     "extraction_coverage": 18.6,
-    "lcom5": 0.9279,
-    "tcc": 0.2968
+    "single_extraction_lcom5": 0.9279,
+    "single_extraction_tcc": 0.2968,
+    "cumulative_methods_remaining": 84,
+    "cumulative_lcom5": 0.9421,
+    "cumulative_tcc": 0.2969
   }
 }

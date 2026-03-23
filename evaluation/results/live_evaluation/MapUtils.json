@@ -3,7 +3,7 @@
   "class_name": "MapUtils",
   "class_file": "src/main/java/org/apache/commons/collections4/MapUtils.java",
   "status": "success",
-  "execution_time": 67.9,
+  "execution_time": 70.3,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.0343,
@@ -23,7 +23,7 @@
       "methods": 4,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for populating maps from iterable collections using transformation functions. They share the same algorithmic pattern and domain concept, making them ide",
+      "rationale": "These methods form a cohesive unit responsible for populating maps from iterable collections using transformation functions. They share the same algorithmic pattern of iterating, transforming, and ins",
       "post_lcom5": 1.0,
       "post_tcc": 0.0343
     },
@@ -32,34 +32,34 @@
       "methods": 3,
       "verified": true,
       "confidence": 0.92,
-      "rationale": "These methods form a cohesive factory unit responsible for creating MultiValueMap instances from existing maps with different collection strategies. Extracting them into a dedicated factory class sepa",
+      "rationale": "These methods form a cohesive factory unit specifically responsible for creating MultiValueMap instances from existing maps using different collection strategies. Extracting them into a dedicated fact",
       "post_lcom5": 1.0,
       "post_tcc": 0.0343
+    },
+    {
+      "name": "MapNumericConverter",
+      "methods": 24,
+      "verified": false,
+      "confidence": 0.92,
+      "rationale": "These methods form a cohesive unit responsible for converting and extracting numeric values from Map objects with type safety and default value support. They share common conversion patterns and deleg",
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0254
     },
     {
       "name": "MapFormatter",
       "methods": 6,
       "verified": false,
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for formatting and displaying Map data structures in various human-readable formats. They share formatting logic, indentation handling, and work together",
+      "rationale": "These methods form a cohesive unit responsible for formatting and displaying Map data structures in various human-readable formats. They share formatting logic, indentation handling, and circular refe",
       "post_lcom5": 1.0,
       "post_tcc": 0.0336
-    },
-    {
-      "name": "MapValueConverter",
-      "methods": 24,
-      "verified": false,
-      "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for converting map values to specific numeric types with null safety and default value handling. Extracting them creates a focused converter that encapsu",
-      "post_lcom5": 1.0,
-      "post_tcc": 0.0254
     },
     {
       "name": "MapAccessor",
       "methods": 3,
       "verified": true,
       "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit focused on safely accessing and retrieving values from Map data structures. They provide null-safe access patterns and map conversion capabilities that represent a s",
+      "rationale": "These methods form a cohesive unit focused on safely accessing and retrieving values from Map structures. They provide null-safe access patterns and map conversion capabilities that represent a distin",
       "post_lcom5": 1.0,
       "post_tcc": 0.0339
     }
@@ -68,7 +68,10 @@
     "methods_extracted": 10,
     "methods_remaining": 84,
     "extraction_coverage": 10.6,
-    "lcom5": 1.0,
-    "tcc": 0.0339
+    "single_extraction_lcom5": 1.0,
+    "single_extraction_tcc": 0.0339,
+    "cumulative_methods_remaining": 83,
+    "cumulative_lcom5": 1.0,
+    "cumulative_tcc": 0.0396
   }
 }
