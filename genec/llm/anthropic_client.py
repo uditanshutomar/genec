@@ -34,7 +34,7 @@ class LLMConfig:
     """Configuration for Anthropic client wrapper."""
 
     model: str = "claude-sonnet-4-20250514"
-    max_prompt_chars: int = 16000
+    max_prompt_chars: int = 60000  # ~15K tokens; Claude supports 200K context
     max_retries: int = 3
     initial_backoff: float = 1.0  # seconds
     backoff_factor: float = 2.0
@@ -105,11 +105,17 @@ class AnthropicClientWrapper:
                 if not response.content:
                     raise LLMRequestFailed("Empty response content from Anthropic.")
 
-                return response.content[0].text
+                first_block = response.content[0]
+                if not hasattr(first_block, 'text') or not first_block.text:
+                    raise LLMRequestFailed(f"No text in response content block: {type(first_block).__name__}")
+                return first_block.text
 
             except anthropic.RateLimitError as err:
                 last_error = err
                 self._log_retry("Rate limit", attempt, backoff, err)
+            except anthropic.APIConnectionError as err:
+                last_error = err
+                self._log_retry("Connection error", attempt, backoff, err)
             except anthropic.APIStatusError as err:
                 last_error = err
                 status = getattr(err, "status_code", None)
@@ -142,13 +148,19 @@ class AnthropicClientWrapper:
         if len(prompt) <= self.config.max_prompt_chars:
             return prompt
 
+        # Truncate at the last complete line before the limit
         truncated = prompt[: self.config.max_prompt_chars]
+        last_newline = truncated.rfind("\n")
+        if last_newline > self.config.max_prompt_chars // 2:
+            truncated = truncated[:last_newline]
+
         self.logger.warning(
-            "Prompt length %s exceeded limit (%s). Truncating.",
+            "Prompt length %d exceeded limit (%d). Truncated to %d chars.",
             len(prompt),
             self.config.max_prompt_chars,
+            len(truncated),
         )
-        return truncated
+        return truncated + "\n\n[... truncated for length ...]"
 
     def _log_retry(self, reason: str, attempt: int, backoff: float, exc: Exception) -> None:
         self.logger.warning(

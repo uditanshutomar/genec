@@ -657,6 +657,41 @@ class JavaParser:
 
         return called_methods
 
+    def extract_method_calls_with_arity(self, method_body: str) -> list[tuple[str, int | None]]:
+        """
+        Extract method calls with argument counts.
+
+        Returns:
+            List of (method_name, arg_count). arg_count may be None if unknown.
+        """
+        calls: list[tuple[str, int | None]] = []
+
+        try:
+            wrapped = f"class Dummy {{ void dummy() {{ {method_body} }} }}"
+            tree = javalang.parse.parse(wrapped)
+
+            for _, node in tree.filter(javalang.tree.MethodInvocation):
+                argc = len(node.arguments) if node.arguments is not None else 0
+                calls.append((node.member, argc))
+        except Exception as e:
+            self.logger.debug(f"Failed to extract method calls with arity: {e}")
+
+        if calls:
+            return calls
+
+        # Tree-sitter fallback
+        ts_calls = self._extract_method_calls_tree_sitter_with_arity(method_body)
+        if ts_calls:
+            return ts_calls
+
+        # Regex fallback as last resort (arity unknown)
+        tokens = re.findall(r"\b[A-Za-z_][A-Za-z0-9_]*\s*(?=\()", method_body)
+        return [
+            (token.strip(), None)
+            for token in tokens
+            if token and token.strip() not in self._KEYWORD_BLACKLIST
+        ]
+
     def extract_field_accesses(self, method_body: str) -> set[str]:
         """
         Extract field accesses from method body.
@@ -724,6 +759,101 @@ class JavaParser:
         except Exception as exc:
             self.logger.debug(f"Tree-sitter method call extraction failed: {exc}")
             return set()
+
+    def _extract_method_calls_tree_sitter_with_arity(
+        self, method_body: str
+    ) -> list[tuple[str, int | None]]:
+        """Tree-sitter fallback for extracting method calls with argument counts."""
+        if not self.ts_parser or not method_body.strip():
+            return []
+
+        try:
+            wrapped = f"class Dummy {{ void dummy() {{ {method_body} }} }}"
+            source_bytes = wrapped.encode("utf-8")
+            tree = self.ts_parser.parse(source_bytes)
+            root = tree.root_node
+
+            calls: list[tuple[str, int | None]] = []
+            for node in self._collect_descendants(root, "method_invocation"):
+                name_node = node.child_by_field_name("name")
+                if not name_node:
+                    continue
+                name = self._node_text(name_node, source_bytes).strip()
+                if not name:
+                    continue
+                args_node = node.child_by_field_name("arguments")
+                argc = self._count_arguments_from_ts(args_node, source_bytes)
+                calls.append((name, argc))
+
+            for node in self._collect_descendants(root, "super_method_invocation"):
+                name_node = node.child_by_field_name("name")
+                if not name_node:
+                    continue
+                name = self._node_text(name_node, source_bytes).strip()
+                if not name:
+                    continue
+                args_node = node.child_by_field_name("arguments")
+                argc = self._count_arguments_from_ts(args_node, source_bytes)
+                calls.append((name, argc))
+
+            return calls
+        except Exception as exc:
+            self.logger.debug(f"Tree-sitter arity extraction failed: {exc}")
+            return []
+
+    def _count_arguments_from_ts(self, args_node, source_bytes: bytes) -> int | None:
+        if args_node is None:
+            return 0
+        try:
+            arg_text = self._node_text(args_node, source_bytes)
+            if not arg_text:
+                return 0
+            return self._count_arguments_from_text(arg_text)
+        except Exception as e:
+            self.logger.debug(f"Failed to count arguments: {e}")
+            return None
+
+    def _count_arguments_from_text(self, arg_text: str) -> int:
+        """Count top-level arguments in a parenthesized argument list."""
+        text = arg_text.strip()
+        if text.startswith("(") and text.endswith(")"):
+            text = text[1:-1]
+        text = text.strip()
+        if not text:
+            return 0
+
+        depth = 0
+        count = 1
+        in_string = False
+        escape = False
+        string_char = ""
+
+        for ch in text:
+            if in_string:
+                if escape:
+                    escape = False
+                    continue
+                if ch == "\\":
+                    escape = True
+                    continue
+                if ch == string_char:
+                    in_string = False
+                continue
+
+            if ch in ("\"", "'"):
+                in_string = True
+                string_char = ch
+                continue
+
+            if ch in ("(", "[", "{", "<"):
+                depth += 1
+            elif ch in (")", "]", "}", ">"):
+                if depth > 0:
+                    depth -= 1
+            elif ch == "," and depth == 0:
+                count += 1
+
+        return count
 
     def _extract_field_accesses_tree_sitter(self, method_body: str) -> set[str]:
         """Tree-sitter fallback for extracting field accesses."""

@@ -88,6 +88,9 @@ class ExtractionValidator:
         if not cluster_methods:
             return True, []
 
+        # Discover actual inner classes so we only flag real ones
+        self._known_inner_classes = self._discover_inner_classes(class_deps)
+
         # Build lookup maps
         method_by_sig = {m.signature: m for m in class_deps.methods}
         method_names = {m.name: m for m in class_deps.methods}
@@ -170,14 +173,15 @@ class ExtractionValidator:
                             )
                         )
 
-                # Check for inner class references
+                # Check for inner class references (warnings, not errors —
+                # inner classes are usually accessible via delegation)
                 inner_class_refs = self._find_inner_class_references(method_info)
                 for inner_class in inner_class_refs:
                     current_issues.append(
                         ValidationIssue(
-                            severity="error",
+                            severity="warning",
                             issue_type="inner_class_reference",
-                            description=f"References inner class '{inner_class}' which may not be accessible from extracted class",
+                            description=f"References inner class '{inner_class}' — may need import or delegation in extracted class",
                             affected_method=method_sig,
                         )
                     )
@@ -328,41 +332,66 @@ class ExtractionValidator:
 
         return calls
 
+    # Known inner class names discovered from class_deps, populated per-validation
+    _known_inner_classes: set[str] = set()
+
     def _find_inner_class_references(self, method_info: MethodInfo) -> set[str]:
-        """Find references to inner classes in method body."""
-        if not method_info.body:
+        """Find references to *actual* inner classes of the enclosing class.
+
+        Previous implementation used a tiny allowlist of 14 JDK types and flagged
+        everything else as an inner class reference — causing massive false
+        positives (e.g., ``new IOException()``, ``instanceof Comparable``).
+
+        New approach: only flag types that are known inner classes of the current
+        class (discovered via ``_discover_inner_classes`` during validation).
+        External types are NOT inner classes and should never block extraction.
+        """
+        if not method_info.body or not self._known_inner_classes:
             return set()
 
         refs = set()
-        # Look for class instantiations and type references that might be inner classes
-        # This is a heuristic - looks for capitalized names that are likely classes
-        for match in re.finditer(r"\bnew\s+([A-Z]\w+)\s*\(", method_info.body):
-            class_name = match.group(1)
-            # Common pattern for inner classes - could be improved
-            if class_name not in [
-                "String",
-                "Integer",
-                "Long",
-                "Double",
-                "Float",
-                "Boolean",
-                "Character",
-                "Byte",
-                "Short",
-                "StringBuilder",
-                "StringBuffer",
-                "ArrayList",
-                "HashMap",
-                "HashSet",
-                "LinkedList",
-            ]:
-                refs.add(class_name)
-
-        # Also look for instance checks and type casts
-        for match in re.finditer(r"\binstanceof\s+([A-Z]\w+)", method_info.body):
-            refs.add(match.group(1))
-
-        for match in re.finditer(r"\(\s*([A-Z]\w+)\s*\)", method_info.body):
-            refs.add(match.group(1))
+        # Only flag types that are ACTUALLY inner classes of the enclosing class
+        for inner_class in self._known_inner_classes:
+            # Check for instantiation, instanceof, or type reference
+            pattern = rf"\b{re.escape(inner_class)}\b"
+            if re.search(pattern, method_info.body):
+                refs.add(inner_class)
 
         return refs
+
+    @staticmethod
+    def _discover_inner_classes(class_deps: ClassDependencies) -> set[str]:
+        """Discover inner classes defined within the source file.
+
+        Scans the source file for ``class Name``, ``interface Name``,
+        ``enum Name`` declarations that appear inside the outer class body.
+        """
+        inner_classes: set[str] = set()
+        source_path = class_deps.file_path
+        if not source_path:
+            return inner_classes
+
+        try:
+            with open(source_path, encoding="utf-8") as f:
+                source = f.read()
+        except OSError:
+            return inner_classes
+
+        outer_class = class_deps.class_name
+
+        # Strip comments and string literals to avoid false positives
+        # (e.g., "// This is a MyClass implementation" shouldn't match)
+        stripped = re.sub(r'//[^\n]*', '', source)        # line comments
+        stripped = re.sub(r'/\*.*?\*/', '', stripped, flags=re.DOTALL)  # block comments
+        stripped = re.sub(r'"(?:[^"\\]|\\.)*"', '""', stripped)  # string literals
+
+        # Find inner type declarations (class, interface, enum, record)
+        # Only match declarations that are NOT the outer class itself
+        for match in re.finditer(
+            r"\b(?:class|interface|enum|record)\s+([A-Z]\w*)", stripped
+        ):
+            name = match.group(1)
+            if name != outer_class:
+                inner_classes.add(name)
+
+        return inner_classes

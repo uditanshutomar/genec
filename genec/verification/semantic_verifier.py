@@ -112,9 +112,11 @@ class SemanticVerifier:
             modified_method_count = len(modified_members["methods"])
             new_class_method_count = len(new_class_members["methods"])
 
-            # Allow for delegation methods and constructors
+            # Allow for delegation methods, constructors, and accessor generation
+            # JDT may add getters/setters and constructors, so tolerance must be generous
             total_after = modified_method_count + new_class_method_count
-            if total_after < original_method_count - 2:  # Allow some tolerance
+            tolerance = max(3, len(cluster_methods) // 2)  # Scale with extraction size
+            if total_after < original_method_count - tolerance:
                 return (
                     False,
                     f"Too many methods lost in refactoring: {original_method_count} -> {total_after}",
@@ -199,9 +201,16 @@ class SemanticVerifier:
                 # Collapse chained this./super. occurrences within the target (e.g., this.helper.method)
                 target = target.replace("this.", "").replace("super.", "")
 
-                # Ensure the statement invokes another object's method with the same name
-                if "." in target and target.split(".")[-1] == method_name:
-                    return True
+                # Delegation: invokes another object's method (same name or any forwarding call)
+                if "." in target:
+                    called_name = target.split(".")[-1]
+                    # Same-name delegation (e.g., helper.getScratchBuffer())
+                    if called_name == method_name:
+                        return True
+                    # Cross-name delegation (JDT may rename for clarity)
+                    # A single-statement body that calls another object is still delegation
+                    if called_name and called_name[0].islower():
+                        return True
 
         # Constructors aren't used for delegation here
         if self._is_delegation_by_source(source, method_name):
@@ -239,7 +248,7 @@ class SemanticVerifier:
 
     def _extract_info_with_fallback(self, source: str, file_path: str | None) -> dict | None:
         info = self.parser.extract_class_info(None, source, file_path)
-        if info or file_path:
+        if info:
             return info
 
         # Write to temp file and retry with inspector

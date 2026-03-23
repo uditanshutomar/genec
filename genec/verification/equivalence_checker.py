@@ -123,7 +123,7 @@ class EquivalenceChecker:
 
                 # Step 3: Apply refactoring temporarily
                 self.logger.info("Applying refactoring...")
-                backup_files = self._backup_and_apply_refactoring(
+                backup_files, created_files = self._backup_and_apply_refactoring(
                     original_class_file, refactored_files, repo_path
                 )
 
@@ -159,7 +159,7 @@ class EquivalenceChecker:
 
                 finally:
                     # Step 6: Restore original files
-                    self._restore_backup(backup_files, repo_path)
+                    self._restore_backup(backup_files, created_files, repo_path)
 
             except Exception as e:
                 self.logger.error(f"Equivalence checking failed: {e}", exc_info=True)
@@ -328,7 +328,7 @@ class EquivalenceChecker:
 
     def _backup_and_apply_refactoring(
         self, original_class_file: str, refactored_files: dict[str, str], repo_path: str
-    ) -> dict[str, str]:
+    ) -> tuple[dict[str, str], list[str]]:
         """
         Backup original files and apply refactoring.
 
@@ -336,9 +336,10 @@ class EquivalenceChecker:
             Dict mapping file paths to backup content
         """
         backup = {}
+        created_files: list[str] = []
 
         # Backup original class file
-        original_path = Path(original_class_file)
+        original_path = Path(original_class_file) if Path(original_class_file).is_absolute() else Path(repo_path) / original_class_file
         if original_path.exists():
             backup[str(original_path)] = original_path.read_text()
 
@@ -346,20 +347,30 @@ class EquivalenceChecker:
         for file_path, code in refactored_files.items():
             full_path = Path(repo_path) / file_path
 
-            # Backup if exists
+            # Backup if exists, otherwise track for deletion on restore
             if full_path.exists():
                 backup[str(full_path)] = full_path.read_text()
+            else:
+                created_files.append(str(full_path))
 
             # Write refactored code
             full_path.parent.mkdir(parents=True, exist_ok=True)
             full_path.write_text(code)
 
-        return backup
+        return backup, created_files
 
-    def _restore_backup(self, backup: dict[str, str], repo_path: str):
+    def _restore_backup(self, backup: dict[str, str], created_files: list[str], repo_path: str):
         """Restore files from backup."""
         for file_path, content in backup.items():
             Path(file_path).write_text(content)
+
+        for file_path in created_files:
+            try:
+                path = Path(file_path)
+                if path.exists():
+                    path.unlink()
+            except Exception as e:
+                self.logger.warning(f"Failed to remove created file {file_path}: {e}")
 
         self.logger.info("Restored original files from backup")
 
@@ -369,12 +380,14 @@ class EquivalenceChecker:
             try:
                 subprocess.run(["mvn", "--version"], capture_output=True, check=True)
                 return True
-            except:
+            except (FileNotFoundError, subprocess.CalledProcessError, OSError) as e:
+                self.logger.debug(f"Maven check failed: {e}")
                 return False
         elif self.build_tool == "gradle":
             try:
                 subprocess.run(["gradle", "--version"], capture_output=True, check=True)
                 return True
-            except:
+            except (FileNotFoundError, subprocess.CalledProcessError, OSError) as e:
+                self.logger.debug(f"Gradle check failed: {e}")
                 return False
         return False

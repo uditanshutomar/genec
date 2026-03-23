@@ -1,5 +1,6 @@
 """Behavioral verification through test execution."""
 
+import json
 import re
 import shutil
 import subprocess
@@ -90,7 +91,9 @@ class BehavioralVerifier:
             repo = Path(repo_path)
             backup_data: dict[Path, str] = {}
             new_class_file: Path | None = None
+            applied_hashes: dict[Path, str] = {}
             marker_file = repo / ".genec_verification_in_progress"
+            backup_dir = repo / ".genec_verification_backup"
 
             try:
                 # Step 1: Check for interrupted previous verification and recover
@@ -102,11 +105,21 @@ class BehavioralVerifier:
                     self.logger.info("No build system detected; skipping behavioral verification.")
                     return True, "Skipped (no build system detected)"
 
+                original_path = repo / original_class_file
+
                 # Step 3: Create marker file for crash recovery
-                marker_file.write_text(original_class_file, encoding="utf-8")
+                new_class_name = self._extract_new_class_name(new_class_code)
+                if new_class_name:
+                    new_class_file = original_path.parent / f"{new_class_name}.java"
+                    marker_payload = {
+                        "original": str(original_path),
+                        "new": str(new_class_file),
+                    }
+                    marker_file.write_text(json.dumps(marker_payload), encoding="utf-8")
+                else:
+                    marker_file.write_text(original_class_file, encoding="utf-8")
 
                 # Step 4: Backup the original file with mtime for safety
-                original_path = repo / original_class_file
                 backup_mtime: dict[Path, float] = {}  # Track original mtimes
                 if original_path.exists():
                     backup_data[original_path] = original_path.read_text(encoding="utf-8")
@@ -114,10 +127,19 @@ class BehavioralVerifier:
                     self.logger.debug(
                         f"Backed up: {original_path} (mtime: {backup_mtime[original_path]})"
                     )
+                    # Persist backup for crash recovery
+                    backup_dir.mkdir(parents=True, exist_ok=True)
+                    try:
+                        rel_path = original_path.relative_to(repo)
+                    except ValueError:
+                        rel_path = Path(original_path.name)
+                    backup_path = backup_dir / rel_path
+                    backup_path.parent.mkdir(parents=True, exist_ok=True)
+                    backup_path.write_text(backup_data[original_path], encoding="utf-8")
 
                 # Step 5: Apply refactoring IN-PLACE
                 self.logger.info("Applying refactoring in-place")
-                apply_success, apply_error, new_class_file = self._apply_refactoring_inplace(
+                apply_success, apply_error, new_class_file, applied_hashes = self._apply_refactoring_inplace(
                     repo,
                     original_path,
                     new_class_code,
@@ -146,7 +168,14 @@ class BehavioralVerifier:
 
             finally:
                 # Step 7: ALWAYS restore original state (with mtime conflict detection)
-                self._restore_files(backup_data, new_class_file, backup_mtime)
+                self._restore_files(backup_data, new_class_file, backup_mtime, applied_hashes)
+
+                # Cleanup recovery artifacts
+                if backup_dir.exists():
+                    try:
+                        shutil.rmtree(backup_dir)
+                    except Exception as e:
+                        self.logger.debug(f"Failed to remove backup dir: {e}")
 
                 # Remove marker file
                 if marker_file.exists():
@@ -163,16 +192,37 @@ class BehavioralVerifier:
 
         if marker_file.exists():
             self.logger.warning("Detected interrupted verification, attempting recovery...")
-            original_class_file = marker_file.read_text(encoding="utf-8").strip()
+            original_class_file = None
+            new_class_file = None
+            marker_text = marker_file.read_text(encoding="utf-8").strip()
+            try:
+                payload = json.loads(marker_text)
+                original_class_file = payload.get("original")
+                new_class_file = payload.get("new")
+            except Exception as e:
+                self.logger.debug(f"Failed to parse marker file as JSON, using raw text: {e}")
+                original_class_file = marker_text or None
 
             # Restore from backup if it exists
             if backup_dir.exists():
-                for backup_file in backup_dir.iterdir():
+                for backup_file in backup_dir.rglob("*"):
                     if backup_file.is_file():
-                        target = repo / backup_file.name
+                        rel_path = backup_file.relative_to(backup_dir)
+                        target = repo / rel_path
+                        target.parent.mkdir(parents=True, exist_ok=True)
                         shutil.copy2(backup_file, target)
                         self.logger.info(f"Recovered: {target}")
                 shutil.rmtree(backup_dir)
+
+            # Remove any partially created new class file
+            if new_class_file:
+                try:
+                    candidate = Path(new_class_file)
+                    if candidate.exists():
+                        candidate.unlink()
+                        self.logger.info(f"Removed partially created file: {candidate}")
+                except Exception as e:
+                    self.logger.debug(f"Failed to remove new class file: {e}")
 
             marker_file.unlink()
             self.logger.info("Recovery complete")
@@ -183,7 +233,7 @@ class BehavioralVerifier:
         original_path: Path,
         new_class_code: str,
         modified_original_code: str,
-    ) -> tuple[bool, str | None, Path | None]:
+    ) -> tuple[bool, str | None, Path | None, dict[Path, str]]:
         """
         Apply refactoring directly to the repository.
 
@@ -194,7 +244,7 @@ class BehavioralVerifier:
             # Extract new class name
             new_class_match = re.search(r"(?:public\s+)?class\s+(\w+)", new_class_code)
             if not new_class_match:
-                return False, "Could not extract new class name", None
+                return False, "Could not extract new class name", None, {}
 
             new_class_name = new_class_match.group(1)
 
@@ -207,16 +257,29 @@ class BehavioralVerifier:
             new_class_file.write_text(new_class_code, encoding="utf-8")
             self.logger.debug(f"Created: {new_class_file}")
 
-            return True, None, new_class_file
+            applied_hashes = {
+                original_path: self._hash_file(original_path),
+                new_class_file: self._hash_file(new_class_file),
+            }
+
+            return True, None, new_class_file, applied_hashes
 
         except Exception as e:
-            return False, f"Error applying refactoring: {str(e)}", None
+            return False, f"Error applying refactoring: {str(e)}", None, {}
+
+    @staticmethod
+    def _extract_new_class_name(new_class_code: str) -> str | None:
+        match = re.search(r"(?:public\s+)?class\s+(\w+)", new_class_code or "")
+        if match:
+            return match.group(1)
+        return None
 
     def _restore_files(
         self,
         backup_data: dict[Path, str],
         new_class_file: Path | None,
         backup_mtime: dict[Path, float] | None = None,
+        applied_hashes: dict[Path, str] | None = None,
     ):
         """
         Restore backed-up files and delete new class file.
@@ -232,21 +295,16 @@ class BehavioralVerifier:
         # Restore original files from backup
         for path, content in backup_data.items():
             try:
-                # Check for mtime conflict (user edited during verification)
-                if backup_mtime and path in backup_mtime:
-                    if path.exists():
-                        current_mtime = path.stat().st_mtime
-                        original_mtime = backup_mtime[path]
-
-                        # If mtime changed beyond what we expect from our own write,
-                        # the user may have edited the file
-                        if current_mtime > original_mtime + 1:  # 1s tolerance
-                            self.logger.error(
-                                f"CONFLICT DETECTED: {path.name} was modified during verification. "
-                                f"Skipping restore to preserve user changes. "
-                                f"Original mtime: {original_mtime}, Current: {current_mtime}"
-                            )
-                            continue
+                # Check for content conflicts (user edited during verification)
+                if applied_hashes and path in applied_hashes and path.exists():
+                    current_hash = self._hash_file(path)
+                    expected_hash = applied_hashes.get(path)
+                    if expected_hash and current_hash != expected_hash:
+                        self.logger.error(
+                            f"CONFLICT DETECTED: {path.name} was modified during verification. "
+                            "Skipping restore to preserve user changes."
+                        )
+                        continue
 
                 path.write_text(content, encoding="utf-8")
                 self.logger.debug(f"Restored: {path}")
@@ -256,10 +314,29 @@ class BehavioralVerifier:
         # Delete the temporarily created new class file
         if new_class_file and new_class_file.exists():
             try:
+                if applied_hashes and new_class_file in applied_hashes:
+                    current_hash = self._hash_file(new_class_file)
+                    expected_hash = applied_hashes.get(new_class_file)
+                    if expected_hash and current_hash != expected_hash:
+                        self.logger.error(
+                            f"CONFLICT DETECTED: {new_class_file.name} was modified during verification. "
+                            "Skipping deletion to preserve user changes."
+                        )
+                        return
                 new_class_file.unlink()
                 self.logger.debug(f"Deleted temporary: {new_class_file}")
             except Exception as e:
                 self.logger.error(f"Failed to delete {new_class_file}: {e}")
+
+    @staticmethod
+    def _hash_file(path: Path) -> str:
+        import hashlib
+
+        sha256 = hashlib.sha256()
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(8192), b""):
+                sha256.update(chunk)
+        return sha256.hexdigest()
 
     def _detect_build_system(self, repo_path: Path) -> str | None:
         """
@@ -393,9 +470,9 @@ class BehavioralVerifier:
                 )
                 if affected_test_classes:
                     # Run only affected tests
-                    cmd = [gradle_cmd, "test", "-q"] + [
-                        f"--tests {tc}" for tc in affected_test_classes
-                    ]
+                    cmd = [gradle_cmd, "test", "-q"]
+                    for tc in affected_test_classes:
+                        cmd.extend(["--tests", tc])
                 else:
                     cmd = [gradle_cmd, "test", "-q"]
 
@@ -461,7 +538,8 @@ class BehavioralVerifier:
                 [self.maven_command, "-version"], capture_output=True, timeout=5
             )
             tools["maven"] = result.returncode == 0
-        except:
+        except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as e:
+            self.logger.debug(f"Maven check failed: {e}")
             tools["maven"] = False
 
         # Check Gradle
@@ -470,7 +548,8 @@ class BehavioralVerifier:
                 [self.gradle_command, "--version"], capture_output=True, timeout=5
             )
             tools["gradle"] = result.returncode == 0
-        except:
+        except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as e:
+            self.logger.debug(f"Gradle check failed: {e}")
             tools["gradle"] = False
 
         return tools

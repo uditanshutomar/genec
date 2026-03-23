@@ -313,7 +313,7 @@ class StaticAnalysisVerifier:
         try:
             subprocess.run(["pmd", "--version"], capture_output=True, check=True, timeout=5)
             return True
-        except:
+        except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
             return False
 
     def _check_spotbugs_available(self) -> bool:
@@ -321,7 +321,7 @@ class StaticAnalysisVerifier:
         try:
             subprocess.run(["spotbugs", "-version"], capture_output=True, check=True, timeout=5)
             return True
-        except:
+        except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
             return False
 
     def _check_sonar_available(self) -> bool:
@@ -331,7 +331,7 @@ class StaticAnalysisVerifier:
                 ["sonar-scanner", "--version"], capture_output=True, check=True, timeout=5
             )
             return True
-        except:
+        except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
             return False
 
     def is_available(self) -> dict[str, bool]:

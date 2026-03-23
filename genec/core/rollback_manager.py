@@ -246,6 +246,10 @@ class RollbackManager:
                 backup_pattern = f"*{Path(original_file).stem}*.java"
                 backups = list(self.backup_dir.glob(backup_pattern))
 
+                if not backups:
+                    self.logger.warning(f"No backup found for: {original_file}")
+                    continue
+
                 if backups:
                     # Use most recent backup
                     backup_file = max(backups, key=lambda p: p.stat().st_mtime)

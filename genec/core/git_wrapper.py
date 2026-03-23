@@ -79,7 +79,8 @@ class GitWrapper:
                 current_branch = f"HEAD detached at {self.repo.head.commit.hexsha[:7]}"
             else:
                 current_branch = self.repo.active_branch.name
-        except Exception:
+        except Exception as e:
+            self.logger.debug(f"Could not determine current branch: {e}")
             current_branch = "unknown"
 
         return GitStatus(
@@ -231,7 +232,8 @@ class GitWrapper:
             # Get file contents at HEAD
             blob = self.repo.head.commit.tree / file_path
             return blob.hexsha
-        except Exception:
+        except Exception as e:
+            self.logger.debug(f"Could not get file hash for {file_path}: {e}")
             return None
 
     def has_conflicts(self, file_path: str) -> bool:
@@ -250,7 +252,8 @@ class GitWrapper:
         try:
             # Check if file is in modified files
             return file_path in [item.a_path for item in self.repo.index.diff(None)]
-        except Exception:
+        except Exception as e:
+            self.logger.debug(f"Could not check conflicts for {file_path}: {e}")
             return False
 
     def get_diff(self, file_path: str, staged: bool = False) -> str | None:

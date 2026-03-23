@@ -210,13 +210,13 @@ class PerformanceVerifier:
         try:
             subprocess.run(["mvn", "--version"], capture_output=True, check=True, timeout=5)
             return True
-        except:
+        except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
             pass
 
         try:
             subprocess.run(["gradle", "--version"], capture_output=True, check=True, timeout=5)
             return True
-        except:
+        except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
             pass
 
         return False

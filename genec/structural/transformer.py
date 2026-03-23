@@ -14,6 +14,7 @@ these plans to perform the actual rewrites automatically.
 from __future__ import annotations
 
 import datetime
+import re
 import textwrap
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -131,16 +132,20 @@ class StructuralTransformer:
 
         inner_classes = sorted(
             {
-                issue.description.split("'")[1]
+                match.group(1)
                 for issue in issues
                 if "inner class" in issue.description
+                for match in [re.search(r"'([^']+)'", issue.description)]
+                if match
             }
         )
         abstract_calls = sorted(
             {
-                issue.description.split("'")[1]
+                match.group(1)
                 for issue in issues
                 if "abstract method" in issue.description
+                for match in [re.search(r"'([^']+)'", issue.description)]
+                if match
             }
         )
 

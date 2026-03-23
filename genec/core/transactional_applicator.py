@@ -150,7 +150,7 @@ class TransactionalApplicator:
         for suggestion in suggestions:
             original_file = original_files.get(suggestion.cluster_id)
             if not original_file:
-                continue
+                raise ValueError(f"No original file found for cluster {suggestion.cluster_id} during conflict detection")
 
             file_path = Path(original_file)
             if not file_path.exists():

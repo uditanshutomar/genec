@@ -159,8 +159,15 @@ class MultiVersionCompilationVerifier:
         # Try common locations
         possible_paths = [
             Path(self.javac_path_template.format(version=version)),
+            # Linux
             Path(f"/usr/lib/jvm/java-{version}/bin/javac"),
+            Path(f"/usr/lib/jvm/java-{version}-openjdk/bin/javac"),
+            Path(f"/usr/lib/jvm/java-{version}-openjdk-amd64/bin/javac"),
+            # macOS (system + Homebrew)
             Path(f"/Library/Java/JavaVirtualMachines/jdk-{version}.jdk/Contents/Home/bin/javac"),
+            Path(f"/opt/homebrew/opt/openjdk@{version}/bin/javac"),
+            Path(f"/usr/local/opt/openjdk@{version}/bin/javac"),
+            # Windows
             Path(f"C:\\Program Files\\Java\\jdk-{version}\\bin\\javac.exe"),
         ]
 

@@ -189,7 +189,7 @@ Only suggest transformations with confidence >= 0.6.
             elif line_stripped.startswith("CONFIDENCE:"):
                 try:
                     confidence = float(line_stripped.split(":", 1)[1].strip())
-                except:
+                except (ValueError, IndexError):
                     confidence = 0.5
             elif line_stripped.startswith("DESCRIPTION:"):
                 description = line_stripped.split(":", 1)[1].strip()

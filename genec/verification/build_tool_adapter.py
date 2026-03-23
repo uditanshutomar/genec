@@ -4,6 +4,7 @@ Build tool adapters for running selective tests.
 Supports Maven, Gradle, and other build systems.
 """
 
+import re
 import subprocess
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -137,7 +138,14 @@ class MavenAdapter(BuildToolAdapter):
         else:
             # Just file patterns - extract class names
             class_names = [self._extract_class_name(f) for f in test_selection.tests if f != "ALL"]
-            return ",".join(class_names) if class_names else "*Test"
+            # Validate test class names to prevent command injection
+            valid_class_names = []
+            for class_name in class_names:
+                if not re.match(r'^[a-zA-Z0-9._$]+$', class_name):
+                    self.logger.warning(f"Invalid test class name skipped: {class_name}")
+                    continue
+                valid_class_names.append(class_name)
+            return ",".join(valid_class_names) if valid_class_names else "*Test"
 
     def _extract_class_name(self, file_path: str) -> str:
         """Extract Java class name from file path."""

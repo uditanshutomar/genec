@@ -124,11 +124,12 @@ class DependencyManager:
         try:
             # Run mvn package
             result = subprocess.run(
-                ["mvn", "package", "-DskipTests"],
+                ["mvn", "package", "-DskipTests", "-q"],
                 cwd=str(source_full_path),
                 capture_output=True,
                 text=True,
                 check=False,
+                timeout=300,  # 5 minute timeout for Maven builds
             )
 
             if result.returncode != 0:
@@ -145,6 +146,9 @@ class DependencyManager:
 
             return True
 
+        except subprocess.TimeoutExpired:
+            logger.error(f"Maven build timed out for {dep.name} (300s limit)")
+            return False
         except Exception as e:
             logger.error(f"Exception during build of {dep.name}: {e}")
             return False

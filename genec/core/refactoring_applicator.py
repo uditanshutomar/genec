@@ -150,6 +150,20 @@ class RefactoringApplicator:
                     error_message=f"File already exists: {new_class_path}",
                 )
 
+            # Validate code before writing
+            if not suggestion.new_class_code or not suggestion.new_class_code.strip():
+                self.logger.error("new_class_code is empty or None; aborting refactoring")
+                return RefactoringApplication(
+                    success=False,
+                    error_message="new_class_code is empty or None",
+                )
+            if not suggestion.modified_original_code or not suggestion.modified_original_code.strip():
+                self.logger.error("modified_original_code is empty or None; aborting refactoring")
+                return RefactoringApplication(
+                    success=False,
+                    error_message="modified_original_code is empty or None",
+                )
+
             # Write new class file
             new_class_path.parent.mkdir(parents=True, exist_ok=True)
             self._write_file(new_class_path, suggestion.new_class_code)
@@ -307,8 +321,9 @@ class RefactoringApplicator:
                 f.write(content)
             # Atomic rename (works on POSIX and Windows)
             os.replace(temp_path, file_path)
-        except Exception:
+        except Exception as e:
             # Clean up temp file on error
+            self.logger.warning(f"Failed to write file {file_path}: {e}")
             if os.path.exists(temp_path):
                 os.remove(temp_path)
             raise

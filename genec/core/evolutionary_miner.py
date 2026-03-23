@@ -54,8 +54,9 @@ def process_commit_worker(
         commit = repo.commit(commit_sha)
 
         return miner._extract_changed_methods(repo, commit, file_path)
-    except Exception:
+    except Exception as e:
         # Return empty set on failure to avoid crashing the pool
+        logger.debug(f"Commit worker failed for {commit_sha}: {e}")
         return set()
 
 
@@ -175,7 +176,6 @@ class EvolutionaryMiner:
             return EvolutionaryData(class_file=normalized_class_file)
 
         self.logger.info(f"Found {len(commits)} commits affecting {normalized_class_file}")
-        print(f"DEBUG: Found {len(commits)} commits affecting {normalized_class_file}")
 
         # Track method changes per commit
         evo_data = EvolutionaryData(class_file=normalized_class_file, total_commits=len(commits))
@@ -250,7 +250,7 @@ class EvolutionaryMiner:
         file_path: str,
         start_date: datetime,
         end_date: datetime,
-        max_commits: int = 2000,  # Memory limit: stop after this many commits
+        max_commits: int = 500,  # Cap at 500 most recent commits (per paper Section 3.1)
     ) -> list[git.Commit]:
         """Get all commits affecting a file within a date range.
 
@@ -323,7 +323,8 @@ class EvolutionaryMiner:
                     file_content = (commit.tree / file_path).data_stream.read().decode("utf-8")
                     methods = self._extract_methods_from_content(file_content, commit.hexsha)
                     return set(methods)
-                except:
+                except (KeyError, UnicodeDecodeError, AttributeError) as e:
+                    self.logger.debug(f"Failed to extract methods from initial commit: {e}")
                     return set()
 
             parent = commit.parents[0]
@@ -864,7 +865,8 @@ class EvolutionaryMiner:
                     size_bytes = stat.st_size
                     files_with_info.append((cache_file, age_days, size_bytes))
                     total_size += size_bytes
-                except Exception:
+                except Exception as e:
+                    self.logger.debug(f"Failed to stat cache file {cache_file}: {e}")
                     continue
 
             # Remove files older than max_age_days
@@ -875,8 +877,8 @@ class EvolutionaryMiner:
                         cache_file.unlink()
                         total_size -= size_bytes
                         removed_count += 1
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        self.logger.debug(f"Failed to remove old cache file {cache_file}: {e}")
 
             # If still over size limit, remove oldest files first
             max_size_bytes = max_size_mb * 1024 * 1024
@@ -892,8 +894,8 @@ class EvolutionaryMiner:
                             cache_file.unlink()
                             total_size -= size_bytes
                             removed_count += 1
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            self.logger.debug(f"Failed to remove excess cache file {cache_file}: {e}")
 
             if removed_count > 0:
                 self.logger.info(
@@ -908,7 +910,8 @@ class EvolutionaryMiner:
         """Compute a signature for the repo state relevant to caching."""
         try:
             head_commit = repo.head.commit.hexsha
-        except Exception:
+        except Exception as e:
+            self.logger.debug(f"Could not read HEAD commit: {e}")
             head_commit = "EMPTY"
 
         file_signature = "MISSING"
@@ -916,7 +919,8 @@ class EvolutionaryMiner:
             tree = repo.head.commit.tree
             blob = tree / class_file
             file_signature = blob.hexsha
-        except Exception:
+        except Exception as e:
+            self.logger.debug(f"Could not read file signature for {class_file}: {e}")
             file_signature = "MISSING"
 
         return f"{head_commit}:{file_signature}"

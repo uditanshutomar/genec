@@ -75,8 +75,8 @@ class ProgressServer:
                             # Handle cancellation through callback if set
                     except json.JSONDecodeError:
                         pass
-            except Exception:
-                pass
+            except Exception as e:
+                self.logger.debug(f"WebSocket client handler error: {e}")
             finally:
                 self._clients.discard(websocket)
                 self.logger.debug("Client disconnected")
@@ -138,7 +138,8 @@ class ProgressServer:
                 for client in list(self._clients):
                     try:
                         await client.send(message)
-                    except Exception:
+                    except Exception as e:
+                        self.logger.debug(f"Failed to send to client, removing: {e}")
                         self._clients.discard(client)
 
             asyncio.run_coroutine_threadsafe(send_all(), self._loop)

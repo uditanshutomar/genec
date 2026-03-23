@@ -173,7 +173,7 @@ Consider Java's access control, inheritance, and composition patterns.
             elif line.startswith("CONFIDENCE:"):
                 try:
                     confidence = float(line.split(":", 1)[1].strip())
-                except:
+                except (ValueError, IndexError):
                     confidence = 0.5
             elif line.startswith("REASONING:"):
                 reasoning = line.split(":", 1)[1].strip()

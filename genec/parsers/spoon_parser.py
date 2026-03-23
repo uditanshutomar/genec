@@ -207,5 +207,6 @@ class SpoonParser:
             # Check if Java is available
             result = subprocess.run(["java", "-version"], capture_output=True, timeout=5)
             return result.returncode == 0
-        except:
+        except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as e:
+            self.logger.debug(f"Java availability check failed: {e}")
             return False

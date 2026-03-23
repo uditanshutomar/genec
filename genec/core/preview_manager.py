@@ -108,8 +108,14 @@ class PreviewManager:
         if new_file_path.exists():
             warnings.append(f"New file already exists: {new_file_path}")
 
-        created_preview = self._preview_file_creation(str(new_file_path), suggestion.new_class_code)
-        files.append(created_preview)
+        if not suggestion.new_class_code or not suggestion.new_class_code.strip():
+            warnings.append("New class code is empty")
+        else:
+            created_preview = self._preview_file_creation(str(new_file_path), suggestion.new_class_code)
+            files.append(created_preview)
+
+        if not suggestion.modified_original_code or not suggestion.modified_original_code.strip():
+            warnings.append("Modified original code is empty")
 
         # Calculate statistics
         statistics = self._calculate_statistics(files)

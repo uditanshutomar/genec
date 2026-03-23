@@ -388,29 +388,32 @@ class LLMInterface:
             SYSTEM_PROMPT,
         )
 
-        methods = cluster.get_methods()
-        fields = cluster.get_fields()
+        if self.use_chunking and self.context_builder:
+            context_str = self.context_builder.build_context(cluster, class_deps)
+        else:
+            methods = cluster.get_methods()
+            fields = cluster.get_fields()
 
-        # Build a lightweight representation of the cluster members
-        # We don't need the full body to name the class, just signatures + javadoc summary
-        member_context = []
+            # Build a lightweight representation of the cluster members
+            # We don't need the full body to name the class, just signatures + javadoc summary
+            member_context = []
 
-        if methods:
-            member_context.append("Methods:")
-            for m in methods:
-                javadoc = self._extract_javadoc_summary(m, original_code)
-                if javadoc:
-                    member_context.append(f"  - {m}")
-                    member_context.append(f"    Description: {javadoc}")
-                else:
-                    member_context.append(f"  - {m}")
+            if methods:
+                member_context.append("Methods:")
+                for m in methods:
+                    javadoc = self._extract_javadoc_summary(m, original_code)
+                    if javadoc:
+                        member_context.append(f"  - {m}")
+                        member_context.append(f"    Description: {javadoc}")
+                    else:
+                        member_context.append(f"  - {m}")
 
-        if fields:
-            member_context.append("Fields:")
-            for f in fields:
-                member_context.append(f"  - {f}")
+            if fields:
+                member_context.append("Fields:")
+                for f in fields:
+                    member_context.append(f"  - {f}")
 
-        context_str = "\n".join(member_context)
+            context_str = "\n".join(member_context)
 
         # Format evolutionary context
         evo_context = self._format_evolutionary_context(cluster, evo_data) if evo_data else ""
@@ -670,12 +673,9 @@ class LLMInterface:
             The first sentence of the Javadoc, or None if not found.
         """
         try:
-            # Extract method name from signature
-            # Signature format: "public void methodName(Args...)"
-            match = re.search(r"\s+(\w+)\(", method_signature)
-            if not match:
+            method_name = self._extract_method_name_from_signature(method_signature)
+            if not method_name:
                 return None
-            method_name = match.group(1)
 
             # Find the method definition in the code
             # This is a heuristic regex; it might not be perfect but works for most standard Java formatting
@@ -708,9 +708,27 @@ class LLMInterface:
                     first_sentence += "."
                 return first_sentence.strip()
 
-        except Exception:
-            pass
+        except Exception as e:
+            self.logger.debug(f"Failed to extract Javadoc summary: {e}")
         return None
+
+    @staticmethod
+    def _extract_method_name_from_signature(method_signature: str) -> str | None:
+        """
+        Extract method name from a signature string like:
+        - methodName(Type,Type)
+        - public void methodName(Type)
+        """
+        if not method_signature:
+            return None
+        try:
+            name_part = method_signature.split("(", 1)[0].strip()
+            if not name_part:
+                return None
+            return name_part.split()[-1]
+        except Exception as e:
+            logger.debug(f"Failed to extract method name from signature: {e}")
+            return None
 
     def _format_evolutionary_context(self, cluster: Cluster, evo_data: EvolutionaryData) -> str:
         """
@@ -732,9 +750,11 @@ class LLMInterface:
 
         # Check for strong coupling pairs within the cluster
         strong_couplings = []
-        method_names = [
-            re.search(r"\s+(\w+)\(", m).group(1) for m in methods if re.search(r"\s+(\w+)\(", m)
-        ]
+        method_names = []
+        for m in methods:
+            name = self._extract_method_name_from_signature(m)
+            if name:
+                method_names.append(name)
 
         # We need to map signatures back to the simple names used in evo_data keys if necessary,
         # but evo_data usually stores pairs of (methodA, methodB).
@@ -795,10 +815,10 @@ class LLMInterface:
             self.logger.warning(f"Class name '{class_name}' is too short")
             return False
 
-        # Check 3: Not generic/unhelpful names
-        generic_names = {"Helper", "Util", "Manager", "Handler", "Service", "Data", "Info"}
-        if class_name in generic_names:
-            self.logger.warning(f"Class name '{class_name}' is too generic")
+        # Check 3: Not a bare generic suffix (compound names like "DataConverter" are OK)
+        bare_generic = {"Helper", "Util", "Utils", "Manager", "Handler", "Service", "Data", "Info", "Impl"}
+        if class_name in bare_generic:
+            self.logger.warning(f"Class name '{class_name}' is a bare generic name")
             return False
 
         # Check 4: UpperCamelCase (starts with capital)

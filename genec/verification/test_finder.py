@@ -173,5 +173,7 @@ class TestFinder:
             return ["gradle", "test"]
 
         # Gradle test filter syntax
-        filters = " ".join([f"--tests {tc}" for tc in test_classes])
-        return ["gradle", "test"] + [f"--tests {tc}" for tc in test_classes]
+        cmd = ["gradle", "test"]
+        for tc in test_classes:
+            cmd.extend(["--tests", tc])
+        return cmd

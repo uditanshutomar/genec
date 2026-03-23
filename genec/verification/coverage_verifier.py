@@ -92,8 +92,8 @@ class CoverageVerifier:
             found = list(repo_path.glob("**/jacoco.xml"))
             if found:
                 return found[0]
-        except Exception:
-            pass
+        except Exception as e:
+            self.logger.debug(f"Error searching for JaCoCo report: {e}")
 
         return None
 
