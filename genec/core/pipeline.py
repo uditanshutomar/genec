@@ -334,10 +334,13 @@ class GenECPipeline:
                 self.jdt_timeout = codegen_config.get("timeout", 60)
                 self.logger.info("Using Eclipse JDT for code generation")
             except Exception as e:
-                self.logger.error(f"Eclipse JDT unavailable: {e}")
-                raise
+                self.logger.warning(f"Eclipse JDT unavailable: {e}. Code generation will be attempted per-suggestion.")
+                self.jdt_wrapper_jar = None
+                self.jdt_timeout = codegen_config.get("timeout", 60)
         else:
-            raise ValueError(f"Unknown code generation engine: {engine}")
+            self.logger.warning(f"Unknown code generation engine: {engine}. Falling back to per-suggestion JDT.")
+            self.jdt_wrapper_jar = None
+            self.jdt_timeout = 60
 
         # Store verification config for later initialization
         self.verify_config = self.config.get("verification", {})
