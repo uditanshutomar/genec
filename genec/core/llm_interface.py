@@ -67,7 +67,7 @@ class LLMInterface:
         model: str = "claude-sonnet-4-20250514",
         max_tokens: int = 4000,
         temperature: float = 0.3,
-        timeout: int = 180,  # 3 minutes for slow connections
+        timeout: int = 120,  # 2 minutes for slow connections
         use_chunking: bool = True,
         use_hybrid_mode: bool = True,  # NEW: Use JDT for code generation
         enable_confidence_scoring: bool = True,  # NEW: Ask LLM for confidence

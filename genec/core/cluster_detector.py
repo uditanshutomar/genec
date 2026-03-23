@@ -92,9 +92,9 @@ def calculate_quality_tier(cluster: Cluster, evo_data=None) -> QualityTier:
     Calculate quality tier for a cluster based on multiple factors.
 
     Scoring criteria:
-    - Evolutionary coupling strength (40%)
-    - Internal cohesion (30%)
-    - External coupling (20%)
+    - Evolutionary coupling strength (30%)
+    - Internal cohesion (35%)
+    - External coupling (25%)
     - Cluster size (10%)
 
     Args:

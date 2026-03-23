@@ -117,7 +117,7 @@ class GraphBuilder:
         self,
         G_static: nx.Graph,
         G_evo: nx.Graph,
-        alpha: float = 0.5,
+        alpha: float = 0.6,
         edge_threshold: float = 0.1,
         hotspot_data: list[dict] | None = None,
         adaptive_fusion: bool = False,

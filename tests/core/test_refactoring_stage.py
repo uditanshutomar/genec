@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 from genec.core.stages.refactoring_stage import RefactoringStage
 from genec.core.stages.base_stage import PipelineContext
 from genec.core.pipeline_recorder import PipelineRecorder
+from genec.core.verification_engine import VerificationResult
 
 
 def _make_suggestion(name, new_code="class Foo {}", modified_code="class Bar {}", cluster=None):
@@ -16,14 +17,16 @@ def _make_suggestion(name, new_code="class Foo {}", modified_code="class Bar {}"
 
 
 def _make_verification_result(is_valid, syntactic=True, semantic=True, behavioral=True):
-    vr = MagicMock()
-    vr.is_valid = is_valid
-    vr.syntactic_pass = syntactic
-    vr.semantic_pass = semantic
-    vr.behavioral_pass = behavioral
-    vr.status = "PASS" if is_valid else "FAIL"
-    vr.suggestion_id = 0
-    vr.error_message = None if is_valid else "compilation failed"
+    """Create a VerificationResult with proper is_valid property behavior."""
+    vr = VerificationResult(
+        suggestion_id=0,
+        status="PASS" if is_valid else "FAIL",
+        syntactic_pass=syntactic,
+        semantic_pass=semantic,
+        behavioral_pass=behavioral,
+    )
+    if not is_valid:
+        vr.error_message = "compilation failed"
     return vr
 
 
@@ -55,7 +58,9 @@ class TestHardVerificationGate:
         java_file.write_text("class Test {}")
 
         engine = MagicMock()
-        engine.verify_refactoring.return_value = _make_verification_result(False)
+        engine.verify_refactoring.return_value = _make_verification_result(
+            False, syntactic=False, semantic=False, behavioral=False
+        )
 
         stage = RefactoringStage(applicator=None, verification_engine=engine)
         ctx = PipelineContext(
@@ -114,3 +119,39 @@ class TestHardVerificationGate:
         # The recorder should have verification stage metrics (added by Task 3 agent)
         # Even if Task 3 isn't done yet, the test should still pass since verified_suggestions works
         assert len(ctx.results["verified_suggestions"]) == 1
+
+    def test_confidence_threshold_skips_low(self, tmp_path):
+        """Suggestions below confidence threshold should be skipped."""
+        java_file = tmp_path / "Test.java"
+        java_file.write_text("class Test {}")
+
+        engine = MagicMock()
+        stage = RefactoringStage(applicator=None, verification_engine=engine)
+        ctx = PipelineContext(
+            config={"refactoring_application": {"enabled": False, "min_verification_confidence": 0.9}},
+            repo_path=str(tmp_path),
+            class_file=str(java_file),
+        )
+        suggestion = _make_suggestion("LowConf")
+        suggestion.confidence_score = 0.3  # Below 0.9 threshold
+        ctx.data["suggestions"] = [suggestion]
+        ctx.set("class_deps", MagicMock())
+
+        stage.run(ctx)
+        engine.verify_refactoring.assert_not_called()
+
+    def test_no_suggestions_returns_true(self, tmp_path):
+        """Empty suggestions list should return True (success)."""
+        java_file = tmp_path / "Test.java"
+        java_file.write_text("class Test {}")
+
+        engine = MagicMock()
+        stage = RefactoringStage(applicator=None, verification_engine=engine)
+        ctx = PipelineContext(
+            config={"refactoring_application": {"enabled": False}},
+            repo_path=str(tmp_path),
+            class_file=str(java_file),
+        )
+        ctx.data["suggestions"] = []
+        result = stage.run(ctx)
+        assert result is True

@@ -123,7 +123,7 @@ class AnalysisStage(PipelineStage):
         G_fused = self.graph_builder.fuse_graphs(
             G_static,
             G_evo,
-            alpha=fusion_config.get("alpha", 0.5),
+            alpha=fusion_config.get("alpha", 0.6),
             edge_threshold=fusion_config.get("edge_threshold", 0.1),
             hotspot_data=hotspot_data,
             adaptive_fusion=adaptive_fusion,

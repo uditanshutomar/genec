@@ -71,7 +71,7 @@ class HybridDependencyAnalyzer:
         result = analyzer.analyze_class("MyClass.java")
 
         # Check which parser was used
-        print(analyzer.metrics.get_summary())
+        self.logger.info(analyzer.metrics.get_summary())
     """
 
     def __init__(self, spoon_wrapper_jar: str | None = None, prefer_spoon: bool = True):
@@ -244,17 +244,16 @@ class HybridDependencyAnalyzer:
         return self.metrics.get_summary()
 
     def print_metrics(self):
-        """Print analysis metrics to console."""
-        print("=" * 80)
-        print("HYBRID DEPENDENCY ANALYZER METRICS")
-        print("=" * 80)
-        print(self.metrics.get_summary())
-        print()
+        """Log analysis metrics."""
+        self.logger.info("=" * 80)
+        self.logger.info("HYBRID DEPENDENCY ANALYZER METRICS")
+        self.logger.info("=" * 80)
+        self.logger.info(self.metrics.get_summary())
         if self.metrics.total_analyses > 0:
             spoon_rate = self.metrics.get_spoon_success_rate()
             fallback_rate = (self.metrics.fallback_successes / self.metrics.total_analyses) * 100
-            print(f"Spoon Success Rate: {spoon_rate:.1f}%")
-            print(f"Fallback Usage Rate: {fallback_rate:.1f}%")
+            self.logger.info(f"Spoon Success Rate: {spoon_rate:.1f}%")
+            self.logger.info(f"Fallback Usage Rate: {fallback_rate:.1f}%")
             if self.metrics.fallback_failures > 0:
-                print(f"⚠️  Total Failures: {self.metrics.fallback_failures}")
-        print("=" * 80)
+                self.logger.info(f"Total Failures: {self.metrics.fallback_failures}")
+        self.logger.info("=" * 80)

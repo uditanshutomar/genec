@@ -1,13 +1,14 @@
 """Records per-stage metrics, timing, and diagnostics for the GenEC pipeline."""
 
 import json
-import logging
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-_logger = logging.getLogger(__name__)
+from genec.utils.logging_utils import get_logger
+
+_logger = get_logger(__name__)
 
 
 @dataclass

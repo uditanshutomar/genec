@@ -102,18 +102,18 @@ class TestCLIValidation:
 class TestCLIEnvironment:
     """Test CLI environment handling."""
 
-    def test_api_key_from_env(self):
+    def test_api_key_from_env(self, monkeypatch):
         """Test API key is read from environment."""
-        os.environ["ANTHROPIC_API_KEY"] = "sk-ant-test-key"
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test-key")
 
         from genec.utils.secrets import get_anthropic_api_key
 
         key = get_anthropic_api_key()
         assert key == "sk-ant-test-key"
 
-    def test_api_key_not_set(self):
+    def test_api_key_not_set(self, monkeypatch):
         """Test handling when API key is not set."""
-        os.environ.pop("ANTHROPIC_API_KEY", None)
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
         from genec.utils.secrets import get_anthropic_api_key
 

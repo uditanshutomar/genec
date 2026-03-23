@@ -39,7 +39,7 @@ class LLMConfig:
     initial_backoff: float = 1.0  # seconds
     backoff_factor: float = 2.0
     max_backoff: float = 30.0
-    timeout: float | None = 60.0  # seconds
+    timeout: float | None = 120.0  # seconds
 
 
 class AnthropicClientWrapper:
