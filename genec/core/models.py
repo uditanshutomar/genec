@@ -102,5 +102,5 @@ class VerificationResult:
 
     @property
     def is_valid(self) -> bool:
-        """Return True if verification passed (at minimum syntactic check)."""
-        return self.status in ("PASS", "PASSED", "VALID") or self.syntactic_pass
+        """Return True only if overall verification status indicates pass."""
+        return self.status in ("PASS", "PASSED", "VALID")

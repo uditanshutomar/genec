@@ -135,6 +135,29 @@ class NamingStage(PipelineStage):
             suggestions.sort(key=lambda s: s.confidence_score or 0.0, reverse=True)
             self.logger.info("Sorted suggestions by confidence score (highest first)")
 
+        # Deduplicate suggestions with overlapping method sets
+        deduplicated = []
+        seen_method_sets = []
+        for s in suggestions:
+            if not s.cluster:
+                deduplicated.append(s)
+                continue
+            methods = frozenset(s.cluster.get_methods())
+            is_dup = False
+            for seen in seen_method_sets:
+                overlap = len(methods & seen) / max(len(methods | seen), 1)
+                if overlap >= 0.7:
+                    self.logger.info(
+                        f"Removing duplicate suggestion '{s.proposed_class_name}' "
+                        f"(70%+ method overlap with existing suggestion)"
+                    )
+                    is_dup = True
+                    break
+            if not is_dup:
+                deduplicated.append(s)
+                seen_method_sets.append(methods)
+        suggestions = deduplicated
+
         if max_suggestions and len(suggestions) > max_suggestions:
             suggestions = suggestions[:max_suggestions]
 

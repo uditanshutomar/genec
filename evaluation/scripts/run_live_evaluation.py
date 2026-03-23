@@ -94,6 +94,8 @@ def run_single_class(entry: dict) -> dict:
             },
             "clusters_found": len(result.all_clusters),
             "clusters_filtered": len(result.filtered_clusters),
+            "clusters_rejected": len(result.all_clusters) - len(result.filtered_clusters),
+            "filter_pass_rate": round(len(result.suggestions) / max(len(result.all_clusters), 1) * 100, 1),
             "suggestions_total": len(result.suggestions),
             "suggestions_verified": len(result.verified_suggestions),
             "suggestions": [
@@ -107,6 +109,19 @@ def run_single_class(entry: dict) -> dict:
                 for s in result.suggestions
             ],
         })
+
+        # Post-refactoring metrics: what the class would look like after extraction
+        original_methods = result.original_metrics.get("num_methods", 0)
+        extracted_methods = sum(
+            len(s.cluster.get_methods()) if s.cluster else 0
+            for s in result.verified_suggestions
+        )
+        remaining_methods = max(original_methods - extracted_methods, 0)
+        result_data["post_refactoring"] = {
+            "methods_extracted": extracted_methods,
+            "methods_remaining": remaining_methods,
+            "extraction_coverage": round(extracted_methods / max(original_methods, 1) * 100, 1),
+        }
 
     except Exception as e:
         import traceback
@@ -164,10 +179,14 @@ def main():
             logger.error(f"  ✗ FAILED: {result.get('error', 'unknown')[:100]}")
 
     # Save aggregate results
+    succeeded_results = [r for r in all_results if r.get("status") == "success"]
+    total_clusters = sum(r.get("clusters_found", 0) for r in succeeded_results)
     aggregate = {
         "total_classes": len(BENCHMARK),
-        "successful": len([r for r in all_results if r.get("status") == "success"]),
+        "successful": len(succeeded_results),
         "failed": len([r for r in all_results if r.get("status") != "success"]),
+        "total_clusters_found": total_clusters,
+        "filter_pass_rate": round(total_suggestions / max(total_clusters, 1) * 100, 1),
         "total_suggestions": total_suggestions,
         "total_verified": total_verified,
         "verification_rate": round(total_verified / max(total_suggestions, 1) * 100, 1),

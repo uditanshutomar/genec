@@ -120,6 +120,8 @@ class VerificationEngine:
     ) -> None:
         """Layer 1: Syntactic verification."""
         if not self.enable_syntactic:
+            # Layer skipped — *_pass left as default (False).
+            # is_valid checks status field, not individual pass flags.
             result.syntactic_pass = True
             self.logger.info("Syntactic verification skipped")
             return
@@ -150,6 +152,8 @@ class VerificationEngine:
     ) -> None:
         """Layer 1.5: Static analysis (code quality)."""
         if not self.enable_static_analysis:
+            # Layer skipped — *_pass left as default (False).
+            # is_valid checks status field, not individual pass flags.
             result.quality_pass = True
             self.logger.info("Static analysis skipped")
             return
@@ -180,6 +184,8 @@ class VerificationEngine:
     ) -> None:
         """Layer 1.7: Multi-version compilation."""
         if not self.enable_multiversion:
+            # Layer skipped — *_pass left as default (False).
+            # is_valid checks status field, not individual pass flags.
             result.multiversion_pass = True
             self.logger.info("Multi-version compilation skipped")
             return
@@ -210,6 +216,8 @@ class VerificationEngine:
     ) -> None:
         """Layer 2: Semantic verification."""
         if not self.enable_semantic:
+            # Layer skipped — *_pass left as default (False).
+            # is_valid checks status field, not individual pass flags.
             result.semantic_pass = True
             self.logger.info("Semantic verification skipped")
             return
@@ -260,6 +268,8 @@ class VerificationEngine:
             result.behavioral_pass = True
             self.logger.info("Behavioral verification skipped (equivalence already verified)")
         else:
+            # Layer skipped — *_pass left as default (False).
+            # is_valid checks status field, not individual pass flags.
             result.behavioral_pass = True
             self.logger.info("Behavioral verification skipped")
 
@@ -273,6 +283,8 @@ class VerificationEngine:
     ) -> None:
         """Layer 4: Performance verification."""
         if not self.enable_performance:
+            # Layer skipped — *_pass left as default (False).
+            # is_valid checks status field, not individual pass flags.
             result.performance_pass = True
             self.logger.info("Performance verification skipped")
             return
