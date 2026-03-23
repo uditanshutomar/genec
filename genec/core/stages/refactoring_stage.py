@@ -13,6 +13,7 @@ class RefactoringStage(PipelineStage):
         self.verification_engine = verification_engine
 
     def run(self, context: PipelineContext) -> bool:
+        """Generate code, verify refactorings, and collect results."""
         app_config = context.config.get("refactoring_application", {})
         apply_enabled = app_config.get("enabled", False) and self.applicator is not None
 

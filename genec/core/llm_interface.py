@@ -230,7 +230,12 @@ class LLMInterface:
         evo_data: EvolutionaryData | None,
         max_retries: int,
     ) -> RefactoringSuggestion | None:
-        """Standard single-shot generation (Priority 1 approach)."""
+        """Standard single-shot generation (Priority 1 approach).
+
+        Note: Transient API retries (rate-limits, connection errors) are handled
+        by the underlying ``AnthropicClient.send_message``.  This method only
+        attempts a single LLM call to avoid nested retry multiplication.
+        """
         # Use prompt diversity if enabled
         if self.use_prompt_diversity:
             return self._generate_with_diversity(cluster, original_code, class_deps, evo_data)
@@ -238,37 +243,24 @@ class LLMInterface:
         # Build prompt
         prompt = self._build_prompt(cluster, original_code, class_deps, evo_data)
 
-        # Call Claude API with retries
-        for attempt in range(max_retries):
-            try:
-                response = self._call_claude(prompt)
-                if response:
-                    # Parse response
-                    suggestion = self._parse_response(response, cluster)
-                    if suggestion:
-                        self.logger.info(
-                            f"Successfully generated suggestion: {suggestion.proposed_class_name}"
-                        )
-                        return suggestion
-                    else:
-                        self.logger.warning(f"Failed to parse response (attempt {attempt + 1})")
+        # Single attempt — the client already retries transient failures
+        try:
+            response = self._call_claude(prompt)
+            if response:
+                suggestion = self._parse_response(response, cluster)
+                if suggestion:
+                    self.logger.info(
+                        f"Successfully generated suggestion: {suggestion.proposed_class_name}"
+                    )
+                    return suggestion
+                else:
+                    self.logger.warning("Failed to parse LLM response")
+        except (LLMServiceUnavailable, LLMRequestFailed) as e:
+            self.logger.error(f"LLM call failed: {e}")
+        except Exception as e:
+            self.logger.error(f"Unexpected error during LLM call: {e}")
 
-            except (LLMServiceUnavailable, LLMRequestFailed) as e:
-                self.logger.error(f"LLM call failed (attempt {attempt + 1}): {e}")
-
-                if attempt < max_retries - 1:
-                    # Exponential backoff
-                    wait_time = 2**attempt
-                    self.logger.info(f"Retrying in {wait_time} seconds...")
-                    time.sleep(wait_time)
-            except Exception as e:
-                self.logger.error(f"Unexpected error during LLM call (attempt {attempt + 1}): {e}")
-                if attempt < max_retries - 1:
-                    wait_time = 2**attempt
-                    self.logger.info(f"Retrying in {wait_time} seconds...")
-                    time.sleep(wait_time)
-
-        self.logger.error(f"Failed to generate suggestion after {max_retries} attempts")
+        self.logger.error("Failed to generate suggestion")
         return None
 
     def _generate_hybrid(

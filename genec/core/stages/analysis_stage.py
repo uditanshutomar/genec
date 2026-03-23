@@ -22,6 +22,7 @@ class AnalysisStage(PipelineStage):
         self.graph_builder = graph_builder
 
     def run(self, context: PipelineContext) -> bool:
+        """Run dependency analysis, evolutionary mining, and graph construction."""
         class_file = context.class_file
         repo_path = context.repo_path
 

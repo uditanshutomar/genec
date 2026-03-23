@@ -11,6 +11,7 @@ class ClusteringStage(PipelineStage):
         self.cluster_detector = cluster_detector
 
     def run(self, context: PipelineContext) -> bool:
+        """Detect, filter, and rank method clusters for extraction."""
         emit_progress(4, 6, "Detecting clusters...")
         self.logger.info("Detecting and ranking clusters...")
 

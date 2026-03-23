@@ -212,8 +212,8 @@ class GenECPipeline:
             "clustering": {
                 "algorithm": "leiden",
                 "min_cluster_size": 3,
-                "max_cluster_size": 15,
-                "min_cohesion": 0.5,
+                "max_cluster_size": 30,
+                "min_cohesion": 0.35,
                 "resolution": 1.0,
             },
             "chunking": {
@@ -281,9 +281,9 @@ class GenECPipeline:
 
         self.evolutionary_miner = EvolutionaryMiner(
             cache_dir=cache_dir,
-            min_coupling_threshold=evolution_config.get("min_coupling_threshold", 0.3),
+            min_coupling_threshold=evolution_config.get("min_coupling_threshold", 0.1),
             max_changeset_size=evolution_config.get("max_changeset_size", 30),
-            min_revisions=evolution_config.get("min_revisions", 5),
+            min_revisions=evolution_config.get("min_revisions", 1),
         )
 
         # Graph builder
@@ -293,8 +293,8 @@ class GenECPipeline:
         cluster_config = self.config.get("clustering", {})
         self.cluster_detector = ClusterDetector(
             min_cluster_size=cluster_config.get("min_cluster_size", 3),
-            max_cluster_size=cluster_config.get("max_cluster_size", 15),
-            min_cohesion=cluster_config.get("min_cohesion", 0.5),
+            max_cluster_size=cluster_config.get("max_cluster_size", 30),
+            min_cohesion=cluster_config.get("min_cohesion", 0.35),
             resolution=cluster_config.get("resolution", 1.0),
             algorithm=cluster_config.get("algorithm", "leiden"),
             config=self.config,  # Pass full config for advanced features

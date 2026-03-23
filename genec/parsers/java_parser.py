@@ -278,6 +278,7 @@ class JavaParser:
                 capture_output=True,
                 text=True,
                 check=True,
+                timeout=60,
             )
         except Exception as exc:
             self.logger.error(f"JDT ClassInspector failed: {exc}")

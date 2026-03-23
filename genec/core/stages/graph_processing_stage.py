@@ -14,6 +14,7 @@ class GraphProcessingStage(PipelineStage):
         self.graph_builder = graph_builder
 
     def run(self, context: PipelineContext) -> bool:
+        """Calculate centrality metrics and export graph data."""
         G_fused = context.get("G_fused")
         class_deps = context.get("class_deps")
 

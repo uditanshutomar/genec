@@ -2,7 +2,7 @@
 javalang==0.13.0
 
 # Git integration for evolutionary coupling analysis
-gitpython==3.1.40
+gitpython>=3.1.42
 
 # Graph and clustering algorithms
 networkx>=3.2

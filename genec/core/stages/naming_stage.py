@@ -58,6 +58,7 @@ class NamingStage(PipelineStage):
         self.llm_interface = llm_interface
 
     def run(self, context: PipelineContext) -> bool:
+        """Generate class names for ranked clusters via LLM or auto-naming."""
         emit_progress(5, 6, "Generating suggestions...")
         self.logger.info("Generating refactoring suggestions...")
 
