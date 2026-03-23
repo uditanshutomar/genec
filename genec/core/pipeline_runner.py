@@ -28,7 +28,11 @@ class PipelineRunner:
             self.logger.info(f"Running stage {stage_idx}/{len(self.stages)}: {stage.name}")
             recorder = context.recorder
             if recorder:
-                recorder.start_stage(stage.name)
+                # Use lowercase + underscore to match stage end_stage() calls
+                # (e.g., stage.name="GraphProcessing" -> "graph_processing")
+                import re
+                stage_key = re.sub(r'(?<!^)(?=[A-Z])', '_', stage.name).lower()
+                recorder.start_stage(stage_key)
             try:
                 success = stage.run(context)
                 # Note: stages call recorder.end_stage() internally, so we

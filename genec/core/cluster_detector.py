@@ -908,6 +908,18 @@ class ClusterDetector:
                 )
                 continue
 
+            # Reject degenerate extractions: if a cluster contains >=80% of all
+            # methods, it's a class rename not a meaningful Extract Class.
+            if class_deps and hasattr(class_deps, 'methods') and class_deps.methods:
+                total_methods = len(class_deps.methods)
+                cluster_methods = len(cluster.get_methods())
+                if total_methods > 0 and cluster_methods / total_methods >= 0.8:
+                    self.logger.info(
+                        f"Cluster {cluster.id} rejected: contains {cluster_methods}/{total_methods} "
+                        f"methods ({cluster_methods*100//total_methods}%) — would be a rename, not extraction"
+                    )
+                    continue
+
             # Check cohesion constraint (skip for fallback clusters with zero modularity)
             # Fallback clusters are created when graph has no edges
             if cluster.modularity > 0 and cluster.internal_cohesion < self.min_cohesion:
