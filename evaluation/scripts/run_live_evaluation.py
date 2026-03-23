@@ -3,7 +3,9 @@
 
 import json
 import logging
+import os
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -99,9 +101,6 @@ def _compute_suggestion_post_metrics(suggestion) -> dict:
     if not suggestion.modified_original_code:
         return {}
     try:
-        import os
-        import tempfile
-
         from genec.core.dependency_analyzer import DependencyAnalyzer
         from genec.metrics.cohesion_calculator import CohesionCalculator
 
@@ -203,9 +202,6 @@ def run_single_class(entry: dict) -> dict:
         # LCOM5/TCC on the original class minus those methods.
         if result.verified_suggestions:
             try:
-                import os
-                import tempfile
-
                 from genec.core.dependency_analyzer import DependencyAnalyzer
                 from genec.metrics.cohesion_calculator import CohesionCalculator
 

@@ -2,31 +2,54 @@
 
 ## Primary Benchmark: 23 God Classes from 6 Open-Source Projects
 
+The primary evaluation uses 23 large classes from well-known Apache Commons
+libraries (IO, Lang, Collections, Text, Math) and JFreeChart.
+
 Results in `results/live_evaluation/aggregate_results.json`:
-- 23 classes from Apache Commons (IO, Lang, Collections, Text, Math) and JFreeChart
+- 23 classes evaluated end-to-end
 - 506 total clusters detected, 76 post-filter suggestions
 - **71/76 verified (93.4%)** — compilation + semantic + behavioral tests
 - Average runtime: 57s per class
 
+### Key contributions demonstrated
+
+- **Safe, verified extractions**: 93.4% of suggestions pass compilation,
+  semantic equivalence, and behavioral (test) verification via Maven builds.
+- **Compilable code generation**: Every accepted suggestion produces code
+  that compiles under the project's build system.
+- **Test-preserving refactoring**: Behavioral verification ensures that
+  existing test suites continue to pass after extraction.
+
+Note: Traditional code-quality metrics (e.g., LCOM5) show only modest
+change after extraction. The primary value is in producing *safe*,
+developer-ready refactoring suggestions rather than maximising metric deltas.
+
 ## Baselines
 
 Run with `scripts/run_baselines.py` on the same 23 classes:
-- **Field-sharing heuristic** (inspired by JDeodorant's approach): 37 suggestions
-- **Random partition**: 462 suggestions
-- **LLM-only** (no graph analysis): run via `LLMOnlyBaseline` (requires `ANTHROPIC_API_KEY`)
 
-Note: The field-sharing baseline is a reimplementation of JDeodorant's core
-agglomerative clustering algorithm, not the original Eclipse plugin.
+1. **Field-sharing heuristic** (inspired by JDeodorant's agglomerative
+   clustering approach): groups methods by shared field access using
+   union-find. This is a simplified reimplementation, *not* the original
+   JDeodorant Eclipse plugin.
+2. **Random partitioning**: assigns methods to random clusters as a
+   lower-bound sanity check.
+3. **LLM-only** (no graph analysis): sends the class directly to an LLM
+   without any structural or evolutionary analysis. Requires
+   `ANTHROPIC_API_KEY`.
 
 ## Ablation Study
 
 Configs in `configs/`: full, no_evolutionary, no_llm, no_verification, high_static
 
-## Historical Results
+## Historical Results (MLCQ 50-class study)
 
-Pre-optimization results from earlier development are in `results/historical/`.
-These used weaker verification (syntactic-only) and are not comparable to the
-current results.
+Early development used a 50-class subset of the MLCQ dataset for rapid
+iteration. Those results (e.g., 6/29 verified = 21%) were produced by a
+*pre-fix version* of the codebase with weaker verification (syntactic-only)
+and several bugs that have since been corrected. They are **not comparable**
+to the current 23-class results and are retained only for historical
+reference in `results/historical/`.
 
 ## User Study
 

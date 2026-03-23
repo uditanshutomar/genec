@@ -117,6 +117,8 @@ class GraphBuilder:
         self,
         G_static: nx.Graph,
         G_evo: nx.Graph,
+        # fusion alpha: weight for static analysis (1-alpha = evolutionary weight)
+        # This is DIFFERENT from clustering.hybrid.alpha which controls graph vs semantic weight
         alpha: float = 0.6,
         edge_threshold: float = 0.1,
         hotspot_data: list[dict] | None = None,

@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from evaluation.baselines.jdeodorant_baseline import FieldSharingBaseline
+from evaluation.baselines.field_sharing_baseline import FieldSharingBaseline
 from evaluation.baselines.llm_only_baseline import LLMOnlyBaseline
 from evaluation.baselines.random_baseline import RandomBaseline
 

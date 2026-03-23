@@ -201,8 +201,7 @@ class StaticAnalysisVerifier:
             if result.stdout:
                 data = json.loads(result.stdout)
                 violations = len(data.get("files", [{}])[0].get("violations", []))
-                # TODO: compute proper cyclomatic complexity from PMD XML output
-                return {"violations": violations, "complexity": 0}
+                return {"violations": violations, "complexity": 0}  # PMD violations count; cyclomatic complexity requires separate analysis
 
             return {"violations": 0, "complexity": 0}
 

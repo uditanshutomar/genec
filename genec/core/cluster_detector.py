@@ -202,7 +202,9 @@ class ClusterDetector:
         self.hybrid_config = self.clustering_config.get("hybrid", {})
         self.use_semantic = self.semantic_config.get("enabled", False)
         self.use_hybrid = self.hybrid_config.get("enabled", False)
-        self.hybrid_alpha = self.hybrid_config.get("alpha", 0.7)  # Graph weight
+        # hybrid alpha: weight for graph-based clustering (1-alpha = semantic similarity weight)
+        # This is DIFFERENT from fusion.alpha which controls static vs evolutionary graph weight
+        self.hybrid_alpha = self.hybrid_config.get("alpha", 0.85)
         self.semantic_threshold = self.hybrid_config.get("semantic_threshold", 0.5)
 
         # Initialize semantic analyzer if enabled

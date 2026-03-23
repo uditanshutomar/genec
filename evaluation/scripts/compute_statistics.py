@@ -171,7 +171,7 @@ def precision_recall_f1(
 
 def main():
     parser = argparse.ArgumentParser(description="Compute statistical analysis of GenEC results.")
-    parser.add_argument("--results-dir", type=Path, default=Path("evaluation/results"))
+    parser.add_argument("--results-dir", type=Path, default=Path("evaluation/results/live_evaluation"))
     parser.add_argument("--ground-truth-file", type=Path, default=None,
                         help="Ground truth JSON (from GroundTruthBuilder)")
     args = parser.parse_args()
