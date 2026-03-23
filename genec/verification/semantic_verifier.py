@@ -63,18 +63,24 @@ class SemanticVerifier:
             new_class_members = self._extract_members(new_info)
             modified_members = self._extract_members(modified_info)
 
-            # Get cluster members
+            # Get cluster members (signatures may include params)
             cluster_methods = set(cluster.get_methods())
             cluster_fields = set(cluster.get_fields())
+            # Normalize cluster method names for comparison
+            cluster_method_names = {
+                self._normalize_method_name(m) for m in cluster_methods
+            }
 
             # Verify extracted members exist in original
             for method_sig in cluster_methods:
-                # Match by method name (signatures might differ slightly)
-                method_name = method_sig.split("(")[0]
+                method_name = self._normalize_method_name(method_sig)
                 if method_name == class_deps.class_name:
                     continue  # Skip constructors
                 # Exact method name match (not substring)
-                if not any(m.split("(")[0] == method_name for m in original_members["methods"]):
+                if not any(
+                    self._normalize_method_name(m) == method_name
+                    for m in original_members["methods"]
+                ):
                     return False, f"Extracted method {method_name} not found in original class"
 
             for field in cluster_fields:
@@ -83,23 +89,48 @@ class SemanticVerifier:
 
             # Verify extracted members appear in new class
             for method_sig in cluster_methods:
-                method_name = method_sig.split("(")[0]
+                method_name = self._normalize_method_name(method_sig)
                 if method_name == class_deps.class_name:
                     continue  # Skip constructors
                 # Exact method name match (not substring)
-                if not any(m.split("(")[0] == method_name for m in new_class_members["methods"]):
+                if not any(
+                    self._normalize_method_name(m) == method_name
+                    for m in new_class_members["methods"]
+                ):
                     return False, f"Method {method_name} missing from new class"
 
             for field in cluster_fields:
                 if field not in new_class_members["fields"]:
                     return False, f"Field {field} missing from new class"
 
-            # Verify extracted members removed from modified original
-            for method_sig in cluster_methods:
-                method_name = method_sig.split("(")[0]
-                if method_name == class_deps.class_name:
-                    continue  # Skip constructors
-                if method_name in modified_members["methods"]:
+            # Verify extracted members removed from modified original.
+            # For overloaded methods, count how many overloads of each name
+            # exist in the original vs modified class.  If the original had N
+            # overloads and K were extracted, at most N-K should remain.  Any
+            # remaining overloads with the SAME bare name are legitimate unless
+            # they exceed that budget and are NOT delegation methods.
+            from collections import Counter
+
+            original_name_counts = Counter(
+                self._normalize_method_name(m) for m in original_members["methods"]
+            )
+            modified_name_counts = Counter(
+                self._normalize_method_name(m) for m in modified_members["methods"]
+            )
+            cluster_name_counts = Counter(
+                self._normalize_method_name(m) for m in cluster_methods
+                if self._normalize_method_name(m) != class_deps.class_name
+            )
+
+            for method_name, extracted_count in cluster_name_counts.items():
+                original_count = original_name_counts.get(method_name, 0)
+                modified_count = modified_name_counts.get(method_name, 0)
+
+                # Allowed remaining overloads: original minus extracted
+                allowed_remaining = max(original_count - extracted_count, 0)
+
+                if modified_count > allowed_remaining:
+                    # Some of the remaining copies might be delegation methods
                     if not self._is_delegation_method(
                         modified_info, modified_original_code, method_name
                     ):
@@ -132,17 +163,35 @@ class SemanticVerifier:
             self.logger.error(error_msg)
             return False, error_msg
 
+    @staticmethod
+    def _normalize_method_name(name: str) -> str:
+        """Strip parentheses and parameters from a method name/signature.
+
+        ``getObject(String, int)`` -> ``getObject``
+        ``getObject``             -> ``getObject``
+        """
+        return name.split("(")[0].strip()
+
     def _extract_members(self, class_info: dict) -> dict[str, set[str]]:
         """
         Extract method and field names from parsed class information.
 
         Returns:
-            Dict with 'methods' and 'fields' sets
+            Dict with 'methods', 'method_signatures', and 'fields' sets.
+            'methods' contains bare names, 'method_signatures' contains
+            full signatures (name + params) for overload-aware comparison.
         """
-        members = {"methods": set(), "fields": set()}
+        members: dict[str, set[str]] = {
+            "methods": set(),
+            "method_signatures": set(),
+            "fields": set(),
+        }
 
         for method in class_info.get("methods", []):
             members["methods"].add(method.name)
+            # Store the signature if available for overload disambiguation
+            sig = getattr(method, "signature", None) or method.name
+            members["method_signatures"].add(self._normalize_method_name(sig))
 
         for constructor in class_info.get("constructors", []):
             members["methods"].add(constructor.name)

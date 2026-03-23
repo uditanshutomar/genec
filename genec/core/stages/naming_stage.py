@@ -158,6 +158,30 @@ class NamingStage(PipelineStage):
                 seen_method_sets.append(methods)
         suggestions = deduplicated
 
+        # Select non-overlapping suggestions (greedy by confidence)
+        # This ensures extracted method sets don't overlap, producing
+        # a clean partition of the God Class.
+        non_overlapping = []
+        used_methods = set()
+        # Sort by confidence descending (best first)
+        for s in sorted(suggestions, key=lambda x: x.confidence_score or 0, reverse=True):
+            if not s.cluster:
+                non_overlapping.append(s)
+                continue
+            methods = set(s.cluster.get_methods())
+            overlap = methods & used_methods
+            if len(overlap) > 0:
+                overlap_pct = len(overlap) / len(methods) if methods else 0
+                if overlap_pct > 0.2:  # Allow up to 20% overlap (helper methods shared)
+                    self.logger.info(
+                        f"Skipping '{s.proposed_class_name}' — {len(overlap)}/{len(methods)} "
+                        f"methods ({overlap_pct:.0%}) overlap with selected suggestions"
+                    )
+                    continue
+            non_overlapping.append(s)
+            used_methods.update(methods)
+        suggestions = non_overlapping
+
         if max_suggestions and len(suggestions) > max_suggestions:
             suggestions = suggestions[:max_suggestions]
 

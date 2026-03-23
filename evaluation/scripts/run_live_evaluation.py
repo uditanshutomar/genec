@@ -52,7 +52,78 @@ BENCHMARK = [
     {"project": "commons-collections", "class_name": "IteratorUtils",
      "class_file": "src/main/java/org/apache/commons/collections4/IteratorUtils.java",
      "repo_path": "/tmp/commons-collections"},
+    # JFreeChart
+    {"project": "jfreechart", "class_name": "XYPlot",
+     "class_file": "src/main/java/org/jfree/chart/plot/XYPlot.java",
+     "repo_path": "/tmp/jfreechart"},
+    {"project": "jfreechart", "class_name": "CategoryPlot",
+     "class_file": "src/main/java/org/jfree/chart/plot/CategoryPlot.java",
+     "repo_path": "/tmp/jfreechart"},
+    {"project": "jfreechart", "class_name": "PiePlot",
+     "class_file": "src/main/java/org/jfree/chart/plot/pie/PiePlot.java",
+     "repo_path": "/tmp/jfreechart"},
+    {"project": "jfreechart", "class_name": "AbstractRenderer",
+     "class_file": "src/main/java/org/jfree/chart/renderer/AbstractRenderer.java",
+     "repo_path": "/tmp/jfreechart"},
+    {"project": "jfreechart", "class_name": "ChartPanel",
+     "class_file": "src/main/java/org/jfree/chart/swing/ChartPanel.java",
+     "repo_path": "/tmp/jfreechart"},
+    # Commons Math
+    {"project": "commons-math", "class_name": "AccurateMath",
+     "class_file": "commons-math-core/src/main/java/org/apache/commons/math4/core/jdkmath/AccurateMath.java",
+     "repo_path": "/tmp/commons-math"},
+    {"project": "commons-math", "class_name": "Dfp",
+     "class_file": "commons-math-legacy-core/src/main/java/org/apache/commons/math4/legacy/core/dfp/Dfp.java",
+     "repo_path": "/tmp/commons-math"},
+    {"project": "commons-math", "class_name": "BOBYQAOptimizer",
+     "class_file": "commons-math-legacy/src/main/java/org/apache/commons/math4/legacy/optim/nonlinear/scalar/noderiv/BOBYQAOptimizer.java",
+     "repo_path": "/tmp/commons-math"},
+    {"project": "commons-math", "class_name": "DSCompiler",
+     "class_file": "commons-math-legacy/src/main/java/org/apache/commons/math4/legacy/analysis/differentiation/DSCompiler.java",
+     "repo_path": "/tmp/commons-math"},
+    # Commons Text
+    {"project": "commons-text", "class_name": "TextStringBuilder",
+     "class_file": "src/main/java/org/apache/commons/text/TextStringBuilder.java",
+     "repo_path": "/tmp/commons-text"},
+    {"project": "commons-text", "class_name": "StringLookupFactory",
+     "class_file": "src/main/java/org/apache/commons/text/lookup/StringLookupFactory.java",
+     "repo_path": "/tmp/commons-text"},
+    {"project": "commons-text", "class_name": "StringSubstitutor",
+     "class_file": "src/main/java/org/apache/commons/text/StringSubstitutor.java",
+     "repo_path": "/tmp/commons-text"},
 ]
+
+
+def _compute_suggestion_post_metrics(suggestion) -> dict:
+    """Compute post-refactoring LCOM5/TCC for a single suggestion's modified original."""
+    if not suggestion.modified_original_code:
+        return {}
+    try:
+        import os
+        import tempfile
+
+        from genec.core.dependency_analyzer import DependencyAnalyzer
+        from genec.metrics.cohesion_calculator import CohesionCalculator
+
+        with tempfile.NamedTemporaryFile(suffix=".java", mode="w", delete=False) as f:
+            f.write(suggestion.modified_original_code)
+            temp_file = f.name
+
+        try:
+            analyzer = DependencyAnalyzer()
+            modified_deps = analyzer.analyze_class(temp_file)
+            if modified_deps:
+                calc = CohesionCalculator()
+                post_metrics = calc.calculate_cohesion_metrics(modified_deps)
+                return {
+                    "post_lcom5": round(post_metrics.get("lcom5", 0), 4),
+                    "post_tcc": round(post_metrics.get("tcc", 0), 4),
+                }
+        finally:
+            os.unlink(temp_file)
+    except Exception as e:
+        logger.warning(f"Failed to compute per-suggestion post metrics: {e}")
+    return {}
 
 
 def run_single_class(entry: dict) -> dict:
@@ -105,6 +176,7 @@ def run_single_class(entry: dict) -> dict:
                     "verified": s.verification_status == "verified",
                     "confidence": s.confidence_score,
                     "rationale": s.rationale[:200] if s.rationale else None,
+                    **_compute_suggestion_post_metrics(s),
                 }
                 for s in result.suggestions
             ],
@@ -122,6 +194,42 @@ def run_single_class(entry: dict) -> dict:
             "methods_remaining": remaining_methods,
             "extraction_coverage": round(extracted_methods / max(original_methods, 1) * 100, 1),
         }
+
+        # Compute post-refactoring cohesion metrics on the modified original class
+        if result.verified_suggestions:
+            try:
+                import os
+                import tempfile
+
+                from genec.core.dependency_analyzer import DependencyAnalyzer
+                from genec.metrics.cohesion_calculator import CohesionCalculator
+
+                # Use the last verified suggestion's modified original as a
+                # reasonable approximation for the aggregate post-refactoring state
+                last_verified = result.verified_suggestions[-1]
+                if last_verified.modified_original_code:
+                    with tempfile.NamedTemporaryFile(
+                        suffix=".java", mode="w", delete=False
+                    ) as f:
+                        f.write(last_verified.modified_original_code)
+                        temp_file = f.name
+
+                    try:
+                        analyzer = DependencyAnalyzer()
+                        modified_deps = analyzer.analyze_class(temp_file)
+                        if modified_deps:
+                            calc = CohesionCalculator()
+                            post_metrics = calc.calculate_cohesion_metrics(modified_deps)
+                            result_data["post_refactoring"]["lcom5"] = round(
+                                post_metrics.get("lcom5", 0), 4
+                            )
+                            result_data["post_refactoring"]["tcc"] = round(
+                                post_metrics.get("tcc", 0), 4
+                            )
+                    finally:
+                        os.unlink(temp_file)
+            except Exception as e:
+                logger.warning(f"Failed to compute post-refactoring metrics: {e}")
 
     except Exception as e:
         import traceback

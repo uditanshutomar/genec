@@ -1,0 +1,2633 @@
+{
+  "jdeodorant": {
+    "total_classes": 23,
+    "total_suggestions": 39,
+    "per_class": [
+      {
+        "class_name": "IOUtils",
+        "status": "success",
+        "suggestions_total": 2,
+        "execution_time": 0.05,
+        "suggestions": [
+          {
+            "name": "IOUtils$Helper1",
+            "methods": 5
+          },
+          {
+            "name": "IOUtils$Helper2",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "FileUtils",
+        "status": "success",
+        "suggestions_total": 2,
+        "execution_time": 1.11,
+        "suggestions": [
+          {
+            "name": "FileUtils$Helper1",
+            "methods": 11
+          },
+          {
+            "name": "FileUtils$Helper2",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "FilenameUtils",
+        "status": "success",
+        "suggestions_total": 1,
+        "execution_time": 0.03,
+        "suggestions": [
+          {
+            "name": "FilenameUtils$Helper1",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "StringUtils",
+        "status": "success",
+        "suggestions_total": 1,
+        "execution_time": 0.15,
+        "suggestions": [
+          {
+            "name": "StringUtils$Helper1",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "ArrayUtils",
+        "status": "success",
+        "suggestions_total": 18,
+        "execution_time": 1.33,
+        "suggestions": [
+          {
+            "name": "ArrayUtils$Helper1",
+            "methods": 10
+          },
+          {
+            "name": "ArrayUtils$Helper2",
+            "methods": 4
+          },
+          {
+            "name": "ArrayUtils$Helper3",
+            "methods": 3
+          },
+          {
+            "name": "ArrayUtils$Helper4",
+            "methods": 5
+          },
+          {
+            "name": "ArrayUtils$Helper5",
+            "methods": 3
+          },
+          {
+            "name": "ArrayUtils$Helper6",
+            "methods": 5
+          },
+          {
+            "name": "ArrayUtils$Helper7",
+            "methods": 3
+          },
+          {
+            "name": "ArrayUtils$Helper8",
+            "methods": 5
+          },
+          {
+            "name": "ArrayUtils$Helper9",
+            "methods": 3
+          },
+          {
+            "name": "ArrayUtils$Helper10",
+            "methods": 5
+          },
+          {
+            "name": "ArrayUtils$Helper11",
+            "methods": 3
+          },
+          {
+            "name": "ArrayUtils$Helper12",
+            "methods": 5
+          },
+          {
+            "name": "ArrayUtils$Helper13",
+            "methods": 3
+          },
+          {
+            "name": "ArrayUtils$Helper14",
+            "methods": 5
+          },
+          {
+            "name": "ArrayUtils$Helper15",
+            "methods": 3
+          },
+          {
+            "name": "ArrayUtils$Helper16",
+            "methods": 5
+          },
+          {
+            "name": "ArrayUtils$Helper17",
+            "methods": 3
+          },
+          {
+            "name": "ArrayUtils$Helper18",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "NumberUtils",
+        "status": "success",
+        "suggestions_total": 1,
+        "execution_time": 0.03,
+        "suggestions": [
+          {
+            "name": "NumberUtils$Helper1",
+            "methods": 5
+          }
+        ]
+      },
+      {
+        "class_name": "DateUtils",
+        "status": "success",
+        "suggestions_total": 2,
+        "execution_time": 0.03,
+        "suggestions": [
+          {
+            "name": "DateUtils$Helper1",
+            "methods": 7
+          },
+          {
+            "name": "DateUtils$Helper2",
+            "methods": 5
+          }
+        ]
+      },
+      {
+        "class_name": "SystemUtils",
+        "status": "success",
+        "suggestions_total": 2,
+        "execution_time": 0.01,
+        "suggestions": [
+          {
+            "name": "SystemUtils$Helper1",
+            "methods": 4
+          },
+          {
+            "name": "SystemUtils$Helper2",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "CollectionUtils",
+        "status": "success",
+        "suggestions_total": 0,
+        "execution_time": 0.04,
+        "suggestions": []
+      },
+      {
+        "class_name": "MapUtils",
+        "status": "success",
+        "suggestions_total": 0,
+        "execution_time": 0.04,
+        "suggestions": []
+      },
+      {
+        "class_name": "IteratorUtils",
+        "status": "success",
+        "suggestions_total": 1,
+        "execution_time": 0.03,
+        "suggestions": [
+          {
+            "name": "IteratorUtils$Helper1",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "XYPlot",
+        "status": "success",
+        "suggestions_total": 4,
+        "execution_time": 0.12,
+        "suggestions": [
+          {
+            "name": "XYPlot$Helper1",
+            "methods": 3
+          },
+          {
+            "name": "XYPlot$Helper2",
+            "methods": 3
+          },
+          {
+            "name": "XYPlot$Helper3",
+            "methods": 3
+          },
+          {
+            "name": "XYPlot$Helper4",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "CategoryPlot",
+        "status": "success",
+        "suggestions_total": 0,
+        "execution_time": 0.1,
+        "suggestions": []
+      },
+      {
+        "class_name": "PiePlot",
+        "status": "success",
+        "suggestions_total": 0,
+        "execution_time": 0.07,
+        "suggestions": []
+      },
+      {
+        "class_name": "AbstractRenderer",
+        "status": "success",
+        "suggestions_total": 0,
+        "execution_time": 0.06,
+        "suggestions": []
+      },
+      {
+        "class_name": "ChartPanel",
+        "status": "success",
+        "suggestions_total": 1,
+        "execution_time": 0.07,
+        "suggestions": [
+          {
+            "name": "ChartPanel$Helper1",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "AccurateMath",
+        "status": "success",
+        "suggestions_total": 2,
+        "execution_time": 0.11,
+        "suggestions": [
+          {
+            "name": "AccurateMath$Helper1",
+            "methods": 12
+          },
+          {
+            "name": "AccurateMath$Helper2",
+            "methods": 5
+          }
+        ]
+      },
+      {
+        "class_name": "Dfp",
+        "status": "success",
+        "suggestions_total": 0,
+        "execution_time": 0.11,
+        "suggestions": []
+      },
+      {
+        "class_name": "BOBYQAOptimizer",
+        "status": "success",
+        "suggestions_total": 0,
+        "execution_time": 0.09,
+        "suggestions": []
+      },
+      {
+        "class_name": "DSCompiler",
+        "status": "success",
+        "suggestions_total": 0,
+        "execution_time": 0.08,
+        "suggestions": []
+      },
+      {
+        "class_name": "TextStringBuilder",
+        "status": "success",
+        "suggestions_total": 1,
+        "execution_time": 0.07,
+        "suggestions": [
+          {
+            "name": "TextStringBuilder$Helper1",
+            "methods": 4
+          }
+        ]
+      },
+      {
+        "class_name": "StringLookupFactory",
+        "status": "success",
+        "suggestions_total": 1,
+        "execution_time": 0.01,
+        "suggestions": [
+          {
+            "name": "StringLookupFactory$Helper1",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "StringSubstitutor",
+        "status": "success",
+        "suggestions_total": 0,
+        "execution_time": 0.02,
+        "suggestions": []
+      }
+    ]
+  },
+  "random": {
+    "total_classes": 23,
+    "total_suggestions": 526,
+    "per_class": [
+      {
+        "class_name": "IOUtils",
+        "status": "success",
+        "suggestions_total": 32,
+        "execution_time": 0.04,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup14",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup15",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup16",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup17",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup18",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup19",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup20",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup21",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup22",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup23",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup24",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup25",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup26",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup27",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup28",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup29",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup30",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup31",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup32",
+            "methods": 5
+          }
+        ]
+      },
+      {
+        "class_name": "FileUtils",
+        "status": "success",
+        "suggestions_total": 31,
+        "execution_time": 1.04,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup14",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup15",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup16",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup17",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup18",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup19",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup20",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup21",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup22",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup23",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup24",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup25",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup26",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup27",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup28",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup29",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup30",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup31",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "FilenameUtils",
+        "status": "success",
+        "suggestions_total": 9,
+        "execution_time": 0.03,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 5
+          }
+        ]
+      },
+      {
+        "class_name": "StringUtils",
+        "status": "success",
+        "suggestions_total": 46,
+        "execution_time": 0.12,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup14",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup15",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup16",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup17",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup18",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup19",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup20",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup21",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup22",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup23",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup24",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup25",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup26",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup27",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup28",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup29",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup30",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup31",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup32",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup33",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup34",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup35",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup36",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup37",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup38",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup39",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup40",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup41",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup42",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup43",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup44",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup45",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup46",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "ArrayUtils",
+        "status": "success",
+        "suggestions_total": 72,
+        "execution_time": 1.35,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup14",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup15",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup16",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup17",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup18",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup19",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup20",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup21",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup22",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup23",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup24",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup25",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup26",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup27",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup28",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup29",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup30",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup31",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup32",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup33",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup34",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup35",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup36",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup37",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup38",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup39",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup40",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup41",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup42",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup43",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup44",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup45",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup46",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup47",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup48",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup49",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup50",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup51",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup52",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup53",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup54",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup55",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup56",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup57",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup58",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup59",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup60",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup61",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup62",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup63",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup64",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup65",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup66",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup67",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup68",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup69",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup70",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup71",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup72",
+            "methods": 4
+          }
+        ]
+      },
+      {
+        "class_name": "NumberUtils",
+        "status": "success",
+        "suggestions_total": 13,
+        "execution_time": 0.06,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 4
+          }
+        ]
+      },
+      {
+        "class_name": "DateUtils",
+        "status": "success",
+        "suggestions_total": 13,
+        "execution_time": 0.03,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "SystemUtils",
+        "status": "success",
+        "suggestions_total": 3,
+        "execution_time": 0.01,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 7
+          }
+        ]
+      },
+      {
+        "class_name": "CollectionUtils",
+        "status": "success",
+        "suggestions_total": 12,
+        "execution_time": 0.04,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "MapUtils",
+        "status": "success",
+        "suggestions_total": 16,
+        "execution_time": 0.04,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup14",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup15",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup16",
+            "methods": 7
+          }
+        ]
+      },
+      {
+        "class_name": "IteratorUtils",
+        "status": "success",
+        "suggestions_total": 13,
+        "execution_time": 0.03,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "XYPlot",
+        "status": "success",
+        "suggestions_total": 45,
+        "execution_time": 0.15,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup14",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup15",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup16",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup17",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup18",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup19",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup20",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup21",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup22",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup23",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup24",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup25",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup26",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup27",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup28",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup29",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup30",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup31",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup32",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup33",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup34",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup35",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup36",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup37",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup38",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup39",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup40",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup41",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup42",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup43",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup44",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup45",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "CategoryPlot",
+        "status": "success",
+        "suggestions_total": 42,
+        "execution_time": 0.1,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup14",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup15",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup16",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup17",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup18",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup19",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup20",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup21",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup22",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup23",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup24",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup25",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup26",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup27",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup28",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup29",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup30",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup31",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup32",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup33",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup34",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup35",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup36",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup37",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup38",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup39",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup40",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup41",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup42",
+            "methods": 5
+          }
+        ]
+      },
+      {
+        "class_name": "PiePlot",
+        "status": "success",
+        "suggestions_total": 23,
+        "execution_time": 0.07,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup14",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup15",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup16",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup17",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup18",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup19",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup20",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup21",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup22",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup23",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "AbstractRenderer",
+        "status": "success",
+        "suggestions_total": 33,
+        "execution_time": 0.08,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup14",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup15",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup16",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup17",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup18",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup19",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup20",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup21",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup22",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup23",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup24",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup25",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup26",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup27",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup28",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup29",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup30",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup31",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup32",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup33",
+            "methods": 4
+          }
+        ]
+      },
+      {
+        "class_name": "ChartPanel",
+        "status": "success",
+        "suggestions_total": 21,
+        "execution_time": 0.06,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup14",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup15",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup16",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup17",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup18",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup19",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup20",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup21",
+            "methods": 3
+          }
+        ]
+      },
+      {
+        "class_name": "AccurateMath",
+        "status": "success",
+        "suggestions_total": 17,
+        "execution_time": 0.11,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup14",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup15",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup16",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup17",
+            "methods": 4
+          }
+        ]
+      },
+      {
+        "class_name": "Dfp",
+        "status": "success",
+        "suggestions_total": 19,
+        "execution_time": 0.08,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup14",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup15",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup16",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup17",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup18",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup19",
+            "methods": 6
+          }
+        ]
+      },
+      {
+        "class_name": "BOBYQAOptimizer",
+        "status": "success",
+        "suggestions_total": 4,
+        "execution_time": 0.08,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 4
+          }
+        ]
+      },
+      {
+        "class_name": "DSCompiler",
+        "status": "success",
+        "suggestions_total": 9,
+        "execution_time": 0.05,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 5
+          }
+        ]
+      },
+      {
+        "class_name": "TextStringBuilder",
+        "status": "success",
+        "suggestions_total": 33,
+        "execution_time": 0.06,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup14",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup15",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup16",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup17",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup18",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup19",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup20",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup21",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup22",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup23",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup24",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup25",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup26",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup27",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup28",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup29",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup30",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup31",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup32",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup33",
+            "methods": 4
+          }
+        ]
+      },
+      {
+        "class_name": "StringLookupFactory",
+        "status": "success",
+        "suggestions_total": 7,
+        "execution_time": 0.01,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 8
+          }
+        ]
+      },
+      {
+        "class_name": "StringSubstitutor",
+        "status": "success",
+        "suggestions_total": 13,
+        "execution_time": 0.02,
+        "suggestions": [
+          {
+            "name": "RandomGroup1",
+            "methods": 7
+          },
+          {
+            "name": "RandomGroup2",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup3",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup4",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup5",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup6",
+            "methods": 8
+          },
+          {
+            "name": "RandomGroup7",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup8",
+            "methods": 5
+          },
+          {
+            "name": "RandomGroup9",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup10",
+            "methods": 4
+          },
+          {
+            "name": "RandomGroup11",
+            "methods": 3
+          },
+          {
+            "name": "RandomGroup12",
+            "methods": 6
+          },
+          {
+            "name": "RandomGroup13",
+            "methods": 4
+          }
+        ]
+      }
+    ]
+  }
+}
