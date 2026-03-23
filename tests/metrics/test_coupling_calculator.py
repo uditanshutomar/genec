@@ -153,8 +153,8 @@ class TestCBO:
 
         assert cbo == 0  # Only "List" is extracted, which is stdlib
 
-    def test_no_project_classes_list_means_all_non_primitive(self):
-        """Without project_classes, any non-primitive/non-stdlib type counts."""
+    def test_no_project_classes_list_conservative_default(self):
+        """Without project_classes, conservatively assume no project coupling."""
         deps = _make_deps(
             fields=[_field("service", "CustomService")],
         )
@@ -162,7 +162,8 @@ class TestCBO:
         calc = CouplingCalculator()
         cbo = calc.calculate_cbo(deps, project_classes=None)
 
-        assert cbo == 1
+        # Conservative: without knowing the project classes, don't count unknown types
+        assert cbo == 0
 
 
 # ---------------------------------------------------------------------------

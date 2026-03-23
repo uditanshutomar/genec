@@ -112,7 +112,13 @@ class DependencyGraph:
 
 
 class DependencyAnalyzer:
-    """Analyzes dependencies across multiple files."""
+    """Analyzes dependencies across multiple files.
+
+    NOTE: This class shares its name with genec.core.dependency_analyzer.DependencyAnalyzer
+    but is NOT used elsewhere in the codebase. It provides a simpler, file-level analysis
+    compared to the main DependencyAnalyzer. Consider renaming to MultiFileDependencyAnalyzer
+    or removing if confirmed unused.
+    """
 
     def __init__(self):
         self.logger = get_logger(self.__class__.__name__)

@@ -452,6 +452,7 @@ class BehavioralVerifier:
                     self.logger.info("No affected tests found, running full suite")
 
             # Build command based on build system and incremental mode
+            cmd: list[str] = []
             if build_system == "maven":
                 if affected_test_classes:
                     # Run only affected tests
@@ -525,7 +526,7 @@ class BehavioralVerifier:
         except subprocess.TimeoutExpired:
             return False, "Test execution timeout"
         except FileNotFoundError:
-            return False, f"Build tool not found: {cmd[0]}"
+            return False, f"Build tool not found: {cmd[0] if cmd else build_system}"
         except Exception as e:
             return False, f"Test execution error: {str(e)}"
 

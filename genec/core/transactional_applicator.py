@@ -146,6 +146,13 @@ class TransactionalApplicator:
 
         Raises:
             ConflictError if conflicts detected
+
+        .. warning:: INCOMPLETE IMPLEMENTATION
+            Currently this method only checks that files still exist on disk.
+            It does NOT compare file content hashes to detect modifications made
+            between the analysis phase and the refactoring phase. A full
+            implementation should store file hashes during analysis (e.g., in
+            _create_savepoint) and compare them here before applying changes.
         """
         for suggestion in suggestions:
             original_file = original_files.get(suggestion.cluster_id)
@@ -158,10 +165,9 @@ class TransactionalApplicator:
                     file_path=str(file_path), expected_hash="", actual_hash="DELETED"
                 )
 
-            # Check if file matches expected state
-            # In production, would store expected hashes from analysis phase
-            # For now, just verify file exists
-            self.logger.debug(f"Verified file exists: {file_path}")
+            # TODO: Compare file content hash against the hash recorded at analysis time.
+            # Currently only verifies the file still exists, not that it is unmodified.
+            self.logger.debug(f"Verified file exists (hash check not yet implemented): {file_path}")
 
     def _create_savepoint(
         self, suggestions: list[RefactoringSuggestion], original_files: dict[int, str]

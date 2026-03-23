@@ -141,7 +141,7 @@ class RefactoringStage(PipelineStage):
                 if should_apply:
                     self.applicator.revert_changes()
 
-        rejected_suggestions = [s for s in suggestions if getattr(s, 'verification_status', None) not in ("verified",)]
+        rejected_suggestions = [s for s in suggestions if getattr(s, 'verification_status', None) == "failed"]
         context.results["rejected_suggestions"] = rejected_suggestions
         context.results["verified_suggestions"] = verified_suggestions
         context.results["verification_results"] = verification_results

@@ -220,8 +220,9 @@ class CouplingCalculator:
         if project_classes is not None:
             return class_name in project_classes
 
-        # Otherwise, assume any non-empty, non-primitive type is a project class
-        return True
+        # Without an explicit project class list, we cannot reliably determine
+        # if a class belongs to the project. Default to False (conservative).
+        return False
 
     def _class_depends_on(self, class_deps: ClassDependencies, target_class: str) -> bool:
         """

@@ -655,8 +655,6 @@ class JavaParser:
             if token and token.strip() not in self._KEYWORD_BLACKLIST
         }
 
-        return called_methods
-
     def extract_method_calls_with_arity(self, method_body: str) -> list[tuple[str, int | None]]:
         """
         Extract method calls with argument counts.

@@ -818,7 +818,11 @@ class EvolutionaryMiner:
         cache_file = self.cache_dir / f"{cache_key}.pkl"
         try:
             with open(cache_file, "rb") as f:
-                return pickle.load(f)  # nosec
+                # Security note: pickle.load is used here for LOCAL cache only.
+                # The cache directory is within the project's .genec/ folder and is
+                # not exposed to untrusted input. Do not use this pattern for
+                # data from external/untrusted sources.
+                return pickle.load(f)  # nosec B301
         except Exception as e:
             self.logger.warning(f"Failed to load cache: {e}")
             return None

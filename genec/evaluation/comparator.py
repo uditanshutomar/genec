@@ -71,7 +71,7 @@ class Comparator:
         )
 
         # Filter ground truth to only this class
-        relevant_gt = [gt for gt in ground_truth if source_class in gt.source_class]
+        relevant_gt = [gt for gt in ground_truth if source_class == gt.source_class]
 
         if not relevant_gt:
             self.logger.warning(f"No ground truth refactorings for {source_class}")

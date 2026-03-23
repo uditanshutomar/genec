@@ -53,8 +53,11 @@ class GitWrapper:
             self.logger.warning("GitPython not installed. Git features disabled.")
             self.git = None
             self.repo = None
-        except git.exc.InvalidGitRepositoryError:
-            self.logger.warning(f"{repo_path} is not a Git repository. Git features disabled.")
+        except Exception as e:
+            # Catch broadly here because if the import succeeded but repo init failed,
+            # we could get InvalidGitRepositoryError or other git exceptions.
+            # Using bare Exception avoids NameError if 'git' import itself partially failed.
+            self.logger.warning(f"{repo_path} is not a valid Git repository: {e}. Git features disabled.")
             self.git = None
             self.repo = None
 

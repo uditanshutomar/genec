@@ -521,8 +521,10 @@ class GenECPipeline:
             result.verification_results = results.get("verification_results", [])
 
             # Calculate original class metrics
-            class_deps = results.get("class_dependencies") or context.get("class_deps")
-            if class_deps:
+            class_deps = results.get("class_dependencies")
+            if class_deps is None:
+                class_deps = context.get("class_deps")
+            if class_deps is not None:
                 result.original_metrics = self._calculate_class_metrics(class_deps)
 
             # Calculate confidence metrics
