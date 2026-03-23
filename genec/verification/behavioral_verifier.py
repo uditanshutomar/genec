@@ -95,6 +95,12 @@ class BehavioralVerifier:
             marker_file = repo / ".genec_verification_in_progress"
             backup_dir = repo / ".genec_verification_backup"
 
+            # Initialize variables used in finally block
+            backup_data = {}
+            new_class_file = None
+            backup_mtime = None
+            applied_hashes = {}
+
             try:
                 # Step 1: Check for interrupted previous verification and recover
                 self._check_and_recover(repo)
