@@ -96,7 +96,7 @@ class TestCLIValidation:
 
         # Should not raise
         result = validate_target_file(str(sample_java_file))
-        assert result is not None or result is None  # Depends on implementation
+        assert result is not None  # Should return a valid path for valid Java files
 
 
 class TestCLIEnvironment:

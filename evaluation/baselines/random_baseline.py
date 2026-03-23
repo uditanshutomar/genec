@@ -47,16 +47,16 @@ class RandomBaseline:
 
         suggestions: list[RefactoringSuggestion] = []
         for idx, group in enumerate(groups):
-            suggestions.append(
-                RefactoringSuggestion(
-                    cluster_id=idx,
-                    proposed_class_name=f"RandomGroup{idx + 1}",
-                    rationale=f"Random partition of {len(group)} methods.",
-                    new_class_code="",
-                    modified_original_code="",
-                    cluster=None,
-                )
+            suggestion = RefactoringSuggestion(
+                cluster_id=idx,
+                proposed_class_name=f"RandomGroup{idx + 1}",
+                rationale=f"Random partition of {len(group)} methods.",
+                new_class_code="",
+                modified_original_code="",
+                cluster=None,
             )
+            suggestion.methods = list(group)  # type: ignore[attr-defined]
+            suggestions.append(suggestion)
 
         self.logger.info("Random baseline produced %d suggestions", len(suggestions))
         return suggestions

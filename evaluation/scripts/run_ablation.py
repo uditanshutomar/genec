@@ -36,7 +36,8 @@ VARIANTS: dict[str, dict] = {
         "evolution": {"window_months": 0},
     },
     "no_llm": {
-        "llm": {"api_key": "__DISABLED__"},
+        "llm": {"api_key": "", "enabled": False},
+        "naming": {"use_llm": False},
     },
     "no_verification": {
         "verification": {
@@ -87,10 +88,10 @@ def _run_variant(variant_name: str, overrides: dict, class_file: str, repo_path:
         elapsed = time.time() - t0
 
         # Collect per-cluster metrics
-        lcom5_vals = []
+        cohesion_vals = []
         coupling_vals = []
         for c in result.all_clusters:
-            lcom5_vals.append(_safe_float(c.internal_cohesion))
+            cohesion_vals.append(_safe_float(c.internal_cohesion))
             coupling_vals.append(_safe_float(c.external_coupling))
 
         num_verified = len(result.verified_suggestions)
@@ -101,7 +102,7 @@ def _run_variant(variant_name: str, overrides: dict, class_file: str, repo_path:
             "clusters_found": num_clusters,
             "num_verified": num_verified,
             "verified_pct": round(verified_pct, 2),
-            "avg_lcom5": round(float(np.mean(lcom5_vals)), 4) if lcom5_vals else 0.0,
+            "avg_cohesion": round(float(np.mean(cohesion_vals)), 4) if cohesion_vals else 0.0,
             "avg_coupling": round(float(np.mean(coupling_vals)), 4) if coupling_vals else 0.0,
             "execution_time": round(elapsed, 2),
             "original_lcom5": _safe_float(result.original_metrics.get("lcom5")),
@@ -113,7 +114,7 @@ def _run_variant(variant_name: str, overrides: dict, class_file: str, repo_path:
         logger.error("    Variant '%s' failed: %s", variant_name, e, exc_info=True)
         return {
             "clusters_found": 0, "num_verified": 0, "verified_pct": 0.0,
-            "avg_lcom5": 0.0, "avg_coupling": 0.0,
+            "avg_cohesion": 0.0, "avg_coupling": 0.0,
             "execution_time": round(elapsed, 2),
             "error": str(e),
         }
@@ -166,7 +167,7 @@ def main():
 
     for variant_name in VARIANTS:
         clusters_list = []
-        lcom5_list = []
+        cohesion_list = []
         coupling_list = []
         verified_list = []
         time_list = []
@@ -174,7 +175,7 @@ def main():
         for class_name, data in per_class.items():
             v = data.get(variant_name, {})
             clusters_list.append(v.get("clusters_found", 0))
-            lcom5_list.append(v.get("avg_lcom5", 0.0))
+            cohesion_list.append(v.get("avg_cohesion", 0.0))
             coupling_list.append(v.get("avg_coupling", 0.0))
             verified_list.append(v.get("verified_pct", 0.0))
             time_list.append(v.get("execution_time", 0.0))
@@ -187,7 +188,7 @@ def main():
 
         aggregate[variant_name] = {
             "clusters_found": _s(clusters_list),
-            "avg_lcom5": _s(lcom5_list),
+            "avg_cohesion": _s(cohesion_list),
             "avg_coupling": _s(coupling_list),
             "verified_pct": _s(verified_list),
             "execution_time": _s(time_list),
@@ -208,12 +209,12 @@ def main():
 
     # Print quick summary table
     print("\n" + "=" * 90)
-    print(f"{'Variant':<20} {'Clusters':>10} {'Avg LCOM5':>12} {'Avg Coupling':>14} {'Verified%':>12} {'Time(s)':>10}")
+    print(f"{'Variant':<20} {'Clusters':>10} {'Avg Cohesion':>12} {'Avg Coupling':>14} {'Verified%':>12} {'Time(s)':>10}")
     print("-" * 90)
     for vname, agg in aggregate.items():
         print(f"{vname:<20} "
               f"{agg['clusters_found'].get('mean', 0):>10.1f} "
-              f"{agg['avg_lcom5'].get('mean', 0):>12.4f} "
+              f"{agg['avg_cohesion'].get('mean', 0):>12.4f} "
               f"{agg['avg_coupling'].get('mean', 0):>14.4f} "
               f"{agg['verified_pct'].get('mean', 0):>12.1f} "
               f"{agg['execution_time'].get('mean', 0):>10.1f}")

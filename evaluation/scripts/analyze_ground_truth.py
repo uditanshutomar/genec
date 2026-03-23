@@ -17,7 +17,6 @@ import json
 import logging
 from pathlib import Path
 
-from genec.evaluation.comparator import Comparator
 from genec.evaluation.ground_truth_builder import GroundTruthBuilder
 
 logging.basicConfig(
@@ -182,9 +181,11 @@ def analyze(
     for t in thresholds:
         tp = sum(1 for c in per_case_results if c["thresholds"].get(str(t), False))
         fn = len(per_case_results) - tp
-        # For precision we'd need total suggestions, approximate here
-        total_suggestions = sum(len(v) for v in class_suggestions.values())
-        fp = max(0, total_suggestions - tp)
+        # Per-class FP calculation
+        fp = 0
+        for cls, suggestions in class_suggestions.items():
+            cls_tp = sum(1 for s in suggestions if s.get("matched", False))
+            fp += len(suggestions) - cls_tp
 
         prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
         rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0

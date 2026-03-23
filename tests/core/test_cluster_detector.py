@@ -51,7 +51,7 @@ class TestClusterDetector:
 
         clusters = detector.detect_clusters(graph)
         # Should detect at least 2 clusters (one per component)
-        assert len(clusters) >= 0  # May filter based on cohesion
+        assert len(clusters) >= 1  # Should detect at least one cluster
 
     def test_detect_clusters_fully_connected(self):
         """Test detecting clusters on fully connected graph."""
@@ -90,7 +90,7 @@ class TestClusterDetector:
         clusters = detector.detect_clusters(graph)
         # Large cluster should be split or filtered
         for cluster in clusters:
-            assert len(cluster.member_names) <= 10  # Original size
+            assert len(cluster.member_names) <= 3  # Respects max_cluster_size=3
 
 
 class TestClusterQuality:

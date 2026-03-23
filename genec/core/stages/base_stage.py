@@ -8,6 +8,11 @@ from typing import Any
 
 from genec.utils.logging_utils import get_logger
 
+# TYPE_CHECKING avoids circular imports at runtime
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from genec.core.pipeline_recorder import PipelineRecorder
+
 
 @dataclass
 class PipelineContext:

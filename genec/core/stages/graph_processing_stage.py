@@ -87,7 +87,7 @@ class GraphProcessingStage(PipelineStage):
 
         if context.recorder:
             context.recorder.end_stage("graph_processing", {
-                "centrality_computed": bool(centrality_metrics),
+                "centrality_computed": "centrality_metrics" in context.results,
                 "graph_exported": bool(context.results.get("graph_data")),
             })
 

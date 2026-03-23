@@ -207,9 +207,9 @@ def main():
     # -----------------------------------------------------------------------
     genec_clusters = []
     baseline_clusters = []
-    genec_lcom5 = []
-    baseline_lcom5 = []
-    improvement_lcom5 = []
+    genec_cohesion = []
+    baseline_cohesion = []
+    improvement_cohesion = []
 
     for cname, data in per_class_data.items():
         g = data.get("genec", {})
@@ -217,11 +217,12 @@ def main():
         genec_clusters.append(g.get("num_clusters", 0))
         baseline_clusters.append(b.get("num_clusters", 0))
 
-        g_lcom = g.get("original_metrics", {}).get("lcom5", 0.0)
-        b_lcom = b.get("original_metrics", {}).get("lcom5", 0.0)
-        genec_lcom5.append(float(g_lcom))
-        baseline_lcom5.append(float(b_lcom))
-        improvement_lcom5.append(float(b_lcom) - float(g_lcom))
+        # Compare cluster quality, not original metrics
+        g_cohesion = g.get("avg_cluster_cohesion", 0.0)
+        b_cohesion = b.get("avg_cluster_cohesion", 0.0)
+        genec_cohesion.append(float(g_cohesion))
+        baseline_cohesion.append(float(b_cohesion))
+        improvement_cohesion.append(float(g_cohesion) - float(b_cohesion))
 
     comparisons = {}
     comparisons["clusters"] = {
@@ -230,10 +231,10 @@ def main():
         "genec_mean": round(float(np.mean(genec_clusters)), 4) if genec_clusters else 0.0,
         "baseline_mean": round(float(np.mean(baseline_clusters)), 4) if baseline_clusters else 0.0,
     }
-    comparisons["lcom5_improvement"] = {
-        "bootstrap_ci": bootstrap_ci(improvement_lcom5),
-        "wilcoxon": wilcoxon_test(genec_lcom5, baseline_lcom5),
-        "cliffs_delta": cliffs_delta(improvement_lcom5, [0.0] * len(improvement_lcom5)),
+    comparisons["cohesion_improvement"] = {
+        "bootstrap_ci": bootstrap_ci(improvement_cohesion),
+        "wilcoxon": wilcoxon_test(genec_cohesion, baseline_cohesion),
+        "cliffs_delta": cliffs_delta(improvement_cohesion, [0.0] * len(improvement_cohesion)),
     }
 
     output["comparisons"] = comparisons

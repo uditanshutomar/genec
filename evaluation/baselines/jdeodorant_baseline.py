@@ -105,6 +105,7 @@ class JDeodorantBaseline:
         for idx, cluster in enumerate(clusters):
             methods_list = sorted(cluster["methods"])
             fields_list = sorted(cluster["fields"])
+            members = methods_list + fields_list
 
             proposed_name = f"{class_name}$Helper{idx + 1}"
             rationale = (
@@ -112,16 +113,16 @@ class JDeodorantBaseline:
                 f"fields {', '.join(fields_list)}."
             )
 
-            suggestions.append(
-                RefactoringSuggestion(
-                    cluster_id=idx,
-                    proposed_class_name=proposed_name,
-                    rationale=rationale,
-                    new_class_code="",
-                    modified_original_code="",
-                    cluster=None,
-                )
+            suggestion = RefactoringSuggestion(
+                cluster_id=idx,
+                proposed_class_name=proposed_name,
+                rationale=rationale,
+                new_class_code="",
+                modified_original_code="",
+                cluster=None,
             )
+            suggestion.methods = members  # type: ignore[attr-defined]
+            suggestions.append(suggestion)
 
         self.logger.info(
             "JDeodorant baseline produced %d suggestions", len(suggestions)
