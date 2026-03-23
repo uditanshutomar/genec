@@ -42,7 +42,9 @@ class TestAnalysisStage:
         evo.mine_method_cochanges.return_value = MagicMock(method_names=[], co_changes={}, total_commits=0)
         gb = MagicMock()
         gb.build_static_graph.return_value = MagicMock()
-        gb.build_evolutionary_graph.return_value = MagicMock()
+        evo_graph = MagicMock()
+        evo_graph.number_of_edges.return_value = 0
+        gb.build_evolutionary_graph.return_value = evo_graph
         fused = MagicMock()
         fused.number_of_nodes.return_value = 2
         fused.number_of_edges.return_value = 1

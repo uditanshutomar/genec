@@ -121,10 +121,24 @@ class AnalysisStage(PipelineStage):
                 self.logger.warning(f"Failed to build conceptual graph: {e}")
                 G_conceptual = None
 
+        # Adaptive alpha: if git history is too shallow (< 5 commits),
+        # evolutionary coupling is unreliable — increase alpha toward static-only.
+        configured_alpha = fusion_config.get("alpha", 0.6)
+        total_commits = getattr(evo_data, 'total_commits', 0)
+        if total_commits < 5 and G_evo.number_of_edges() > 0:
+            # Shallow history: use mostly static analysis
+            effective_alpha = max(configured_alpha, 0.95)
+            self.logger.info(
+                f"Shallow git history ({total_commits} commits) — "
+                f"increasing alpha from {configured_alpha} to {effective_alpha}"
+            )
+        else:
+            effective_alpha = configured_alpha
+
         G_fused = self.graph_builder.fuse_graphs(
             G_static,
             G_evo,
-            alpha=fusion_config.get("alpha", 0.6),
+            alpha=effective_alpha,
             edge_threshold=fusion_config.get("edge_threshold", 0.1),
             hotspot_data=hotspot_data,
             adaptive_fusion=adaptive_fusion,
