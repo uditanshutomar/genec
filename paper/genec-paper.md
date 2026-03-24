@@ -12,7 +12,7 @@ Vijay.Poloju@colorado.edu
 
 ## Abstract
 
-God Classes—monolithic Java behemoths that accumulate dozens of unrelated responsibilities—still plague even mature open-source libraries, yet existing refactoring tools either stay silent or suggest extractions that break compilation or semantics. Large Java classes with tangled concerns make maintenance and evolution risky, and approaches based solely on metrics, static dependencies, or unconstrained machine learning often surface refactorings that are semantically misaligned or unsafe. GenEC attacks this gap with a hybrid pipeline that fuses static dependency analysis with evolutionary coupling mined from version history, while constraining a Large Language Model (LLM) to generate only semantic artifacts (names, documentation, rationale) and delegating all structural edits to IDE-grade refactoring engines such as Eclipse JDT. Every candidate extraction is gated by multi-tier verification—compilation (with stub generation where needed), semantic-equivalence checks, and test preservation—and clusters that fail these gates are not silently discarded but instead yield structural transformation plans for manual follow-up. Our empirical evaluation on 50 real-world God Classes from the MLCQ benchmark and additional Java projects shows that GenEC consistently identifies semantically coherent extraction opportunities that metric-only baselines miss, while blocking 25% of unsafe proposals that would have broken compilation or violated equivalence. On Apache Commons IO's 2,100-line IOUtils (37 methods), metric-based analysis produced zero viable extraction groups despite clear design smells, whereas GenEC's fused analysis surfaced four cohesive opportunities (LCOM5≈0.0, external coupling < 0.25), all of which preserved existing tests. Developer ratings further indicate a 1.3× improvement in the semantic alignment of LLM-generated names over baseline naming. We release the complete tooling, prompts, evaluation harness, and replication package to support reproducibility and future work on safe, explainable automated refactoring.
+God Classes—monolithic Java behemoths that accumulate dozens of unrelated responsibilities—still plague even mature open-source libraries, yet existing refactoring tools either stay silent or suggest extractions that break compilation or semantics. Large Java classes with tangled concerns make maintenance and evolution risky, and approaches based solely on metrics, static dependencies, or unconstrained machine learning often surface refactorings that are semantically misaligned or unsafe. GenEC attacks this gap with a hybrid pipeline that fuses static dependency analysis with evolutionary coupling mined from version history, while constraining a Large Language Model (LLM) to generate only semantic artifacts (names, documentation, rationale) and delegating all structural edits to IDE-grade refactoring engines such as Eclipse JDT. Every candidate extraction is gated by multi-tier verification—compilation (with stub generation where needed), semantic-equivalence checks, and test preservation—and clusters that fail these gates are not silently discarded but instead yield structural transformation plans for manual follow-up. Our empirical evaluation on 23 real-world God Classes from 6 open-source projects (Apache Commons IO/Lang/Collections/Text/Math, JFreeChart) shows that GenEC consistently identifies semantically coherent extraction opportunities that metric-only baselines miss, while blocking 41.6% of proposals that would have broken compilation or equivalence. On Apache Commons IO's 4,012-line IOUtils (172 methods), metric-based analysis produced zero viable extraction groups despite clear design smells, whereas GenEC's fused analysis surfaced one verified extraction opportunity ("ResourceLoader" — internal cohesion 0.80, external coupling 0.25) that preserved existing tests. On the established HECS ECAccEval benchmark (92 instances), GenEC achieves macro F1=0.478 on instances with full evolutionary context (21 instances). We release the complete tooling, prompts, evaluation harness, and replication package to support reproducibility and future work on safe, explainable automated refactoring.
 
 ## 1 Introduction
 
@@ -52,25 +52,25 @@ Clusters that fail verification are not silently discarded. Instead, GenEC produ
 
 ### 1.3 Illustrative Example
 
-Consider `IOUtils` from Apache Commons IO—a 2,100-line class with 37 methods. Its LCOM5 score is 0.99 (nearly cohesive), so metric-only tools propose zero extractions. Yet manual inspection reveals four distinct responsibilities: stream copying, encoding detection, reader creation, and scratch-buffer pooling.
+Consider `IOUtils` from Apache Commons IO—a 4,012-line class with 172 methods and 8 fields. Its LCOM5 score is 1.0 and TCC is 0.064, so metric-only tools propose zero viable extractions. Yet manual inspection reveals distinct responsibilities buried among the overloaded utility methods.
 
-GenEC's evolutionary analysis discovered that the scratch-buffer methods (`getScratchBuffer()`, `releaseScratchBuffer()`, `getBufferSize()`) co-changed together in 8 commits while rarely changing with stream or encoding methods. Community detection on the fused graph surfaced this cluster. The LLM named it "ScratchBufferPool" with the rationale: "Manages thread-local scratch buffers for efficient I/O operations." JDT executed the extraction; verification passed all tiers. A developer reviewing this suggestion sees not just a list of methods but a coherent responsibility with a meaningful name and mechanical guarantees.
+GenEC's analysis discovered that the resource-loading methods (`resourceToString()`, `resourceToURL()` and their overloads) form a cohesive cluster with internal cohesion of 0.80 and external coupling of 0.25. The LLM named it "ResourceLoader" with the rationale: "These methods form a cohesive unit responsible for loading classpath resources and converting them to strings." JDT executed the extraction; verification passed all tiers. A developer reviewing this suggestion sees not just a list of methods but a coherent responsibility with a meaningful name and mechanical guarantees.
 
 ### 1.4 Empirical Evaluation Summary
 
 We evaluated GenEC on:
 
-- **50 real-world God Classes** from the MLCQ benchmark [7] spanning 12 Apache projects
-- Apache Commons IO's `IOUtils` (2,100 LOC, 37 methods)
-- **10 historical Extract Class refactorings** mined from RefactoringMiner [11] to establish ground truth
+- **23 God Classes** from 6 open-source projects (Apache Commons IO/Lang/Collections/Text/Math, JFreeChart)
+- **Baselines:** field-sharing clustering (37 suggestions) and random grouping (526 suggestions)
+- **HECS ECAccEval benchmark:** 92 Extract Class instances for ground-truth comparison
 
 Key results:
 
-- **Metric-only baselines produced zero viable clusters** on IOUtils; GenEC found four cohesive opportunities with LCOM5 ≈ 0.0 and external coupling < 0.25.
-- **Multi-tier verification blocked 25%** of proposed extractions that would have broken compilation or equivalence—preventing unsafe suggestions from reaching developers.
-- **All accepted extractions preserved tests**, demonstrating behavioral safety.
-- **Developer study (12 participants, 75% acceptance rate)**: ratings averaged 4.3/5 for willingness to apply and 4.5/5 for naming quality, a 1.3× improvement over baseline naming.
-- **End-to-end latency under 3 minutes per class** on commodity hardware, practical for interactive use.
+- GenEC produced **178 suggestions**, of which **104 passed multi-tier verification** (58.4% verification rate). Field-sharing baselines produced only 37 suggestions with no compilable extractions.
+- **Multi-tier verification blocked 41.6%** of proposed extractions that would have broken compilation or equivalence—preventing unsafe suggestions from reaching developers.
+- **"Should"-tier suggestions verified at 88.9%**, "could"-tier at 57.7%, demonstrating quality-tier stratification.
+- **HECS benchmark:** On the 21 instances with evolutionary context, GenEC achieves macro F1=0.478 (precision 0.41, recall 0.76).
+- **Average end-to-end latency of 201 seconds per class** on commodity hardware, practical for interactive use.
 
 ### 1.5 Contributions
 
@@ -79,7 +79,7 @@ This paper makes the following contributions:
 1. **Hybrid analysis for Extract Class** that fuses static dependency structure with evolutionary co-change signals, surfacing semantically coherent clusters that metric-only tools miss (Section 3).
 2. **Constrained LLM usage** that limits the model to naming and rationales while Eclipse JDT performs structural edits, eliminating hallucinated code while preserving semantic value (Section 3.3).
 3. **Multi-tier verification pipeline** with compilation, semantic/equivalence, and behavioral checks—plus structural fallback plans that provide actionable guidance when extraction fails (Section 3.4).
-4. **Empirical evaluation** on 50 real-world God Classes demonstrating higher-quality clusters, 25% unsafe proposals blocked, 75% developer acceptance, and practical performance (Section 6).
+4. **Empirical evaluation** on 23 real-world God Classes from 6 projects demonstrating higher-quality clusters, 41.6% unsafe proposals blocked, and macro F1=0.478 on the HECS benchmark with evolutionary context (Section 6).
 5. **Replication package** including complete tooling, prompts, evaluation harness, and VS Code extension, available in our public repository [9].
 
 ## 2 Technical Challenges
@@ -90,7 +90,7 @@ Building an Extract Class tool that developers trust requires addressing several
 
 Classical cohesion metrics like LCOM5 (Lack of Cohesion of Methods) and coupling metrics like CBO (Coupling Between Objects) were designed to flag problematic classes, not to guide decomposition. Community detection on method-call graphs optimizes graph properties (modularity, edge density) but routinely misses conceptual boundaries.
 
-**The problem is particularly acute in utility classes.** Consider IOUtils from Apache Commons IO: it has 37 methods that share a handful of common helper fields (buffers, default encodings). Metrics see high field-sharing and conclude the class is cohesive. But a human reviewer immediately recognizes that stream-copying methods, encoding-detection methods, and buffer-management methods serve distinct responsibilities that happen to share infrastructure.
+**The problem is particularly acute in utility classes.** Consider IOUtils from Apache Commons IO: it has 172 methods that share a handful of common helper fields (buffers, default encodings). Metrics see high field-sharing and conclude the class is cohesive. But a human reviewer immediately recognizes that stream-copying methods, encoding-detection methods, and buffer-management methods serve distinct responsibilities that happen to share infrastructure.
 
 *GenEC's response.* We fuse static structure with evolutionary coupling. Methods that change together across many commits likely share a responsibility—even if metrics suggest otherwise. The fused graph reveals conceptual boundaries that pure structure obscures.
 
@@ -150,7 +150,7 @@ Even worse, when a suggestion cannot be applied (due to circular dependencies, v
 
 *GenEC's response.* Every suggestion includes:
 
-- **A meaningful name** generated by the LLM (e.g., "ScratchBufferPool" not "Class1").
+- **A meaningful name** generated by the LLM (e.g., "ResourceLoader" not "Class1").
 - **A one-sentence rationale** explaining the shared responsibility.
 - **Evolutionary evidence** when available (e.g., "These 4 methods changed together in 8 commits").
 - **Verification status** showing which tiers passed.
@@ -177,7 +177,7 @@ w_static(m_i, m_j) = α_call·call_count(m_i, m_j) + α_field·shared_fields(m_i
 Where:
 - call_count(m_i, m_j) = number of times method m_i calls m_j
 - shared_fields(m_i, m_j) = number of class fields accessed by both methods
-- α_call = 0.6, α_field = 0.4 (configurable weights)
+- α_call = 1.0, α_field = 0.8, with an additional α_shared_field = 0.9 for shared field access (configurable weights)
 
 *Stage 2: Evolutionary Coupling Mining.* We traverse Git history to compute a co-change matrix C, where C[i, j] represents how often methods m_i and m_j changed together:
 
@@ -197,19 +197,15 @@ Implementation details:
 
 G_fused = α · normalize(G_static) + (1 − α) · normalize(G_evo). (3)
 
-By default, α = 0.6 (60% structural, 40% evolutionary). When evolutionary signal is weak (fewer than 10 co-changes total), we adaptively increase α toward 1.0.
+The configured default is α = 0.5, but the pipeline applies adaptive hotspot-based fusion where α varies per edge: high-hotspot edges use α as low as 0.2 (80% evolutionary), while low-hotspot edges use α = 0.8 (80% static). When evolutionary signal is weak (fewer than 10 co-changes total), α is adaptively increased toward 1.0.
 
-Community detection uses the Leiden algorithm (preferred for stability) or Louvain (fallback) at multiple resolutions:
-
-- **Resolution 0.8:** Coarse clusters (fewer, larger).
-- **Resolution 1.2:** Fine clusters (more, smaller).
-- **Resolution 1.0:** Default.
+Community detection uses the Leiden algorithm (preferred for stability) or Louvain (fallback). The pipeline default resolution is 2.0 (favoring more, smaller clusters), though the config file default is 1.0. Multi-resolution search over [0.5, 0.75, 1.0, 1.25, 1.5] is available but disabled by default.
 
 We filter clusters requiring:
 
 - Minimum of 3 methods.
 - At most 40% of the original class size.
-- Internal cohesion > 0.5 (ratio of intra-cluster edges to possible edges).
+- Internal cohesion > 0.35 (ratio of intra-cluster edges to possible edges).
 
 *Stage 4: Constrained LLM Semantics.* For each valid cluster, we prompt the LLM with a structured request:
 
@@ -346,45 +342,38 @@ To illustrate GenEC's approach concretely, we walk through its application to IO
 
 ### 4.1 The Subject Class
 
-IOUtils is a 2,100-line utility class with 37 public methods providing I/O convenience functions. It has been part of Apache Commons IO since 2002 and is used by thousands of downstream projects.
+IOUtils is a 4,012-line utility class with 172 methods providing I/O convenience functions. It has been part of Apache Commons IO since 2002 and is used by thousands of downstream projects.
 
 **Class Statistics:**
 
 | Metric | Value |
 |--------|-------|
-| Lines of Code | 2,100 |
-| Public Methods | 37 |
-| Private Methods | 12 |
+| Lines of Code | 4,012 |
+| Methods | 172 |
 | Fields | 8 |
-| LCOM5 | 0.99 (appears cohesive) |
-| CBO | 15 |
+| LCOM5 | 1.0 (appears maximally uncohesive) |
+| TCC | 0.064 (very low connectivity) |
+| CBO | 9 |
 
-**Sample Methods.**
+**Sample Methods (representative subset of 172).**
 
 ```java
 public class IOUtils {
-    // Stream copying
-    public static long copy(InputStream input, OutputStream output) {
-        → ... }
+    // Stream copying (many overloads)
+    public static long copy(InputStream input, OutputStream output) { ... }
     public static int copy(InputStream input, OutputStream output,
-        → int bufferSize) { ... }
+        int bufferSize) { ... }
 
-    // Encoding detection
-    public static String toString(InputStream input, String encoding) {
-        → { ... }
-    public static String toString(InputStream input, Charset charset) {
-        → { ... }
+    // Resource loading (the cluster GenEC extracts)
+    public static String resourceToString(String name, Charset charset) { ... }
+    public static URL resourceToURL(String name) { ... }
+
+    // String/encoding conversion
+    public static String toString(InputStream input, Charset charset) { ... }
 
     // Reader creation
-    public static BufferedReader toBufferedReader(Reader reader) {
-        → { ... }
-    public static LineIterator lineIterator(Reader reader) {
-        → { ... }
-
-    // Scratch buffer management
-    private static byte[] getScratchBuffer() { ... }
-    private static void releaseScratchBuffer(byte[] buffer) { ... }
-    private static int getDefaultBufferSize() { ... }
+    public static BufferedReader toBufferedReader(Reader reader) { ... }
+    public static LineIterator lineIterator(Reader reader) { ... }
 }
 ```
 
@@ -394,128 +383,66 @@ JDeodorant and similar metric-based tools analyze IOUtils and find:
 
 - **High field sharing:** Many methods access common fields (e.g., DEFAULT_BUFFER_SIZE, SKIP_BUFFER).
 - **Extensive method calls:** Utility methods call each other frequently.
-- **LCOM5 ≈ 0.99:** Metrics suggest the class is already cohesive.
+- **LCOM5 = 1.0, TCC = 0.064:** The class is large and uncohesive by metrics, yet the field-sharing baseline produces only 1 suggestion (a generic "IOUtils$Helper1" grouping 13 methods by shared field access).
 
-**Result:** Zero extraction opportunities suggested.
+**Result:** The field-sharing baseline produces one low-quality cluster with no verification. GenEC's fused analysis finds 37 candidate clusters, filters down to 1 verified extraction.
 
-But a human reviewer immediately sees distinct responsibilities:
-
-1. **Stream copying:** `copy()`, `copyLarge()`, `skip()`.
-2. **Encoding handling:** `toString()` overloads, `toCharArray()`.
-3. **Reader utilities:** `toBufferedReader()`, `lineIterator()`.
-4. **Scratch buffer management:** `getScratchBuffer()`, `releaseScratchBuffer()`, `getDefaultBufferSize()`.
-
-Metrics miss these because all responsibilities share common infrastructure (buffer fields, encoding constants).
+The challenge with IOUtils is that its 172 methods are mostly static utilities with minimal field sharing, making structural clustering difficult. Most methods are independent overloaded variants that do not share fields or call each other.
 
 ### 4.3 GenEC's Analysis
 
-*Stage 1: Static Dependency Graph.* GenEC builds a weighted dependency graph:
+*Stage 1: Static Dependency Graph.* GenEC builds a weighted dependency graph over IOUtils' 172 methods. With such a large utility class, most methods are static and share few fields, producing a sparse graph.
 
-```
-copy() --0.8--> getScratchBuffer()
-copy() --0.6--> releaseScratchBuffer()
-toString() --0.7--> copy()
-toString() --0.5--> getDefaultEncoding()
-getScratchBuffer() --0.9--> releaseScratchBuffer()
-```
+*Stage 2: Evolutionary Coupling.* Git history mining reveals co-change patterns among the resource-loading methods (`resourceToString`, `resourceToURL` and their overloads), which changed together across commits while rarely changing with stream-copying or encoding methods.
 
-Static analysis shows high coupling between buffer methods and stream methods (due to shared infrastructure).
-
-*Stage 2: Evolutionary Coupling.* Git history mining reveals a different pattern:
-
-| Method Pair | Co-changes | Static Coupling |
-|------------|-----------|----------------|
-| getScratchBuffer ↔ releaseScratchBuffer | 8 | 0.9 |
-| getScratchBuffer ↔ getDefaultBufferSize | 6 | 0.4 |
-| copy ↔ copyLarge | 12 | 0.7 |
-| toString ↔ toCharArray | 5 | 0.3 |
-| copy ↔ getScratchBuffer | 2 | 0.8 |
-
-**Key insight:** Buffer management methods (getScratchBuffer, releaseScratchBuffer, getDefaultBufferSize) co-changed frequently with each other but rarely with stream copying methods—despite high static coupling.
-
-*Stage 3: Fused Graph and Clustering.*
-
-With α = 0.6, the fused graph reveals four distinct clusters:
-
-| Cluster | Methods | Static | Evo | Fused |
-|---------|---------|--------|-----|-------|
-| BufferManagement | getScratchBuffer, releaseScratchBuffer, getDefaultBufferSize | 0.65 | 0.92 | 0.76 |
-| StreamCopying | copy, copyLarge, skip, skipFully | 0.78 | 0.85 | 0.81 |
-| EncodingHandling | toString (×4 overloads), toCharArray | 0.55 | 0.71 | 0.61 |
-| ReaderUtilities | toBufferedReader, lineIterator, readLines | 0.60 | 0.68 | 0.63 |
+*Stage 3: Fused Graph and Clustering.* Community detection on the fused graph produces 37 candidate clusters. After quality filtering (internal cohesion > 0.35, size constraints), only 1 cluster passes: a group of 4 resource-loading methods with internal cohesion of 0.80 and external coupling of 0.25.
 
 *Stage 4: LLM Naming.*
 
-GenEC prompts the LLM for the buffer cluster:
-
-> Given this cluster of methods from class IOUtils:
-> – Methods: getScratchBuffer(), releaseScratchBuffer(), getDefaultBufferSize()
-> – Shared fields: SCRATCH_BUFFER_TLS, DEFAULT_BUFFER_SIZE
-> – Co-change evidence: These 3 methods changed together in 8 commits (20182023)
->
-> Generate a class name and rationale.
+The LLM names the cluster "ResourceLoader" with the rationale: "These methods form a cohesive unit responsible for loading classpath resources and converting them to strings. They handle the complete workflow from resource discovery to content conversion."
 
 **LLM Response:**
 
-> Name: ScratchBufferPool
-> Rationale: Manages thread-local scratch buffers for efficient I/O operations, providing pooled byte arrays to avoid repeated allocations.
+> Name: ResourceLoader
+> Rationale: These methods form a cohesive unit responsible for loading classpath resources and converting them to strings.
 >
-> Confidence: 0.91
+> Confidence: 0.90
 
 ### 4.4 Verification Results
 
-Each extraction candidate passes through the multi-tier verification pipeline. Table 1 summarizes the outcomes.
+The single candidate extraction passes through the multi-tier verification pipeline.
 
 | Cluster | T1: Compile | T2: Semantic | T3: Tests | Result |
 |---------|-------------|-------------|-----------|--------|
-| ScratchBufferPool | Pass | Pass | Pass | Verified |
-| StreamCopier | Pass | Fail | – | Plan |
-| EncodingHandler | Pass | Pass | Pass | Verified |
-| ReaderFactory | Pass | Pass | Pass | Verified |
+| ResourceLoader | Pass | Pass | Pass | Verified |
 
 **Table 1:** Verification results for candidate extractions in IOUtils.
 
 ### 4.5 Final Output
 
-GenEC produces three verified suggestions and one structural plan.
+GenEC produces one verified suggestion for IOUtils.
 
-*Verified Suggestion 1: ScratchBufferPool.*
+*Verified Suggestion: ResourceLoader.*
 
-```java
-public class ScratchBufferPool {
-    // Extracted class
-    private static final ThreadLocal<byte[]> SCRATCH_BUFFER_TLS =
-        → ...;
-    private static final int DEFAULT_BUFFER_SIZE = 8192;
-
-    public static byte[] getScratchBuffer() { ... }
-    public static void releaseScratchBuffer(byte[] buffer) { ... }
-    public static int getDefaultBufferSize() { ... }
-}
-
-// Delegate in IOUtils
-public class IOUtils {
-    public static byte[] getScratchBuffer() {
-        return ScratchBufferPool.getScratchBuffer();
-    }
-}
-```
+- **Methods:** `resourceToString(String,Charset)`, `resourceToString(String,Charset,ClassLoader)`, `resourceToURL(String)`, `resourceToURL(String,ClassLoader)`
+- **Fields:** None (stateless extraction)
+- **Quality tier:** "should" (score 75.0)
 
 **Developer View.**
 
-- Name: ScratchBufferPool
-- Rationale: "Manages thread-local scratch buffers for efficient I/O operations"
-- Methods moved: 3
+- Name: ResourceLoader
+- Rationale: "These methods form a cohesive unit responsible for loading classpath resources and converting them to strings."
+- Methods moved: 4
 - Verification: All tiers passed
-- Confidence: 0.91
+- Confidence: 0.90
+- Post-extraction LCOM5: 1.0 (original class barely changes — 4 of 172 methods extracted)
 
 ### 4.6 Lessons from This Example
 
-1. **Metrics can deceive:** LCOM5 = 0.99 suggested no extraction needed—wrong.
-2. **History reveals intent:** 8 co-changes in buffer methods revealed a latent responsibility.
-3. **Fusion is key:** Neither static nor evolutionary analysis alone would find this cluster.
-4. **LLM adds semantic value:** "ScratchBufferPool" is far more meaningful than "IOUtils$Helper1".
-5. **Verification catches subtle bugs:** StreamCopier's state leakage was caught before reaching developers.
+1. **Large utility classes are hard:** With 172 methods and minimal field sharing, IOUtils yields only 1 verified extraction out of 37 candidates — a 2.7% filter pass rate.
+2. **Quality over quantity:** The single verified suggestion has high internal cohesion (0.80) and reasonable coupling (0.25), making it a genuinely useful extraction.
+3. **LLM adds semantic value:** "ResourceLoader" is far more meaningful than "IOUtils$Helper1" (the field-sharing baseline's name).
+4. **Honest limitations:** IOUtils' design (172 static utility methods with minimal interdependencies) resists decomposition. GenEC correctly identifies this by rejecting 36 of 37 clusters.
 
 ## 5 Research Questions
 
@@ -530,11 +457,11 @@ We structure our evaluation around four research questions that assess GenEC's e
 **Metrics.**
 
 - Number of viable clusters detected (compared to baselines)
-- Internal cohesion score (LCOM5 of extracted class)
-- External coupling score (CBO between extracted and original class)
-- Developer ratings of cluster coherence (5-point Likert)
+- Internal cohesion score of extracted clusters
+- External coupling score between extracted and original class
+- Wilcoxon signed-rank test and Cliff's delta for statistical comparison
 
-**Finding:** GenEC found 1.8× more viable clusters than metric-only baselines, with average cohesions 0.35 higher. On IOUtils, baselines found zero clusters while GenEC found four (see Section 6.2).
+**Finding:** GenEC produced 178 suggestions across 23 classes versus 37 for the field-sharing baseline (Wilcoxon p=0.0005, Cliff's delta=0.828, "large" effect). Verified suggestions average 5.9 methods with mean internal cohesion of 0.77 (95% CI: [0.74, 0.79]). See Section 6.2.
 
 ### RQ2: Verification Effectiveness
 
@@ -548,13 +475,13 @@ We structure our evaluation around four research questions that assess GenEC's e
 - Distribution of failure causes
 - Behavioral preservation rate
 
-**Finding:** Multi-tier verification blocked 25% of proposed extractions that would have introduced bugs. T1 (Compilation) caught 11%, T2 (Semantic) caught 9%, and T3 (Tests) caught 4%. All accepted extractions preserved test behavior (see Section 6.2).
+**Finding:** Multi-tier verification blocked 41.6% of proposed extractions (74 of 178). "Should"-tier suggestions verified at 88.9% (16/18), "could"-tier at 57.7% (86/149), and "potential"-tier at 18.2% (2/11). The strong correlation between quality tier and verification rate validates the tier stratification. See Section 6.2.
 
 ### RQ3: Semantic Artifact Quality
 
 **Question.** Do constrained LLM-generated names and rationales improve interpretability and developer acceptance compared to baseline naming?
 
-**Motivation.** A suggestion like "ScratchBufferPool: Manages thread-local scratch buffers for efficient I/O operations" provides far more context for decision-making than "IOUtils$Helper1" or "Cluster3".
+**Motivation.** A suggestion like "ResourceLoader: These methods form a cohesive unit responsible for loading classpath resources" provides far more context for decision-making than "IOUtils$Helper1" or "Cluster3".
 
 **Metrics.**
 
@@ -563,7 +490,7 @@ We structure our evaluation around four research questions that assess GenEC's e
 - Developer ratings for semantic alignment (5-point Likert)
 - Overall acceptance rate (% of suggestions developers would apply)
 
-**Finding:** LLM-generated names averaged 4.5/5.0, representing a 1.3× improvement over baseline naming (3.4/5.0). Developer acceptance rate reached 75% (9/12 would apply at least one suggestion). See Section 6.2 for details.
+**Finding:** Pending user study. Qualitative inspection of LLM-generated names (e.g., "ResourceLoader", "ByteSizeFormatter", "ShutdownFileDeleter") suggests meaningful semantic labels compared to baseline naming ("IOUtils$Helper1", "RandomGroup1"). A formal developer study with Likert-scale ratings is planned as future work.
 
 ### RQ4: Performance
 
@@ -577,7 +504,7 @@ We structure our evaluation around four research questions that assess GenEC's e
 - Total end-to-end latency per class
 - Peak memory consumption
 
-**Finding:** Total latency averaged 2.1 minutes for classes up to 2,100 LOC. Evolutionary mining dominated (540 ms), followed by LLM naming (800 ms) and verification (450 ms). Peak memory remained under 1 GB. See Section 6.2.
+**Finding:** Total latency averaged 201.3 seconds (approximately 3.4 minutes) per class across all 23 subjects, with total wall-clock time of 4,629 seconds. IOUtils (172 methods) completed in only 18.8 seconds due to its sparse dependency structure, while larger classes like JFreeChart's DefaultPolarItemRenderer took longer. See Section 6.2.
 
 ## 6 Empirical Evaluation
 
@@ -585,118 +512,97 @@ We structure our evaluation around four research questions that assess GenEC's e
 
 **Subjects.**
 
-- **50 God Classes** from the MLCQ benchmark [7] spanning 12 Apache projects
-- Apache Commons IO's `IOUtils` (2,100 LOC, 37 methods)
-- **10 historical Extract Class refactorings** mined from RefactoringMiner [11]
+- **23 God Classes** from 6 open-source projects:
+  - Apache Commons IO (3 classes): IOUtils, FileUtils, FilenameUtils
+  - Apache Commons Lang (5 classes): StringUtils, NumberUtils, ClassUtils, ArrayUtils, DateUtils
+  - Apache Commons Collections (3 classes): CollectionUtils, MapUtils, ListUtils
+  - Apache Commons Text (3 classes): StringSubstitutor, StrBuilder, WordUtils
+  - Apache Commons Math (4 classes): FastMath, MathArrays, ArithmeticUtils, Fraction
+  - JFreeChart (5 classes): various plot and renderer classes
 
 **Baselines.**
 
-- Metric-only clustering (LCOM5/TCC + Louvain)
-- JDeodorant published metrics [4]
+- **Field-sharing clustering:** groups methods by shared field access (37 total suggestions)
+- **Random grouping:** random method partitioning (526 total suggestions)
 
 **Metrics.**
 
-- Cluster quality (cohesion/coupling/modularity)
-- Verification outcomes per tier and failure categories
-- Semantic artifact ratings (5-point Likert)
-- Per-stage latency and memory
+- Cluster quality (internal cohesion, external coupling, modularity)
+- Verification outcomes per quality tier
+- Statistical comparison (Wilcoxon signed-rank, Cliff's delta)
+- Per-class latency
 
-**Procedure.** Run baselines and GenEC; record clusters and overlaps; apply verification and log failure reasons and structural plans; collect developer ratings for artifacts; and measure wall-clock time on an 8-core / 16 GB machine.
+**Procedure.** Run baselines and GenEC on all 23 classes; record clusters and verification outcomes; compare suggestion counts and quality; measure wall-clock time on commodity hardware. Additionally, evaluate on the HECS ECAccEval benchmark (92 instances) for ground-truth comparison.
 
 ### 6.2 Results
 
 **RQ1: Semantic Coherence.** *Does fusing static and evolutionary signals yield clusters that better align with human-perceived responsibilities than metric-only clustering?*
 
-| Subject | Baseline Clusters | GenEC Clusters | LCOM5 | Ext. Coupling |
-|---------|------------------|---------------|-------|--------------|
-| IOUtils | 0 | 4 | 0.00 | < 0.25 |
-| SerializationUtils | 3 | 5 | 0.05 | ~ 0.40 |
-| JobSchedulerService | 1 | 4 | 0.02 | ~ 0.30 |
+| Project | Classes | GenEC Suggestions | GenEC Verified | Baseline Suggestions |
+|---------|---------|-------------------|----------------|---------------------|
+| commons-io | 3 | 13 | 13 | 4 |
+| commons-lang | 5 | 25 | 23 | 8 |
+| commons-collections | 3 | 16 | 12 | 5 |
+| commons-text | 3 | 14 | 8 | 5 |
+| commons-math | 4 | 26 | 23 | 6 |
+| jfreechart | 5 | 84 | 25 | 9 |
+| **Total** | **23** | **178** | **104** | **37** |
 
-On IOUtils, metric-only baselines produced zero viable clusters; GenEC found four cohesive opportunities. Across 50 MLCQ samples, GenEC produced verified suggestions for **20% of candidates** (compared to 0% for metric-only baselines on complex utility classes).
+GenEC produced 178 suggestions versus 37 for the field-sharing baseline — a statistically significant improvement (Wilcoxon p=0.0005, Cliff's delta=0.828, "large" effect). Verified suggestions average 5.9 methods with mean internal cohesion of 0.77 (95% CI: [0.74, 0.79]). The overall cluster filter pass rate was 16.6% (178 of 1,071 raw clusters).
 
 **RQ2: Verification Effectiveness.** *How often do proposed clusters fail multi-tier verification, and what impediments dominate?*
 
-| Tier | Proposed | Passed | Pass Rate | Dominant Failures |
-|------|---------|--------|-----------|------------------|
-| Compilation (T1) | 27 | 24 | 88.9% | Missing deps, visibility |
-| Semantic/Equivalence (T2) | 24 | 20 | 83.3% | State leakage, init order |
-| Tests (T3) | 20 | 20 | 100% | — |
+| Quality Tier | Proposed | Verified | Verification Rate |
+|-------------|---------|----------|------------------|
+| "should" (high quality) | 18 | 16 | 88.9% |
+| "could" (moderate quality) | 149 | 86 | 57.7% |
+| "potential" (marginal) | 11 | 2 | 18.2% |
+| **Total** | **178** | **104** | **58.4%** |
 
-Multi-tier verification rejected **25%** of proposed extractions. All accepted extractions preserved tests.
+Multi-tier verification rejected **41.6%** of proposed extractions (74 of 178). The strong correlation between quality tier and verification rate validates GenEC's tier stratification: "should"-tier suggestions are almost always safe (88.9%), while "potential"-tier suggestions rarely survive verification (18.2%). The overall mean verification rate is 68.0% (95% CI: [51.9%, 83.0%]).
 
 **RQ3: Semantic Artifact Quality.** *Do constrained LLM-generated names and rationales improve interpretability and developer acceptance compared to baseline naming?*
 
-**Participants.** We recruited 12 Java developers to evaluate GenEC's suggestions:
+**Status:** A formal developer study with Likert-scale ratings is planned as future work. We report qualitative observations from the automated evaluation.
 
-- 5 industry developers (3–15 years experience, mean: 8.2 years)
-- 7 PhD students in software engineering (2–6 years experience, mean: 4.1 years)
+**Qualitative comparison of naming.** GenEC's LLM-generated names are semantically descriptive compared to baseline alternatives:
 
-**Task.** Each participant reviewed 5 GenEC suggestions from different God Classes and rated them on a 5-point Likert scale across four dimensions.
+| GenEC Name | Baseline Name | Project |
+|-----------|--------------|---------|
+| ResourceLoader | IOUtils$Helper1 | commons-io |
+| ByteSizeFormatter | FileUtils$Helper2 | commons-io |
+| ShutdownFileDeleter | FileUtils$Helper3 | commons-io |
+| DirectoryCreator | FileUtils$Helper4 | commons-io |
 
-**Survey Questions.**
+Each GenEC suggestion includes a one-sentence rationale grounded in the cluster's methods and co-change evidence, providing developers with context for acceptance decisions. A formal user study to quantify the impact on developer acceptance is planned.
 
-1. Would you apply this refactoring? (1 = Definitely not, 5 = Definitely yes)
-2. Is the suggested class name appropriate? (1 = Poor, 5 = Excellent)
-3. Are the method groupings cohesive? (1 = Arbitrary, 5 = Highly cohesive)
-4. Does this improve code quality? (1 = No improvement, 5 = Significant improvement)
+**RQ4: Performance.** *Is the end-to-end latency and memory footprint practical for interactive refactoring sessions?*
 
-**Results by Suggestion.**
+Average end-to-end latency is 201.3 seconds per class (total 4,629 seconds across 23 classes). Latency varies significantly by class complexity:
 
-| Extracted Class | Apply? | Name | Cohesion | Quality | Overall |
-|----------------|--------|------|----------|---------|---------|
-| ScratchBufferPool | 4.8 | 5.0 | 4.7 | 4.8 | 4.8 |
-| StreamCopier | 4.2 | 4.0 | 4.7 | 4.2 | 4.3 |
-| ScheduleTimer | 4.5 | 4.7 | 4.2 | 4.5 | 4.5 |
-| EncodingDetector | 4.3 | 4.7 | 4.0 | 4.2 | 4.3 |
-| CredentialRepository | 3.8 | 4.2 | 3.5 | 3.9 | 3.9 |
-| **Average** | **4.3** | **4.5** | **4.1** | **4.3** | **4.3** |
+| Class | Methods | Execution Time (s) | Suggestions |
+|-------|---------|-------------------|-------------|
+| IOUtils | 172 | 18.8 | 1 |
+| FileUtils | 159 | 136.2 | 7 |
+| StringUtils | 166 | — | — |
+| JFreeChart classes | varies | up to 600+ | varies |
 
-**Aggregate Results.**
+IOUtils completes quickly (18.8s) because its sparse dependency structure produces few viable clusters. Classes with richer dependency graphs and more verification candidates take proportionally longer. The pipeline is practical for batch analysis but classes with many verification candidates may exceed interactive thresholds.
 
-| Question | Mean | SD |
-|----------|------|----|
-| Would you apply this refactoring? | 4.3 | 0.8 |
-| Is the suggested class name appropriate? | 4.5 | 0.6 |
-| Are the method groupings cohesive? | 4.1 | 0.9 |
-| Does this improve code quality? | 4.3 | 0.7 |
+### 6.3 HECS Benchmark Comparison
 
-**Acceptance Rate.** 75% (9/12) of developers indicated they would apply at least one GenEC suggestion to their codebase.
+We evaluated GenEC on the HECS ECAccEval benchmark [3], which provides 92 ground-truth Extract Class instances from real-world projects.
 
-**Qualitative Feedback:**
+| Subset | Instances | Precision | Recall | Macro F1 |
+|--------|-----------|-----------|--------|----------|
+| With evolutionary context | 21 | 0.405 | 0.758 | 0.478 |
+| Static only (no evo history) | 71 | 0.057 | 0.161 | 0.076 |
+| Multi-member (3+ members) | 49 | 0.228 | 0.476 | 0.281 |
+| **All instances** | **92** | **0.136** | **0.297** | **0.167** |
 
-> "The name 'ScheduleTimer' is much better than what I would have called it—probably just 'TimerHelper' or something generic." — P4 (Industry, 8 yrs)
+**Key finding on evolutionary coupling:** A controlled ablation running `--no-evo` on the same 21 instances with evolutionary context produces identical F1=0.478. This reveals that evolutionary coupling improves candidate discovery (+27.4% more clusters on the live benchmark) rather than member-selection accuracy. The evo signal helps find more potential extraction sites but does not change which members are grouped once a cluster is found.
 
-> "I appreciate that it generates actual compilable code, not just a list of methods to move." — P11 (Industry, 12 yrs)
-
-> "Some extractions feel slightly arbitrary—why include these 4 methods but not those 3? The rationale helped but wasn't always convincing." — P7 (PhD, 4 yrs)
-
-> "The verification report showing it compiles and passes tests gives me confidence to accept." — P2 (Industry, 5 yrs)
-
-**Comparison vs. Baseline Naming.** Developer ratings showed a **1.3× improvement** in semantic alignment for GenEC's constrained LLM artifacts compared to metric-based baseline naming (4.5 vs. 3.4 average).
-
-**RQ4: Performance.** *Is the end-to-end latency and memory footprint practical for interactive refactoring sessions?* End-to-end latency remains under 3 minutes per class. Evolutionary mining dominates (60–90s on long histories). Peak memory remains below 1 GB.
-
-| Stage | IOUtils (ms) | JobScheduler (ms) |
-|-------|-------------|------------------|
-| Static Analysis | 120 | 85 |
-| Evolutionary Coupling | 540 | 320 |
-| Graph Fusion/Clustering | 40 | 28 |
-| LLM Naming (per cluster) | 800 | 650 |
-| Verification | 450 | 280 |
-| **Total (per cluster)** | **~1,950** | **~1,360** |
-
-### 6.3 Ground Truth Comparison
-
-We used RefactoringMiner to mine historical *Extract Class* refactorings from Apache Commons IO (5,855 commits, 18,683 refactorings, 10 *Extract Class* instances). Running GenEC on the parent commits yields:
-
-| Original Class | Developer Extracted | GenEC Suggested | Match |
-|---------------|-------------------|-----------------|-------|
-| FileUtils (1,325 LOC) | FilenameUtils | FilePathParser | Partial |
-| IOUtils | Charsets | ResourceCloser | No |
-| CountingPathFileVisitor | toPathCounts | DirectoryCounter | No |
-
-Match rate is 25% (1/4). GenEC focuses on behavioral clusters, whereas developers often extract data/constant classes.
+**Limitations on static-only instances:** On the 71 instances without meaningful evolutionary history, GenEC achieves only F1=0.076, highlighting the tool's dependence on repository health and the difficulty of matching HECS's labeled extractions using purely structural signals.
 
 ### 6.4 Threats to Validity
 
@@ -773,7 +679,7 @@ Zimmermann et al. [13] established that files changing together predict future c
 
 CodeMaat [10] operationalized evolutionary coupling for architectural analysis, enabling "temporal coupling" visualization. However, prior work has not fused evolutionary signals with static structure specifically for *Extract Class* refactoring.
 
-**GenEC's contribution.** We are the first to combine evolutionary coupling with static dependency analysis for Extract Class, using adaptive α-weighting to balance signals based on repository health.
+**GenEC's contribution.** We are the first to combine evolutionary coupling with static dependency analysis for Extract Class, using adaptive α-weighting to balance signals based on repository health. Our controlled ablation reveals a nuanced finding: evolutionary coupling improves candidate discovery (+27.4% more clusters) rather than member-selection accuracy (identical F1 in controlled ablation on the same instances). This suggests that evo coupling's primary value for Extract Class is broadening the search space, not refining individual cluster composition.
 
 ### 7.5 Verification and Safety
 
@@ -799,16 +705,16 @@ Prior Extract Class tools lack multi-tier verification. JDeodorant checks only c
 
 This paper presented GenEC, a hybrid Extract Class refactoring framework that addresses the longstanding gap between God Class detection and safe, automated decomposition. By fusing static dependency analysis with evolutionary coupling and constraining LLM usage to semantic artifacts while delegating code generation to Eclipse JDT, GenEC produces verified, compilable, and explainable refactoring suggestions.
 
-Our evaluation on 50 real-world God Classes demonstrates that GenEC identifies cohesive extraction opportunities invisible to metric-only tools, blocks 25% of unsafe proposals through multi-tier verification, and produces suggestions that developers accept at a 75% rate with meaningful semantic names.
+Our evaluation on 23 real-world God Classes from 6 open-source projects demonstrates that GenEC identifies cohesive extraction opportunities invisible to metric-only tools (178 vs. 37 suggestions, Wilcoxon p=0.0005), blocks 41.6% of unsafe proposals through multi-tier verification, and produces suggestions with meaningful semantic names. On the HECS benchmark, GenEC achieves macro F1=0.478 on instances with evolutionary context.
 
 The key lessons are:
 
-1. **Evolutionary coupling reveals latent responsibilities** that static analysis misses, particularly in utility classes with shared infrastructure.
+1. **Evolutionary coupling improves candidate discovery** (+27.4% more clusters) rather than member-selection accuracy (identical F1 in controlled ablation), particularly valuable in utility classes with shared infrastructure.
 2. **Constraining LLMs to semantics** eliminates hallucination issues while preserving the naming and explanation quality developers value.
 3. **Multi-tier verification is essential** for developer trust—compilation alone is insufficient.
 4. **Structural transformation plans** turn failures into actionable guidance, making the tool useful even when automatic extraction is not possible.
 
-**Future work.** We plan to extend GenEC to support incremental God Class decomposition (multiple passes), cross-file Extract Class refactoring, and integration with additional LLM providers for robustness. We also plan to evaluate on larger industrial codebases and conduct a longitudinal study of developer adoption patterns.
+**Future work.** We plan to extend GenEC to support incremental God Class decomposition (multiple passes), cross-file Extract Class refactoring, and integration with additional LLM providers for robustness. We also plan to conduct a formal developer study with Likert-scale ratings to quantify the impact of LLM-generated semantic artifacts on developer acceptance, evaluate on larger industrial codebases, and conduct a longitudinal study of developer adoption patterns.
 
 ## References
 
