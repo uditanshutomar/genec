@@ -218,9 +218,24 @@ class CouplingCalculator:
         if project_classes is not None:
             return class_name in project_classes
 
-        # Without an explicit project class list, we cannot reliably determine
-        # if a class belongs to the project. Default to False (conservative).
-        return False
+        # Without an explicit project class list, treat all non-primitive,
+        # non-stdlib types as potential coupling targets. This is permissive
+        # but more useful than returning 0 for all classes.
+        java_primitives = {
+            "int", "long", "short", "byte", "float", "double", "boolean",
+            "char", "void",
+        }
+        java_stdlib = {
+            "String", "Object", "Integer", "Long", "Short", "Byte", "Float",
+            "Double", "Boolean", "Character", "Void", "Number", "Math",
+            "Class", "System", "Thread", "Throwable", "Exception",
+            "RuntimeException", "Error",
+            "List", "Map", "Set", "Collection", "Iterator", "Iterable",
+            "ArrayList", "HashMap", "HashSet", "LinkedList", "TreeMap",
+            "Optional", "Stream", "Comparable", "Comparator",
+            "StringBuilder", "StringBuffer", "Enum",
+        }
+        return class_name not in java_primitives and class_name not in java_stdlib
 
     def _class_depends_on(self, class_deps: ClassDependencies, target_class: str) -> bool:
         """
