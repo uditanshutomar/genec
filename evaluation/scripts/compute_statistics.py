@@ -208,6 +208,27 @@ def main():
     # -----------------------------------------------------------------------
     # 1) Paired comparisons: GenEC vs baseline
     # -----------------------------------------------------------------------
+    # The live evaluation stores one file per class in flat format:
+    #   data = {"class_name": ..., "suggestions": [...], "clusters_found": ...}
+    # NOT data = {"genec": {...}, "baseline": {...}}
+    # Baseline data comes from a separate baseline_results.json file.
+
+    # Load baseline results if available
+    baseline_file = args.results_dir / "baseline_results.json"
+    if not baseline_file.exists():
+        baseline_file = args.results_dir.parent / "baseline_results.json"
+    baseline_per_class: dict[str, dict] = {}
+    if baseline_file.exists():
+        with open(baseline_file) as f:
+            baseline_data = json.load(f)
+        # baseline_results.json has {"field_sharing": {"per_class": [...]}, "random": {...}}
+        for strategy_name, strategy_data in baseline_data.items():
+            for entry in strategy_data.get("per_class", []):
+                cname = entry.get("class_name", "")
+                if cname:
+                    baseline_per_class[cname] = entry
+        logger.info("Loaded baseline data for %d classes", len(baseline_per_class))
+
     genec_clusters = []
     baseline_clusters = []
     genec_cohesion = []
@@ -215,16 +236,20 @@ def main():
     improvement_cohesion = []
 
     for cname, data in per_class_data.items():
-        g = data.get("genec", {})
-        b = data.get("baseline", {})
-        genec_clusters.append(g.get("num_clusters", 0))
-        baseline_clusters.append(b.get("num_clusters", 0))
+        # Flat format: data itself is the GenEC result
+        genec_clusters.append(data.get("clusters_found", 0))
 
-        # Compute avg cluster cohesion from the clusters array
-        g_clusters = g.get("clusters", [])
-        b_clusters = b.get("clusters", [])
-        g_cohesion = sum(c.get("cohesion", 0.0) for c in g_clusters) / max(len(g_clusters), 1) if g_clusters else 0.0
-        b_cohesion = sum(c.get("cohesion", 0.0) for c in b_clusters) / max(len(b_clusters), 1) if b_clusters else 0.0
+        b = baseline_per_class.get(cname, {})
+        baseline_clusters.append(b.get("suggestions_total", 0))
+
+        # GenEC cohesion: average internal_cohesion from suggestions
+        g_suggestions = data.get("suggestions", [])
+        g_cohesion_vals = [s.get("internal_cohesion", 0.0) for s in g_suggestions if s.get("internal_cohesion") is not None]
+        g_cohesion = sum(g_cohesion_vals) / max(len(g_cohesion_vals), 1) if g_cohesion_vals else 0.0
+
+        # Baseline has no cohesion data; use 0.0
+        b_cohesion = 0.0
+
         genec_cohesion.append(float(g_cohesion))
         baseline_cohesion.append(float(b_cohesion))
         improvement_cohesion.append(g_cohesion - b_cohesion)
@@ -260,7 +285,8 @@ def main():
             all_prec, all_rec, all_f1 = [], [], []
 
             for cname, data in per_class_data.items():
-                suggestions = data.get("genec", {}).get("suggestions", [])
+                # Flat format: suggestions are at top level
+                suggestions = data.get("suggestions", [])
                 source_class = cname  # class stem as identifier
                 prf = precision_recall_f1(suggestions, gt_entries, source_class, threshold)
                 all_prec.append(prf["precision"])

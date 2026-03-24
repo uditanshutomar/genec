@@ -171,10 +171,29 @@ def run_single_class(entry: dict) -> dict:
             "suggestions": [
                 {
                     "name": s.proposed_class_name,
-                    "methods": len(s.cluster.get_methods()) if s.cluster else 0,
-                    "verified": s.verification_status == "verified",
+                    "methods": s.cluster.get_methods() if s.cluster else [],
+                    "fields": s.cluster.get_fields() if s.cluster else [],
+                    "members": s.cluster.member_names if s.cluster else [],
+                    "member_types": s.cluster.member_types if s.cluster else {},
+                    "cluster_id": s.cluster.id if s.cluster else None,
+                    "quality_tier": s.quality_tier,
+                    "quality_score": s.quality_score,
+                    "quality_reasons": s.quality_reasons if s.quality_reasons else [],
+                    "internal_cohesion": s.cluster.internal_cohesion if s.cluster else None,
+                    "external_coupling": s.cluster.external_coupling if s.cluster else None,
+                    "modularity": s.cluster.modularity if s.cluster else None,
+                    "silhouette_score": s.cluster.silhouette_score if s.cluster else None,
+                    "conductance": s.cluster.conductance if s.cluster else None,
+                    "coverage": s.cluster.coverage if s.cluster else None,
+                    "is_connected": s.cluster.is_connected if s.cluster else None,
+                    "stability_score": s.cluster.stability_score if s.cluster else None,
+                    "verified": getattr(s, 'verification_status', None) == "verified",
+                    "verification_status": getattr(s, 'verification_status', None),
                     "confidence": s.confidence_score,
-                    "rationale": s.rationale[:200] if s.rationale else None,
+                    "rationale": s.rationale or getattr(s, 'reasoning', None),
+                    "reasoning": s.reasoning,
+                    "naming_votes": s.naming_votes,
+                    "naming_agreement": s.naming_agreement,
                     **_compute_suggestion_post_metrics(s),
                 }
                 for s in result.suggestions
@@ -343,7 +362,8 @@ def main():
             logger.info(f"  ✓ {v}/{s} verified in {t}s")
             for sg in result["suggestions"]:
                 mark = "✓" if sg["verified"] else "✗"
-                logger.info(f"    {mark} {sg['name']} ({sg['methods']} methods)")
+                n_methods = len(sg['methods']) if isinstance(sg['methods'], list) else sg['methods']
+                logger.info(f"    {mark} {sg['name']} ({n_methods} methods)")
         else:
             logger.error(f"  ✗ FAILED: {result.get('error', 'unknown')[:100]}")
 

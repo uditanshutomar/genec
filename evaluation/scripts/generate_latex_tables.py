@@ -39,10 +39,30 @@ def _f(val, fmt=".2f"):
 # Table 1 – RQ1: GenEC vs Baseline
 # ---------------------------------------------------------------------------
 
+def _load_baseline(results_dir: Path) -> dict[str, dict]:
+    """Load baseline results keyed by class name."""
+    baseline_file = results_dir / "baseline_results.json"
+    if not baseline_file.exists():
+        baseline_file = results_dir.parent / "baseline_results.json"
+    if not baseline_file.exists():
+        return {}
+    with open(baseline_file) as f:
+        baseline_data = json.load(f)
+    baseline_per_class: dict[str, dict] = {}
+    for _strategy_name, strategy_data in baseline_data.items():
+        for entry in strategy_data.get("per_class", []):
+            cname = entry.get("class_name", "")
+            if cname:
+                baseline_per_class[cname] = entry
+    return baseline_per_class
+
+
 def generate_table_rq1(results_dir: Path) -> str:
     per_class = _load_per_class(results_dir)
     if not per_class:
         return "% No per-class data found.\n"
+
+    baseline_per_class = _load_baseline(results_dir)
 
     lines = [
         r"\begin{table}[t]",
@@ -58,17 +78,16 @@ def generate_table_rq1(results_dir: Path) -> str:
     ]
 
     for cname, data in sorted(per_class.items()):
-        g = data.get("genec", {})
-        b = data.get("baseline", {})
-        g_orig = g.get("original_metrics", {})
-        b_orig = b.get("original_metrics", {})
+        # Flat format: data itself is the GenEC result
+        g_orig = data.get("original_metrics", {})
+        b = baseline_per_class.get(cname, {})
 
         escaped = cname.replace("_", r"\_")
         row = (
             f"{escaped} & "
-            f"{b.get('num_clusters', 0)} & {g.get('num_clusters', 0)} & "
-            f"{_f(b_orig.get('lcom5'), '.3f')} & {_f(g_orig.get('lcom5'), '.3f')} & "
-            f"{_f(b_orig.get('external_coupling'), '.3f')} & {_f(g_orig.get('external_coupling'), '.3f')} \\\\"
+            f"{b.get('suggestions_total', 0)} & {data.get('clusters_found', 0)} & "
+            f"{_f(g_orig.get('lcom5'), '.3f')} & {_f(g_orig.get('lcom5'), '.3f')} & "
+            f"{_f(None, '.3f')} & {_f(g_orig.get('external_coupling'), '.3f')} \\\\"
         )
         lines.append(row)
 
@@ -149,17 +168,15 @@ def generate_table_verification(results_dir: Path) -> str:
     tier_counts: dict[str, dict[str, int]] = {}  # tier -> {total, verified}
 
     for cname, data in per_class.items():
-        clusters = data.get("genec", {}).get("clusters", [])
-        verified_ids = set()
-        for s in data.get("genec", {}).get("suggestions", []):
-            verified_ids.add(s.get("cluster_id"))
+        # Flat format: suggestions are at top level and contain quality_tier directly
+        suggestions = data.get("suggestions", [])
 
-        for c in clusters:
-            tier = c.get("quality_tier", "unknown") or "unknown"
+        for s in suggestions:
+            tier = s.get("quality_tier", "unknown") or "unknown"
             if tier not in tier_counts:
                 tier_counts[tier] = {"total": 0, "verified": 0}
             tier_counts[tier]["total"] += 1
-            if c.get("id") in verified_ids:
+            if s.get("verified", False):
                 tier_counts[tier]["verified"] += 1
 
     if not tier_counts:
@@ -246,7 +263,8 @@ def generate_table_ground_truth(results_dir: Path) -> str:
 
 def _load_per_class(results_dir: Path) -> dict[str, dict]:
     """Load per-class result JSON files."""
-    skip = {"aggregate_results.json", "ablation_results.json", "statistical_analysis.json"}
+    skip = {"aggregate_results.json", "ablation_results.json", "statistical_analysis.json",
+            "ground_truth_analysis.json", "baseline_results.json"}
     per_class = {}
     for p in sorted(results_dir.glob("*.json")):
         if p.name in skip:

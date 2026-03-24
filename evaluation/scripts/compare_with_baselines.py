@@ -22,14 +22,14 @@ def load_json(path: Path) -> dict:
 
 
 def avg_cluster_size(per_class: list[dict]) -> float:
-    """Average number of methods per suggestion across all classes."""
-    total_methods = 0
+    """Average number of members per suggestion across all classes."""
+    total_members = 0
     total_suggestions = 0
     for entry in per_class:
         for s in entry.get("suggestions", []):
-            total_methods += s.get("methods", 0)
+            total_members += s.get("members", s.get("methods", 0))
             total_suggestions += 1
-    return round(total_methods / total_suggestions, 1) if total_suggestions else 0.0
+    return round(total_members / total_suggestions, 1) if total_suggestions else 0.0
 
 
 def main():
@@ -46,14 +46,14 @@ def main():
     genec_rate = genec["verification_rate"]
     genec_classes = genec["total_classes"]
 
-    # Compute GenEC avg cluster size from per-class data
-    genec_total_methods = 0
+    # Compute GenEC avg cluster size from per-class data (members = methods + fields)
+    genec_total_members = 0
     genec_total_sug = 0
     for entry in genec["per_class"]:
         for s in entry.get("suggestions", []):
-            genec_total_methods += s.get("methods", 0)
+            genec_total_members += s.get("members", s.get("methods", 0))
             genec_total_sug += 1
-    genec_avg_size = round(genec_total_methods / genec_total_sug, 1) if genec_total_sug else 0.0
+    genec_avg_size = round(genec_total_members / genec_total_sug, 1) if genec_total_sug else 0.0
 
     # --- Field-Sharing metrics ---
     fs = baselines.get("field_sharing", {})
@@ -90,7 +90,7 @@ def main():
         print(f" {llm_suggestions:>10d}", end="")
     print()
 
-    print(f"{'Avg methods/suggestion':30s} {genec_avg_size:>10.1f} {fs_avg_size:>10.1f} {rand_avg_size:>10.1f}", end="")
+    print(f"{'Avg members/suggestion':30s} {genec_avg_size:>10.1f} {fs_avg_size:>10.1f} {rand_avg_size:>10.1f}", end="")
     if llm:
         print(f" {llm_avg_size:>10.1f}", end="")
     print()
@@ -114,8 +114,8 @@ def main():
     sign = "+" if fs_delta >= 0 else ""
     print(f"  GenEC vs Field-Sharing: {sign}{fs_delta} suggestions "
           f"({genec_suggestions} vs {fs_suggestions})")
-    print(f"  GenEC avg cluster size: {genec_avg_size} methods vs "
-          f"Field-Sharing: {fs_avg_size} methods")
+    print(f"  GenEC avg cluster size: {genec_avg_size} members vs "
+          f"Field-Sharing: {fs_avg_size} members")
     print()
 
     rand_delta = genec_suggestions - rand_suggestions
@@ -132,7 +132,7 @@ def main():
         sign = "+" if llm_delta >= 0 else ""
         print(f"  GenEC vs LLM-Only: {sign}{llm_delta} suggestions "
               f"({genec_suggestions} vs {llm_suggestions})")
-        print(f"  LLM-Only avg cluster size: {llm_avg_size} methods")
+        print(f"  LLM-Only avg cluster size: {llm_avg_size} members")
         print()
 
     print("Note: Baselines do not produce compilable code and have no")

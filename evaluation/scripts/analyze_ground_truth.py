@@ -93,9 +93,10 @@ def analyze(
     category_counts = {"naming_only": 0, "partial_overlap": 0, "behavioral_vs_data": 0, "no_match": 0}
 
     # Map: class stem -> GenEC suggestions
+    # Per-class files use flat format: data["suggestions"], not data["genec"]["suggestions"]
     class_suggestions: dict[str, list[dict]] = {}
     for cname, data in per_class_data.items():
-        suggestions = data.get("genec", {}).get("suggestions", [])
+        suggestions = data.get("suggestions", [])
         class_suggestions[cname] = suggestions
 
     # Track which (class_key, suggestion_index) pairs matched a ground truth entry
@@ -165,9 +166,9 @@ def analyze(
             "commit_sha": commit_sha,
             "gt_members": sorted(gt_members),
             "best_match": {
-                "proposed_class_name": best_suggestion.get("proposed_class_name", "") if best_suggestion else None,
+                "proposed_class_name": best_suggestion.get("name", "") if best_suggestion else None,
                 "members": sorted(best_suggestion.get("members", [])) if best_suggestion else [],
-                "confidence": best_suggestion.get("confidence_score", 0.0) if best_suggestion else None,
+                "confidence": best_suggestion.get("confidence", 0.0) if best_suggestion else None,
             },
             "best_jaccard": round(best_jaccard, 4),
             "category": category,

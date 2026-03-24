@@ -48,7 +48,10 @@ def run_baseline(baseline, class_file, class_name):
             "suggestions": [
                 {
                     "name": s.proposed_class_name,
-                    "methods": len(s.cluster.member_names) if s.cluster else 0,
+                    "members": len(s.cluster.member_names) if s.cluster else 0,
+                    "member_names": s.cluster.member_names if s.cluster else [],
+                    "method_count": len(s.cluster.method_signatures) if s.cluster and hasattr(s.cluster, 'method_signatures') else 0,
+                    "field_count": (len(s.cluster.member_names) - len(s.cluster.method_signatures)) if s.cluster and hasattr(s.cluster, 'method_signatures') else 0,
                 }
                 for s in suggestions
             ],
