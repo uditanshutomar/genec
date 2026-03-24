@@ -68,8 +68,8 @@
         "REG_NAME_PART_PATTERN": "field"
       },
       "cluster_id": 2,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "COULD",
+      "quality_score": 61,
       "quality_reasons": [],
       "internal_cohesion": 0.5261538461538462,
       "external_coupling": 1.0,
@@ -208,8 +208,8 @@
         "equals(String,String)": "method"
       },
       "cluster_id": 1,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "COULD",
+      "quality_score": 52,
       "quality_reasons": [],
       "internal_cohesion": 0.549375,
       "external_coupling": 0.9950701554797118,

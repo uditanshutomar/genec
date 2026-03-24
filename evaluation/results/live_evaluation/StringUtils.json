@@ -40,8 +40,8 @@
         "compareIgnoreCase(String,String,boolean)": "method"
       },
       "cluster_id": 5,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "COULD",
+      "quality_score": 57,
       "quality_reasons": [],
       "internal_cohesion": 0.54,
       "external_coupling": 0.0,
@@ -128,8 +128,8 @@
         "substring(String,int)": "method"
       },
       "cluster_id": 3,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "COULD",
+      "quality_score": 56,
       "quality_reasons": [],
       "internal_cohesion": 0.5399999999999999,
       "external_coupling": 1.0,
@@ -232,8 +232,8 @@
         "substring(String,int)": "method"
       },
       "cluster_id": 2,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "COULD",
+      "quality_score": 56,
       "quality_reasons": [],
       "internal_cohesion": 0.5369230769230768,
       "external_coupling": 1.0,

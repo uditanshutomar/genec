@@ -94,8 +94,8 @@
         "isSorted(T[],Comparator)": "method"
       },
       "cluster_id": 4,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "SHOULD",
+      "quality_score": 70,
       "quality_reasons": [],
       "internal_cohesion": 0.8722727272727276,
       "external_coupling": 1.0,
@@ -179,8 +179,8 @@
         "reverse(short[],int,int)": "method"
       },
       "cluster_id": 5,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "SHOULD",
+      "quality_score": 70,
       "quality_reasons": [],
       "internal_cohesion": 0.8550000000000003,
       "external_coupling": 0.0,
@@ -289,8 +289,8 @@
         "getComponentType(T[])": "method"
       },
       "cluster_id": 3,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "SHOULD",
+      "quality_score": 70,
       "quality_reasons": [],
       "internal_cohesion": 0.8455629139072849,
       "external_coupling": 0.9753039513677807,

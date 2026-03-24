@@ -119,8 +119,8 @@
         "backgroundRangeMarkers": "field"
       },
       "cluster_id": 2,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "COULD",
+      "quality_score": 56,
       "quality_reasons": [],
       "internal_cohesion": 0.5294117647058824,
       "external_coupling": 0.9987500000000001,
@@ -162,8 +162,8 @@
         "setDomainAxisLocation(int,AxisLocation,boolean)": "method"
       },
       "cluster_id": 3,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "COULD",
+      "quality_score": 57,
       "quality_reasons": [],
       "internal_cohesion": 0.54,
       "external_coupling": 0.9814814814814815,
@@ -202,8 +202,8 @@
         "zoomDomainAxes(double,PlotRenderingInfo,Point2D,boolean)": "method"
       },
       "cluster_id": 4,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "COULD",
+      "quality_score": 57,
       "quality_reasons": [],
       "internal_cohesion": 0.54,
       "external_coupling": 0.0,

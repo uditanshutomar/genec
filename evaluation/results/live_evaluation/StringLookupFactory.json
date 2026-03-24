@@ -59,8 +59,8 @@
         "propertiesStringLookup()": "method"
       },
       "cluster_id": 1,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "COULD",
+      "quality_score": 65,
       "quality_reasons": [],
       "internal_cohesion": 0.6041666666666666,
       "external_coupling": 1.0,
@@ -102,8 +102,8 @@
         "interpolatorStringLookup()": "method"
       },
       "cluster_id": 3,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "COULD",
+      "quality_score": 59,
       "quality_reasons": [],
       "internal_cohesion": 0.6,
       "external_coupling": 1.0,
@@ -143,8 +143,8 @@
         "INSTANCE_BASE64_DECODER": "field"
       },
       "cluster_id": 2,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "COULD",
+      "quality_score": 57,
       "quality_reasons": [],
       "internal_cohesion": 0.5555555555555555,
       "external_coupling": 0.0,

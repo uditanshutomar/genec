@@ -44,13 +44,13 @@ preservation via Maven builds.
 
 Results in `results/live_evaluation/aggregate_results.json`:
 - 23 classes evaluated end-to-end
-- 505 total clusters detected, 76 post-filter suggestions
-- **71/76 verified (93.4%)** -- compilation + semantic + behavioral tests
-- Average runtime: 55s per class
+- 505 total clusters detected, 77 post-filter suggestions
+- **70/77 verified (90.9%)** — compilation + semantic + behavioral tests
+- Average runtime: 73s per class
 
 ### Key Contributions
 
-- **Verification rate**: 93.4% of suggestions pass compilation, semantic
+- **Verification rate**: 90.9% of suggestions pass compilation, semantic
   equivalence, and behavioral verification via Maven builds.
 - **Compilable code generation**: Every accepted suggestion produces code
   that compiles under the project's own build system.
@@ -125,9 +125,15 @@ python evaluation/scripts/compare_with_baselines.py
 
 ### 5. Compute statistics
 ```bash
+# Without ground truth (compares GenEC vs field-sharing baseline):
 python evaluation/scripts/compute_statistics.py \
-  --results-dir evaluation/results/live_evaluation \
-  --ground-truth-file evaluation/ground_truth/refactoring_miner_results.json
+  --results-dir evaluation/results/live_evaluation
+
+# With ground truth (requires running RefactoringMiner first):
+# java -jar RefactoringMiner.jar -a <repo> -json ground_truth.json
+# python evaluation/scripts/compute_statistics.py \
+#   --results-dir evaluation/results/live_evaluation \
+#   --ground-truth-file <path-to-ground-truth.json>
 ```
 
 ### 6. Generate LaTeX tables

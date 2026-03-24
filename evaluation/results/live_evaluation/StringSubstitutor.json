@@ -103,8 +103,8 @@
         "substitute(TextStringBuilder,int,int,List)": "method"
       },
       "cluster_id": 1,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "COULD",
+      "quality_score": 57,
       "quality_reasons": [],
       "internal_cohesion": 0.540655737704918,
       "external_coupling": 1.0,

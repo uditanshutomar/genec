@@ -217,7 +217,7 @@ def generate_table_verification(results_dir: Path) -> str:
         r"\midrule",
     ]
 
-    tier_order = ["should", "could", "potential", "unknown"]
+    tier_order = ["SHOULD", "COULD", "POTENTIAL", "unknown"]
     for tier in tier_order:
         if tier not in tier_counts:
             continue
@@ -225,7 +225,7 @@ def generate_table_verification(results_dir: Path) -> str:
         total = tc["total"]
         verified = tc["verified"]
         rate = (verified / total * 100.0) if total > 0 else 0.0
-        label = tier.capitalize()
+        label = tier.capitalize() if tier != "unknown" else "Unknown"
         lines.append(f"{label} & {total} & {verified} & {_f(rate, '.1f')}\\% \\\\")
 
     lines += [

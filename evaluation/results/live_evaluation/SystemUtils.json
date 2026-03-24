@@ -50,8 +50,8 @@
         "OS_VERSION": "field"
       },
       "cluster_id": 0,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "COULD",
+      "quality_score": 62,
       "quality_reasons": [],
       "internal_cohesion": 0.5475000000000001,
       "external_coupling": 0.0,
@@ -91,8 +91,8 @@
         "JAVA_SPECIFICATION_VERSION": "field"
       },
       "cluster_id": 2,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "COULD",
+      "quality_score": 57,
       "quality_reasons": [],
       "internal_cohesion": 0.54,
       "external_coupling": 0.0,
@@ -132,8 +132,8 @@
         "JAVA_SPECIFICATION_VERSION_ENUM": "field"
       },
       "cluster_id": 1,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "COULD",
+      "quality_score": 55,
       "quality_reasons": [],
       "internal_cohesion": 0.5,
       "external_coupling": 0.0,

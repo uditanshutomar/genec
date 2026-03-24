@@ -37,8 +37,8 @@
         "linearCombination(double,double[],int,double,double[],int,double,double[],int,double,double[],int,double[],int)": "method"
       },
       "cluster_id": 1,
-      "quality_tier": null,
-      "quality_score": 0.0,
+      "quality_tier": "COULD",
+      "quality_score": 57,
       "quality_reasons": [],
       "internal_cohesion": 0.54,
       "external_coupling": 1.0,
