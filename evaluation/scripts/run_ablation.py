@@ -150,7 +150,7 @@ def main():
     for idx, entry in enumerate(benchmark, 1):
         project_name = entry.get("project_name", "unknown")
         repo_path = entry["repo_path"]
-        class_file = entry["class_file"]
+        class_file = str(Path(repo_path) / entry["class_file"])
         class_name = Path(class_file).stem
 
         logger.info("[%d/%d] %s (%s)", idx, total, class_name, project_name)

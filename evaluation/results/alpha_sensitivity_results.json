@@ -1,0 +1,224 @@
+{
+  "0.0": {
+    "alpha": 0.0,
+    "per_class": [
+      {
+        "class_name": "IOUtils",
+        "clusters_found": 126,
+        "clusters_filtered": 5,
+        "suggestions": 5,
+        "verified": 4,
+        "execution_time": 115.2
+      },
+      {
+        "class_name": "FileUtils",
+        "clusters_found": 154,
+        "clusters_filtered": 13,
+        "suggestions": 9,
+        "verified": 9,
+        "execution_time": 497.52
+      },
+      {
+        "class_name": "FilenameUtils",
+        "clusters_found": 19,
+        "clusters_filtered": 9,
+        "suggestions": 5,
+        "verified": 5,
+        "execution_time": 131.11
+      }
+    ],
+    "summary": {
+      "total_classes": 3,
+      "succeeded": 3,
+      "total_clusters": 299,
+      "total_suggestions": 19,
+      "total_verified": 18,
+      "avg_time": 247.94
+    }
+  },
+  "0.2": {
+    "alpha": 0.2,
+    "per_class": [
+      {
+        "class_name": "IOUtils",
+        "clusters_found": 117,
+        "clusters_filtered": 3,
+        "suggestions": 3,
+        "verified": 3,
+        "execution_time": 74.93
+      },
+      {
+        "class_name": "FileUtils",
+        "clusters_found": 101,
+        "clusters_filtered": 7,
+        "suggestions": 6,
+        "verified": 6,
+        "execution_time": 286.46
+      },
+      {
+        "class_name": "FilenameUtils",
+        "clusters_found": 19,
+        "clusters_filtered": 2,
+        "suggestions": 2,
+        "verified": 2,
+        "execution_time": 46.58
+      }
+    ],
+    "summary": {
+      "total_classes": 3,
+      "succeeded": 3,
+      "total_clusters": 237,
+      "total_suggestions": 11,
+      "total_verified": 11,
+      "avg_time": 135.99
+    }
+  },
+  "0.4": {
+    "alpha": 0.4,
+    "per_class": [
+      {
+        "class_name": "IOUtils",
+        "clusters_found": 34,
+        "clusters_filtered": 0,
+        "suggestions": 0,
+        "verified": 0,
+        "execution_time": 18.35
+      },
+      {
+        "class_name": "FileUtils",
+        "clusters_found": 59,
+        "clusters_filtered": 7,
+        "suggestions": 4,
+        "verified": 4,
+        "execution_time": 334.85
+      },
+      {
+        "class_name": "FilenameUtils",
+        "clusters_found": 19,
+        "clusters_filtered": 4,
+        "suggestions": 4,
+        "verified": 4,
+        "execution_time": 97.36
+      }
+    ],
+    "summary": {
+      "total_classes": 3,
+      "succeeded": 3,
+      "total_clusters": 112,
+      "total_suggestions": 8,
+      "total_verified": 8,
+      "avg_time": 150.19
+    }
+  },
+  "0.6": {
+    "alpha": 0.6,
+    "per_class": [
+      {
+        "class_name": "IOUtils",
+        "clusters_found": 34,
+        "clusters_filtered": 0,
+        "suggestions": 0,
+        "verified": 0,
+        "execution_time": 24.99
+      },
+      {
+        "class_name": "FileUtils",
+        "clusters_found": 62,
+        "clusters_filtered": 8,
+        "suggestions": 5,
+        "verified": 5,
+        "execution_time": 284.65
+      },
+      {
+        "class_name": "FilenameUtils",
+        "clusters_found": 19,
+        "clusters_filtered": 9,
+        "suggestions": 6,
+        "verified": 6,
+        "execution_time": 109.72
+      }
+    ],
+    "summary": {
+      "total_classes": 3,
+      "succeeded": 3,
+      "total_clusters": 115,
+      "total_suggestions": 11,
+      "total_verified": 11,
+      "avg_time": 139.79
+    }
+  },
+  "0.8": {
+    "alpha": 0.8,
+    "per_class": [
+      {
+        "class_name": "IOUtils",
+        "clusters_found": 36,
+        "clusters_filtered": 0,
+        "suggestions": 0,
+        "verified": 0,
+        "execution_time": 17.75
+      },
+      {
+        "class_name": "FileUtils",
+        "clusters_found": 61,
+        "clusters_filtered": 10,
+        "suggestions": 7,
+        "verified": 7,
+        "execution_time": 257.82
+      },
+      {
+        "class_name": "FilenameUtils",
+        "clusters_found": 19,
+        "clusters_filtered": 9,
+        "suggestions": 5,
+        "verified": 5,
+        "execution_time": 106.32
+      }
+    ],
+    "summary": {
+      "total_classes": 3,
+      "succeeded": 3,
+      "total_clusters": 116,
+      "total_suggestions": 12,
+      "total_verified": 12,
+      "avg_time": 127.3
+    }
+  },
+  "1.0": {
+    "alpha": 1.0,
+    "per_class": [
+      {
+        "class_name": "IOUtils",
+        "clusters_found": 50,
+        "clusters_filtered": 1,
+        "suggestions": 1,
+        "verified": 1,
+        "execution_time": 35.78
+      },
+      {
+        "class_name": "FileUtils",
+        "clusters_found": 72,
+        "clusters_filtered": 10,
+        "suggestions": 7,
+        "verified": 7,
+        "execution_time": 288.69
+      },
+      {
+        "class_name": "FilenameUtils",
+        "clusters_found": 19,
+        "clusters_filtered": 9,
+        "suggestions": 6,
+        "verified": 6,
+        "execution_time": 133.88
+      }
+    ],
+    "summary": {
+      "total_classes": 3,
+      "succeeded": 3,
+      "total_clusters": 141,
+      "total_suggestions": 14,
+      "total_verified": 14,
+      "avg_time": 152.78
+    }
+  }
+}

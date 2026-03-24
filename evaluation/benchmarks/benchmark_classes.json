@@ -1,56 +1,142 @@
 {
-  "_description": "MLCQ benchmark God Classes for GenEC evaluation. 50 classes from 12 Apache projects.",
-  "_source": "MLCQ Dataset (Reichenbach et al., MSR 2022)",
-  "_note": "Populate repo_path after running setup_benchmarks.sh. commit_sha pins the exact version analyzed.",
   "classes": [
     {
-      "project": "commons-io",
       "class_name": "IOUtils",
+      "repo_path": "/tmp/commons-io",
       "class_file": "src/main/java/org/apache/commons/io/IOUtils.java",
-      "commit_sha": "TO_BE_FILLED",
-      "repo_url": "https://github.com/apache/commons-io.git",
-      "repo_path": "benchmarks/repos/commons-io",
-      "loc": 2100,
-      "methods": 37,
-      "fields": 8,
-      "notes": "Primary motivating example in paper"
+      "project": "commons-io"
     },
     {
-      "project": "commons-lang",
+      "class_name": "FileUtils",
+      "repo_path": "/tmp/commons-io",
+      "class_file": "src/main/java/org/apache/commons/io/FileUtils.java",
+      "project": "commons-io"
+    },
+    {
+      "class_name": "FilenameUtils",
+      "repo_path": "/tmp/commons-io",
+      "class_file": "src/main/java/org/apache/commons/io/FilenameUtils.java",
+      "project": "commons-io"
+    },
+    {
       "class_name": "StringUtils",
+      "repo_path": "/tmp/commons-lang",
       "class_file": "src/main/java/org/apache/commons/lang3/StringUtils.java",
-      "commit_sha": "TO_BE_FILLED",
-      "repo_url": "https://github.com/apache/commons-lang.git",
-      "repo_path": "benchmarks/repos/commons-lang",
-      "loc": 8000,
-      "methods": 200,
-      "fields": 15,
-      "notes": "Largest utility class in Commons"
+      "project": "commons-lang"
     },
     {
-      "project": "commons-lang",
       "class_name": "ArrayUtils",
+      "repo_path": "/tmp/commons-lang",
       "class_file": "src/main/java/org/apache/commons/lang3/ArrayUtils.java",
-      "commit_sha": "TO_BE_FILLED",
-      "repo_url": "https://github.com/apache/commons-lang.git",
-      "repo_path": "benchmarks/repos/commons-lang",
-      "loc": 4500,
-      "methods": 150,
-      "fields": 10,
-      "notes": "Array manipulation utilities"
+      "project": "commons-lang"
     },
     {
-      "project": "commons-lang",
       "class_name": "NumberUtils",
+      "repo_path": "/tmp/commons-lang",
       "class_file": "src/main/java/org/apache/commons/lang3/math/NumberUtils.java",
-      "commit_sha": "TO_BE_FILLED",
-      "repo_url": "https://github.com/apache/commons-lang.git",
-      "repo_path": "benchmarks/repos/commons-lang",
-      "loc": 1800,
-      "methods": 50,
-      "fields": 12,
-      "notes": "Number parsing and conversion"
+      "project": "commons-lang"
+    },
+    {
+      "class_name": "DateUtils",
+      "repo_path": "/tmp/commons-lang",
+      "class_file": "src/main/java/org/apache/commons/lang3/time/DateUtils.java",
+      "project": "commons-lang"
+    },
+    {
+      "class_name": "SystemUtils",
+      "repo_path": "/tmp/commons-lang",
+      "class_file": "src/main/java/org/apache/commons/lang3/SystemUtils.java",
+      "project": "commons-lang"
+    },
+    {
+      "class_name": "CollectionUtils",
+      "repo_path": "/tmp/commons-collections",
+      "class_file": "src/main/java/org/apache/commons/collections4/CollectionUtils.java",
+      "project": "commons-collections"
+    },
+    {
+      "class_name": "MapUtils",
+      "repo_path": "/tmp/commons-collections",
+      "class_file": "src/main/java/org/apache/commons/collections4/MapUtils.java",
+      "project": "commons-collections"
+    },
+    {
+      "class_name": "IteratorUtils",
+      "repo_path": "/tmp/commons-collections",
+      "class_file": "src/main/java/org/apache/commons/collections4/IteratorUtils.java",
+      "project": "commons-collections"
+    },
+    {
+      "class_name": "XYPlot",
+      "repo_path": "/tmp/jfreechart",
+      "class_file": "src/main/java/org/jfree/chart/plot/XYPlot.java",
+      "project": "jfreechart"
+    },
+    {
+      "class_name": "CategoryPlot",
+      "repo_path": "/tmp/jfreechart",
+      "class_file": "src/main/java/org/jfree/chart/plot/CategoryPlot.java",
+      "project": "jfreechart"
+    },
+    {
+      "class_name": "PiePlot",
+      "repo_path": "/tmp/jfreechart",
+      "class_file": "src/main/java/org/jfree/chart/plot/pie/PiePlot.java",
+      "project": "jfreechart"
+    },
+    {
+      "class_name": "AbstractRenderer",
+      "repo_path": "/tmp/jfreechart",
+      "class_file": "src/main/java/org/jfree/chart/renderer/AbstractRenderer.java",
+      "project": "jfreechart"
+    },
+    {
+      "class_name": "ChartPanel",
+      "repo_path": "/tmp/jfreechart",
+      "class_file": "src/main/java/org/jfree/chart/swing/ChartPanel.java",
+      "project": "jfreechart"
+    },
+    {
+      "class_name": "AccurateMath",
+      "repo_path": "/tmp/commons-math",
+      "class_file": "commons-math-core/src/main/java/org/apache/commons/math4/core/jdkmath/AccurateMath.java",
+      "project": "commons-math"
+    },
+    {
+      "class_name": "Dfp",
+      "repo_path": "/tmp/commons-math",
+      "class_file": "commons-math-legacy-core/src/main/java/org/apache/commons/math4/legacy/core/dfp/Dfp.java",
+      "project": "commons-math"
+    },
+    {
+      "class_name": "BOBYQAOptimizer",
+      "repo_path": "/tmp/commons-math",
+      "class_file": "commons-math-legacy/src/main/java/org/apache/commons/math4/legacy/optim/nonlinear/scalar/noderiv/BOBYQAOptimizer.java",
+      "project": "commons-math"
+    },
+    {
+      "class_name": "DSCompiler",
+      "repo_path": "/tmp/commons-math",
+      "class_file": "commons-math-legacy/src/main/java/org/apache/commons/math4/legacy/analysis/differentiation/DSCompiler.java",
+      "project": "commons-math"
+    },
+    {
+      "class_name": "TextStringBuilder",
+      "repo_path": "/tmp/commons-text",
+      "class_file": "src/main/java/org/apache/commons/text/TextStringBuilder.java",
+      "project": "commons-text"
+    },
+    {
+      "class_name": "StringLookupFactory",
+      "repo_path": "/tmp/commons-text",
+      "class_file": "src/main/java/org/apache/commons/text/lookup/StringLookupFactory.java",
+      "project": "commons-text"
+    },
+    {
+      "class_name": "StringSubstitutor",
+      "repo_path": "/tmp/commons-text",
+      "class_file": "src/main/java/org/apache/commons/text/StringSubstitutor.java",
+      "project": "commons-text"
     }
-  ],
-  "_remaining": "Add remaining 46 MLCQ God Classes here. Full list available from MLCQ dataset at https://github.com/2022-MLCQ"
+  ]
 }
