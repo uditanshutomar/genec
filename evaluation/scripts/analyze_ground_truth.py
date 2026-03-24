@@ -8,8 +8,8 @@ categorises mismatches.
 Usage:
     python -m evaluation.scripts.analyze_ground_truth \
         --ground-truth-file evaluation/ground_truth/ground_truth.json \
-        --results-dir evaluation/results \
-        --output-file evaluation/results/ground_truth_analysis.json
+        --results-dir evaluation/results/live_evaluation \
+        --output-file evaluation/results/live_evaluation/ground_truth_analysis.json
 """
 
 import argparse
@@ -228,7 +228,7 @@ def main():
     parser = argparse.ArgumentParser(description="Analyze GenEC results against ground truth.")
     parser.add_argument("--ground-truth-file", required=True, type=Path,
                         help="Ground truth JSON from GroundTruthBuilder")
-    parser.add_argument("--results-dir", type=Path, default=Path("evaluation/results"),
+    parser.add_argument("--results-dir", type=Path, default=Path("evaluation/results/live_evaluation"),
                         help="Directory with per-class result JSONs")
     parser.add_argument("--output-file", type=Path, default=None,
                         help="Output file (default: <results-dir>/ground_truth_analysis.json)")

@@ -48,12 +48,14 @@ def _load_baseline(results_dir: Path) -> dict[str, dict]:
         return {}
     with open(baseline_file) as f:
         baseline_data = json.load(f)
+    # Use field_sharing as the structural baseline (NOT random, which
+    # would overwrite due to dict key collision)
     baseline_per_class: dict[str, dict] = {}
-    for _strategy_name, strategy_data in baseline_data.items():
-        for entry in strategy_data.get("per_class", []):
-            cname = entry.get("class_name", "")
-            if cname:
-                baseline_per_class[cname] = entry
+    fs_data = baseline_data.get("field_sharing", {})
+    for entry in fs_data.get("per_class", []):
+        cname = entry.get("class_name", "")
+        if cname:
+            baseline_per_class[cname] = entry
     return baseline_per_class
 
 
@@ -67,29 +69,51 @@ def generate_table_rq1(results_dir: Path) -> str:
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{RQ1: GenEC vs.\ metric-only baseline on benchmark classes.}",
+        r"\caption{GenEC vs.\ field-sharing baseline: suggestions and verification.}",
         r"\label{tab:rq1}",
-        r"\begin{tabular}{lrrrrrr}",
+        r"\begin{tabular}{lrrrrr}",
         r"\toprule",
-        r"Subject & \multicolumn{2}{c}{Clusters} & \multicolumn{2}{c}{LCOM5} & \multicolumn{2}{c}{Ext.\ Coupling} \\",
-        r"\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}",
-        r" & Base & GenEC & Base & GenEC & Base & GenEC \\",
+        r"Subject & \multicolumn{2}{c}{Suggestions} & \multicolumn{2}{c}{Verified} & LCOM5 \\",
+        r"\cmidrule(lr){2-3} \cmidrule(lr){4-5}",
+        r" & FS & GenEC & GenEC & Rate & (orig) \\",
         r"\midrule",
     ]
 
+    total_fs = 0
+    total_genec = 0
+    total_verified = 0
+
     for cname, data in sorted(per_class.items()):
-        # Flat format: data itself is the GenEC result
         g_orig = data.get("original_metrics", {})
         b = baseline_per_class.get(cname, {})
+        suggestions = data.get("suggestions", [])
+        verified = [s for s in suggestions if s.get("verified")]
 
-        escaped = cname.replace("_", r"\_")
+        fs_count = b.get("suggestions_total", 0)
+        genec_count = len(suggestions)
+        ver_count = len(verified)
+        ver_rate = round(ver_count / max(genec_count, 1) * 100, 1)
+
+        total_fs += fs_count
+        total_genec += genec_count
+        total_verified += ver_count
+
+        escaped = cname.replace("_", r"\_").replace("$", r"\$")
         row = (
             f"{escaped} & "
-            f"{b.get('suggestions_total', 0)} & {data.get('clusters_found', 0)} & "
-            f"{_f(g_orig.get('lcom5'), '.3f')} & {_f(g_orig.get('lcom5'), '.3f')} & "
-            f"{_f(None, '.3f')} & {_f(g_orig.get('external_coupling'), '.3f')} \\\\"
+            f"{fs_count} & {genec_count} & "
+            f"{ver_count} & {ver_rate}\\% & "
+            f"{_f(g_orig.get('lcom5'), '.3f')} \\\\"
         )
         lines.append(row)
+
+    # Totals row
+    total_rate = round(total_verified / max(total_genec, 1) * 100, 1)
+    lines.append(r"\midrule")
+    lines.append(
+        f"\\textbf{{Total}} & {total_fs} & {total_genec} & "
+        f"{total_verified} & {total_rate}\\% & -- \\\\"
+    )
 
     lines += [
         r"\bottomrule",

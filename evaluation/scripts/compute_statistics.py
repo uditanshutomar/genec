@@ -213,7 +213,8 @@ def main():
     # NOT data = {"genec": {...}, "baseline": {...}}
     # Baseline data comes from a separate baseline_results.json file.
 
-    # Load baseline results if available
+    # Load baseline results — use ONLY field_sharing (structural baseline)
+    # NOT random (which would overwrite structural due to dict key collision)
     baseline_file = args.results_dir / "baseline_results.json"
     if not baseline_file.exists():
         baseline_file = args.results_dir.parent / "baseline_results.json"
@@ -221,50 +222,48 @@ def main():
     if baseline_file.exists():
         with open(baseline_file) as f:
             baseline_data = json.load(f)
-        # baseline_results.json has {"field_sharing": {"per_class": [...]}, "random": {...}}
-        for strategy_name, strategy_data in baseline_data.items():
-            for entry in strategy_data.get("per_class", []):
-                cname = entry.get("class_name", "")
-                if cname:
-                    baseline_per_class[cname] = entry
-        logger.info("Loaded baseline data for %d classes", len(baseline_per_class))
+        # Use field_sharing as the primary structural baseline
+        fs_data = baseline_data.get("field_sharing", {})
+        for entry in fs_data.get("per_class", []):
+            cname = entry.get("class_name", "")
+            if cname:
+                baseline_per_class[cname] = entry
+        logger.info("Loaded field-sharing baseline for %d classes", len(baseline_per_class))
 
-    genec_clusters = []
-    baseline_clusters = []
-    genec_cohesion = []
-    baseline_cohesion = []
-    improvement_cohesion = []
+    genec_suggestions_count = []
+    baseline_suggestions_count = []
+    genec_verified_count = []
 
     for cname, data in per_class_data.items():
-        # Flat format: data itself is the GenEC result
-        genec_clusters.append(data.get("clusters_found", 0))
-
-        b = baseline_per_class.get(cname, {})
-        baseline_clusters.append(b.get("suggestions_total", 0))
-
-        # GenEC cohesion: average internal_cohesion from suggestions
+        # GenEC: count verified suggestions (the meaningful metric)
         g_suggestions = data.get("suggestions", [])
-        g_cohesion_vals = [s.get("internal_cohesion", 0.0) for s in g_suggestions if s.get("internal_cohesion") is not None]
-        g_cohesion = sum(g_cohesion_vals) / max(len(g_cohesion_vals), 1) if g_cohesion_vals else 0.0
+        g_verified = [s for s in g_suggestions if s.get("verified")]
+        genec_suggestions_count.append(len(g_suggestions))
+        genec_verified_count.append(len(g_verified))
 
-        # Baseline has no cohesion data; use 0.0
-        b_cohesion = 0.0
+        # Baseline: count suggestions (no verification available)
+        b = baseline_per_class.get(cname, {})
+        baseline_suggestions_count.append(b.get("suggestions_total", 0))
 
-        genec_cohesion.append(float(g_cohesion))
-        baseline_cohesion.append(float(b_cohesion))
-        improvement_cohesion.append(g_cohesion - b_cohesion)
+    # Note: cohesion comparison is omitted because the field-sharing baseline
+    # does not compute internal cohesion metrics. Comparing GenEC cohesion
+    # against zero is not a meaningful statistical test.
 
     comparisons = {}
-    comparisons["clusters"] = {
-        "wilcoxon": wilcoxon_test(genec_clusters, baseline_clusters),
-        "cliffs_delta": cliffs_delta(genec_clusters, baseline_clusters),
-        "genec_mean": round(float(np.mean(genec_clusters)), 4) if genec_clusters else 0.0,
-        "baseline_mean": round(float(np.mean(baseline_clusters)), 4) if baseline_clusters else 0.0,
+    comparisons["suggestions"] = {
+        "wilcoxon": wilcoxon_test(genec_suggestions_count, baseline_suggestions_count),
+        "cliffs_delta": cliffs_delta(genec_suggestions_count, baseline_suggestions_count),
+        "genec_mean": round(float(np.mean(genec_suggestions_count)), 4) if genec_suggestions_count else 0.0,
+        "baseline_mean": round(float(np.mean(baseline_suggestions_count)), 4) if baseline_suggestions_count else 0.0,
+        "genec_total": sum(genec_suggestions_count),
+        "baseline_total": sum(baseline_suggestions_count),
     }
-    comparisons["cohesion_improvement"] = {
-        "bootstrap_ci": bootstrap_ci(improvement_cohesion),
-        "wilcoxon": wilcoxon_test(genec_cohesion, baseline_cohesion),
-        "cliffs_delta": cliffs_delta(improvement_cohesion, [0.0] * len(improvement_cohesion)),
+    comparisons["verified"] = {
+        "genec_total_verified": sum(genec_verified_count),
+        "genec_total_suggestions": sum(genec_suggestions_count),
+        "verification_rate": round(sum(genec_verified_count) / max(sum(genec_suggestions_count), 1) * 100, 1),
+        "baseline_verified": 0,
+        "baseline_note": "Field-sharing baseline does not generate compilable code; verification not applicable",
     }
 
     output["comparisons"] = comparisons
