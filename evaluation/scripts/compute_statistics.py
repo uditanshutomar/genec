@@ -51,7 +51,7 @@ def wilcoxon_test(x: list[float], y: list[float]) -> dict:
     return {
         "statistic": float(stat),
         "p_value": float(p),
-        "significant": p < 0.05,
+        "significant": bool(p < 0.05),
         "n_nonzero": int(len(nonzero)),
     }
 

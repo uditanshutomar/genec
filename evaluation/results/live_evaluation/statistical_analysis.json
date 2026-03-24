@@ -1,0 +1,28 @@
+{
+  "num_classes": 23,
+  "comparisons": {
+    "suggestions": {
+      "wilcoxon": {
+        "statistic": 37.0,
+        "p_value": 0.006099494745057189,
+        "significant": "True",
+        "n_nonzero": 21
+      },
+      "cliffs_delta": {
+        "delta": 0.5123,
+        "magnitude": "large"
+      },
+      "genec_mean": 3.3478,
+      "baseline_mean": 1.6957,
+      "genec_total": 77,
+      "baseline_total": 39
+    },
+    "verified": {
+      "genec_total_verified": 70,
+      "genec_total_suggestions": 77,
+      "verification_rate": 90.9,
+      "baseline_verified": 0,
+      "baseline_note": "Field-sharing baseline does not generate compilable code; verification not applicable"
+    }
+  }
+}

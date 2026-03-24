@@ -323,13 +323,25 @@ def main():
         "table_ground_truth.tex": generate_table_ground_truth(args.results_dir),
     }
 
+    placeholders = []
     for filename, content in tables.items():
         outpath = args.output_dir / filename
+        is_placeholder = content.strip().startswith("%")
         with open(outpath, "w") as f:
             f.write(content + "\n")
-        logger.info("Wrote %s", outpath)
+        if is_placeholder:
+            logger.warning("Wrote %s (PLACEHOLDER — missing input data)", outpath)
+            placeholders.append(filename)
+        else:
+            logger.info("Wrote %s", outpath)
 
-    logger.info("All tables generated in %s", args.output_dir)
+    if placeholders:
+        logger.warning(
+            "%d of %d tables are placeholders (missing data): %s",
+            len(placeholders), len(tables), ", ".join(placeholders),
+        )
+    else:
+        logger.info("All %d tables generated in %s", len(tables), args.output_dir)
 
 
 if __name__ == "__main__":
