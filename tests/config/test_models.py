@@ -41,7 +41,7 @@ class TestLLMConfigValidation:
 class TestFusionDefaults:
     def test_alpha_default_matches_config(self):
         c = FusionConfig()
-        assert c.alpha == 0.6
+        assert c.alpha == 0.8
 
     def test_edge_threshold_default(self):
         c = FusionConfig()

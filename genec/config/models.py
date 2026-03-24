@@ -15,7 +15,7 @@ class FusionConfig(BaseModel):
     """Configuration for graph fusion."""
 
     alpha: float = Field(
-        default=0.6,
+        default=0.8,
         ge=0.0,
         le=1.0,
         description="Weight for static dependencies (0-1). Higher values favor static over evolutionary coupling.",

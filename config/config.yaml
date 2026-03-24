@@ -1,5 +1,5 @@
 fusion:
-  alpha: 0.6  # 60% static, 40% evolutionary (per paper Section 3.1, validated by ablation)
+  alpha: 0.8  # 80% static, 20% evolutionary — higher alpha prevents evo noise from merging clusters
   edge_threshold: 0.05
 
   # Adaptive fusion (Stage 3 enhancement)

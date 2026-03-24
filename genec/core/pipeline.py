@@ -205,7 +205,7 @@ class GenECPipeline:
     def _get_default_config(self) -> dict:
         """Get default configuration."""
         return {
-            "fusion": {"alpha": 0.6, "edge_threshold": 0.1},
+            "fusion": {"alpha": 0.8, "edge_threshold": 0.05},
             "evolution": {
                 "window_months": 120,
                 "min_commits": 2,
