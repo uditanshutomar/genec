@@ -215,7 +215,7 @@ class GenECPipeline:
                 "min_cluster_size": 3,
                 "max_cluster_size": 30,
                 "min_cohesion": 0.35,
-                "resolution": 1.0,
+                "resolution": 2.0,
             },
             "chunking": {
                 "enabled": True,
