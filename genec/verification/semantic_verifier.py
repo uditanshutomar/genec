@@ -74,7 +74,7 @@ class SemanticVerifier:
             # Verify extracted members exist in original
             for method_sig in cluster_methods:
                 method_name = self._normalize_method_name(method_sig)
-                if method_name == class_deps.class_name:
+                if method_name == class_deps.class_name or method_name == "<init>":
                     continue  # Skip constructors
                 # Exact method name match (not substring)
                 if not any(
@@ -90,7 +90,7 @@ class SemanticVerifier:
             # Verify extracted members appear in new class
             for method_sig in cluster_methods:
                 method_name = self._normalize_method_name(method_sig)
-                if method_name == class_deps.class_name:
+                if method_name == class_deps.class_name or method_name == "<init>":
                     continue  # Skip constructors
                 # Exact method name match (not substring)
                 if not any(
@@ -119,7 +119,7 @@ class SemanticVerifier:
             )
             cluster_name_counts = Counter(
                 self._normalize_method_name(m) for m in cluster_methods
-                if self._normalize_method_name(m) != class_deps.class_name
+                if self._normalize_method_name(m) not in (class_deps.class_name, "<init>")
             )
 
             for method_name, extracted_count in cluster_name_counts.items():

@@ -403,13 +403,16 @@ class JDTCodeGenerator:
         candidate_names = set(name_to_sigs.keys())
         initial_method_names = {sig.split("(")[0] for sig in methods}
 
-        # 1. Add ALL overloads of initially selected methods
-        # This ensures API consistency (e.g., if remove(int) is selected, remove(long) is too)
+        # 1. Add overloads ONLY for private methods (not public API methods)
+        # For public static utility classes like IOUtils, adding all overloads
+        # of public methods would pull in most of the class.
         for name in initial_method_names:
             for sig in name_to_sigs.get(name, []):
                 if sig not in methods:
-                    methods.add(sig)
-                    self.logger.debug(f"Added overload: {sig}")
+                    mods = [m.lower() for m in modifiers_by_sig.get(sig, [])]
+                    if "private" in mods or not any(m in mods for m in ["public", "protected"]):
+                        methods.add(sig)
+                        self.logger.debug(f"Added private overload: {sig}")
 
         added = True
         while added:
@@ -447,8 +450,10 @@ class JDTCodeGenerator:
                         elif not any(m in modifiers for m in ["public", "protected"]):
                             should_add = True
 
-                        # Add static helper methods (they're often utilities used by the cluster)
-                        elif "static" in modifiers:
+                        # Add PRIVATE static helper methods only (not public static)
+                        # In static utility classes, public static methods are the API,
+                        # not helpers. JDT will generate delegation calls for them.
+                        elif "static" in modifiers and "private" in modifiers:
                             should_add = True
 
                         if should_add:

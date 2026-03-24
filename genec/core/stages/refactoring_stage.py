@@ -126,7 +126,7 @@ class RefactoringStage(PipelineStage):
                     if not application_result.success:
                         self.logger.warning(
                             f"Verified but failed to apply {suggestion.proposed_class_name}: "
-                            f"{application_result.message}"
+                            f"{application_result.error_message}"
                         )
             else:
                 self.logger.warning(f"Suggestion {suggestion.proposed_class_name} failed verification")
