@@ -132,7 +132,7 @@ class RefactoringStage(PipelineStage):
                 self.logger.warning(f"Suggestion {suggestion.proposed_class_name} failed verification")
                 suggestion.verification_status = "failed"
 
-        rejected_suggestions = [s for s in suggestions if getattr(s, 'verification_status', None) == "failed"]
+        rejected_suggestions = [s for s in suggestions if getattr(s, 'verification_status', None) not in ("verified", None)]
         context.results["rejected_suggestions"] = rejected_suggestions
         context.results["verified_suggestions"] = verified_suggestions
         context.results["verification_results"] = verification_results

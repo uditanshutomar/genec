@@ -343,7 +343,7 @@ def _format_json_output(results, runtime_str: str) -> str:
         "suggestions": [
             {
                 "name": s.proposed_class_name,
-                "verified": s in results.verified_suggestions,
+                "verified": getattr(s, "verification_status", None) == "verified",
                 "new_class_code": s.new_class_code or "",
                 "modified_original_code": s.modified_original_code or "",
                 "rationale": getattr(s, "rationale", None),
