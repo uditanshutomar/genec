@@ -165,7 +165,7 @@ def run_single_class(entry: dict) -> dict:
             "clusters_found": len(result.all_clusters),
             "clusters_filtered": len(result.filtered_clusters),
             "clusters_rejected": len(result.all_clusters) - len(result.filtered_clusters),
-            "filter_pass_rate": round(len(result.suggestions) / max(len(result.all_clusters), 1) * 100, 1),
+            "filter_pass_rate": round(len(result.filtered_clusters) / max(len(result.all_clusters), 1) * 100, 1),
             "suggestions_total": len(result.suggestions),
             "suggestions_verified": len(result.verified_suggestions),
             "suggestions": [

@@ -5,6 +5,7 @@ import os
 import sys
 from pathlib import Path
 
+from genec import __version__
 from genec.core.pipeline import GenECPipeline
 from genec.utils.logging_utils import get_logger, setup_logger
 
@@ -16,7 +17,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="GenEC: Generative Extract Class Refactoring Tool"
     )
-    parser.add_argument("--version", action="version", version="GenEC 1.0.0")
+    parser.add_argument("--version", action="version", version=f"GenEC {__version__}")
     parser.add_argument("--target", required=True, help="Path to the Java class file to refactor")
     parser.add_argument("--repo", required=True, help="Path to the repository root")
     parser.add_argument(
@@ -120,12 +121,7 @@ def validate_api_key_for_llm_features() -> bool:
     from genec.utils.secrets import get_anthropic_api_key
 
     api_key = get_anthropic_api_key()
-    if not api_key:
-        return False
-
-    # Basic format validation (Anthropic keys start with sk-ant-)
-    if not api_key.startswith("sk-ant-"):
-        logger.warning("API key does not appear to be a valid Anthropic key (should start with sk-ant-)")
+    if not api_key or len(api_key) < 10:
         return False
 
     return True

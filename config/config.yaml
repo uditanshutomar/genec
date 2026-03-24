@@ -34,10 +34,6 @@ clustering:
   min_cohesion: 0.35              # Lowered for real-world use (less aggressive filtering)
   resolution: 2.0                 # Higher resolution = more, smaller clusters (better for Extract Class)
 
-  # Field-based clustering boost (new)
-  field_weight_boost: 1.5         # Boost edge weight when methods share field access
-  shared_field_min_methods: 2     # Minimum methods sharing a field to apply boost
-
   # Multi-resolution consensus - tries multiple resolutions and picks best
   multi_resolution:
     enabled: true                  # Enable multi-resolution clustering

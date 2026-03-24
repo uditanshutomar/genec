@@ -92,7 +92,7 @@ export class ConfigService {
      * Prompt user for API key if not configured
      */
     public async promptForApiKey(): Promise<string | undefined> {
-        const existingKey = this.getApiKey();
+        const existingKey = await this.getApiKeyAsync();
         if (existingKey) {
             return existingKey;
         }

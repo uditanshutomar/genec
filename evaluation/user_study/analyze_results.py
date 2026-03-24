@@ -132,8 +132,8 @@ def analyze(results: list[dict]) -> dict:
             "total": len(results),
             "industry": n_industry,
             "phd": n_phd,
-            "experience_mean": round(np.mean(exp_years), 1),
-            "experience_range": f"{min(exp_years)}-{max(exp_years)}",
+            "experience_mean": round(np.mean(exp_years), 1) if exp_years else 0,
+            "experience_range": f"{min(exp_years)}-{max(exp_years)}" if exp_years else "N/A",
         },
         "ratings": {
             "applicability": compute_likert_stats(applicability),
@@ -142,8 +142,8 @@ def analyze(results: list[dict]) -> dict:
             "quality": compute_likert_stats(quality),
         },
         "acceptance_rate": {
-            "threshold_4": round(sum(1 for a in applicability if a >= 4) / len(applicability), 3),
-            "threshold_3": round(sum(1 for a in applicability if a >= 3) / len(applicability), 3),
+            "threshold_4": round(sum(1 for a in applicability if a >= 4) / len(applicability), 3) if applicability else 0.0,
+            "threshold_3": round(sum(1 for a in applicability if a >= 3) / len(applicability), 3) if applicability else 0.0,
         },
         "naming_comparison": {
             "preference": naming_preference,
@@ -167,7 +167,7 @@ def generate_latex_table(analysis: dict) -> str:
     """Generate LaTeX table for paper."""
     lines = [
         r"\begin{table}[t]",
-        r"\caption{Developer study results (12 participants, 5-point Likert scale).}",
+        rf"\caption{{Developer study results ({analysis['participants']['total']} participants, 5-point Likert scale).}}",
         r"\label{tab:developer-study}",
         r"\centering",
         r"\begin{tabular}{lrr}",
@@ -233,7 +233,9 @@ def main():
     if "naming_significance" in analysis:
         ns = analysis["naming_significance"]
         sig = "significant" if ns.get("significant") else "not significant"
-        print(f"Naming clarity: p={ns.get('p_value', 'N/A'):.4f} ({sig}), "
+        p_val = ns.get('p_value')
+        p_str = f"p={p_val:.4f}" if isinstance(p_val, (int, float)) else f"p={p_val}"
+        print(f"Naming clarity: {p_str} ({sig}), "
               f"Cliff's d={ns.get('cliffs_delta', 'N/A')}")
 
 

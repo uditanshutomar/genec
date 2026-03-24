@@ -105,9 +105,10 @@ export class GenECService extends EventEmitter {
             });
 
             // Set timeout
+            const timeoutMinutes = (config.analysisTimeout || 10);
             timeoutId = setTimeout(() => {
                 if (this.currentProcess) {
-                    this.log('[TIMEOUT] Process exceeded 10 minute limit');
+                    this.log(`[TIMEOUT] Process exceeded ${timeoutMinutes} minute limit`);
                     this.currentProcess.kill('SIGTERM');
                     setTimeout(() => {
                         if (this.currentProcess) {
@@ -366,6 +367,7 @@ export class GenECService extends EventEmitter {
      */
     public dispose(): void {
         this.cancel();
+        this.removeAllListeners();
         this.outputChannel.dispose();
     }
 }

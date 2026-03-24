@@ -83,6 +83,8 @@ class Comparator:
 
         for suggestion in suggestions:
             # Get extracted members from suggestion
+            if suggestion.cluster is None:
+                continue
             suggestion_members = set(suggestion.cluster.member_names)
 
             # Try to match with ground truth
@@ -218,7 +220,7 @@ class Comparator:
 
         # Calculate effect size (Cohen's d)
         differences = np.array(approach_metrics) - np.array(baseline_metrics)
-        cohen_d = np.mean(differences) / np.std(differences) if np.std(differences) > 0 else 0
+        cohen_d = np.mean(differences) / np.std(differences, ddof=1) if np.std(differences, ddof=1) > 0 else 0
 
         result = {
             "metric_name": metric_name,

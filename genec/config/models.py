@@ -109,7 +109,7 @@ class LLMConfig(BaseModel):
         default=4000, ge=1, le=200000, description="Maximum tokens in LLM response."
     )
     temperature: float = Field(
-        default=0.3, ge=0.0, le=1.0, description="Temperature for LLM sampling (0-1)."
+        default=0.2, ge=0.0, le=1.0, description="Temperature for LLM sampling (0-1)."
     )
     timeout: int = Field(default=120, ge=1, description="Timeout for LLM requests in seconds.")
     api_key: str | None = Field(
@@ -117,7 +117,7 @@ class LLMConfig(BaseModel):
         description="API key for LLM provider. If not set, uses ANTHROPIC_API_KEY env var.",
     )
     enable_refinement: bool = Field(
-        default=False,
+        default=True,
         description="Enable critique-refine loop for LLM naming suggestions.",
     )
     use_prompt_diversity: bool = Field(
@@ -188,7 +188,7 @@ class VerificationConfig(BaseModel):
     )
     java_compiler: str = Field(default="javac", description="Java compiler command.")
     maven_command: str = Field(default="mvn", description="Maven command.")
-    gradle_command: str = Field(default="./gradlew", description="Gradle wrapper command.")
+    gradle_command: str = Field(default="gradle", description="Gradle command.")
     max_workers: int = Field(
         default=4, ge=1, description="Maximum parallel workers for verification."
     )
