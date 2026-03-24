@@ -7,7 +7,7 @@ import os
 import pickle
 import re
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import git
@@ -43,8 +43,13 @@ class EvolutionaryData:
 
 def process_commit_worker(
     repo_path: str, commit_sha: str, file_path: str, max_changeset_size: int
-) -> set[str]:
-    """Worker function to process a single commit in a separate process."""
+) -> tuple[set[str], datetime | None]:
+    """Worker function to process a single commit in a separate process.
+
+    Returns:
+        Tuple of (changed_methods, committed_datetime).
+        committed_datetime is used for recency-weighted coupling.
+    """
     try:
         # Initialize a lightweight miner for this worker
         miner = EvolutionaryMiner(max_changeset_size=max_changeset_size)
@@ -53,11 +58,13 @@ def process_commit_worker(
         repo = Repo(repo_path)
         commit = repo.commit(commit_sha)
 
-        return miner._extract_changed_methods(repo, commit, file_path)
+        changed_methods = miner._extract_changed_methods(repo, commit, file_path)
+        committed_datetime = commit.committed_datetime
+        return changed_methods, committed_datetime
     except Exception as e:
         # Return empty set on failure to avoid crashing the pool
         logger.debug(f"Commit worker failed for {commit_sha}: {e}")
-        return set()
+        return set(), None
 
 
 class EvolutionaryMiner:
@@ -70,6 +77,7 @@ class EvolutionaryMiner:
         max_changeset_size: int = 30,
         min_revisions: int = 2,
         prefer_spoon: bool = False,
+        recency_decay: float = 0.8,
     ):
         """
         Initialize the evolutionary miner.
@@ -80,6 +88,8 @@ class EvolutionaryMiner:
             max_changeset_size: Maximum changeset size to avoid refactoring noise (default 30)
             min_revisions: Minimum revisions required for method (default 2)
             prefer_spoon: Whether to prefer Spoon (JVM) over lightweight parser (default: False)
+            recency_decay: Decay factor for time-weighted coupling (default 0.8 = 20% decay/year).
+                           0.0 ignores old commits entirely, 1.0 disables decay.
         """
         # Use hybrid analyzer (Spoon + JavaParser fallback)
         # For mining, we prefer the lightweight parser (JavaParser/Regex) because spawning
@@ -94,6 +104,7 @@ class EvolutionaryMiner:
         self.min_coupling_threshold = min_coupling_threshold
         self.max_changeset_size = max_changeset_size
         self.min_revisions = min_revisions
+        self.recency_decay: float = recency_decay
 
         if self.cache_dir:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -201,22 +212,37 @@ class EvolutionaryMiner:
 
             for future in concurrent.futures.as_completed(future_to_commit):
                 try:
-                    changed_methods = future.result()
+                    changed_methods, commit_date = future.result()
 
                     # Update method commit counts
                     for method in changed_methods:
                         evo_data.method_names.add(method)
                         evo_data.method_commits[method] = evo_data.method_commits.get(method, 0) + 1
 
-                    # Update co-change matrix with IDF-like weighting.
-                    # A commit touching N methods contributes 1/sqrt(N) per pair.
-                    # This dampens bulk changes without killing the signal:
+                    # IDF weighting: dampens bulk changes without killing the signal.
+                    # A commit touching N methods contributes 1/sqrt(N) per pair:
                     # N=2: weight=0.71 (focused commit, strong signal)
                     # N=5: weight=0.45 (moderate commit)
                     # N=10: weight=0.32 (broad commit, weaker signal)
                     # N=50: weight=0.14 (bulk change, weak signal)
                     n_changed = len(changed_methods)
-                    commit_weight = 1.0 / np.sqrt(max(n_changed, 1))
+                    idf_weight = 1.0 / np.sqrt(max(n_changed, 1))
+
+                    # Recency weighting: recent commits matter more.
+                    # recency_weight = decay_factor ^ (months_ago / 12)
+                    # With default decay=0.8: 1mo ago=0.98, 6mo=0.90, 2yr=0.64, 5yr=0.33
+                    if commit_date is not None:
+                        now_utc = datetime.now(timezone.utc)
+                        # Ensure commit_date is timezone-aware for subtraction
+                        if commit_date.tzinfo is None:
+                            commit_date = commit_date.replace(tzinfo=timezone.utc)
+                        months_ago = max(0.0, (now_utc - commit_date).days / 30.0)
+                        recency_weight = self.recency_decay ** (months_ago / 12.0)
+                    else:
+                        recency_weight = 0.5  # Unknown date, use moderate weight
+
+                    commit_weight = idf_weight * recency_weight
+
                     for m1 in changed_methods:
                         for m2 in changed_methods:
                             if m1 < m2:  # Only store once (ordered pair)

@@ -27,6 +27,7 @@ evolution:
   min_coupling_threshold: 0.1    # Minimum coupling strength 0.0-1.0 (default: 0.3 = 30%)
   max_changeset_size: 100        # Skip commits touching >N methods (filters refactorings)
   min_revisions: 1               # Minimum revisions required (stricter than min_commits)
+  recency_decay: 0.8             # 20% decay per year (0.0=ignore old commits, 1.0=no decay)
 clustering:
   algorithm: leiden               # Changed from louvain - more robust clustering
   min_cluster_size: 3

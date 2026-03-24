@@ -172,11 +172,11 @@ class TestMineMethodCochanges:
             mock_pool.return_value.__enter__ = MagicMock(return_value=mock_executor)
             mock_pool.return_value.__exit__ = MagicMock(return_value=False)
 
-            # Create futures that return changed method sets
+            # Create futures that return (changed_methods, commit_date) tuples
             future1 = MagicMock()
-            future1.result.return_value = {"add(int)", "subtract(int)"}
+            future1.result.return_value = ({"add(int)", "subtract(int)"}, now)
             future2 = MagicMock()
-            future2.result.return_value = {"add(int)", "getTotal()"}
+            future2.result.return_value = ({"add(int)", "getTotal()"}, now - timedelta(days=1))
 
             mock_executor.submit.side_effect = [future1, future2]
 
@@ -225,7 +225,7 @@ class TestMineMethodCochanges:
             mock_pool.return_value.__exit__ = MagicMock(return_value=False)
 
             future1 = MagicMock()
-            future1.result.return_value = {"doStuff()"}
+            future1.result.return_value = ({"doStuff()"}, now)
             mock_executor.submit.side_effect = [future1]
 
             with patch(
@@ -270,10 +270,11 @@ class TestMineMethodCochanges:
             futures = []
             for i in range(5):
                 f = MagicMock()
+                commit_dt = now - timedelta(days=i)
                 if i == 0:
-                    f.result.return_value = {"frequent()", "rare()"}
+                    f.result.return_value = ({"frequent()", "rare()"}, commit_dt)
                 else:
-                    f.result.return_value = {"frequent()"}
+                    f.result.return_value = ({"frequent()"}, commit_dt)
                 futures.append(f)
 
             mock_executor.submit.side_effect = futures
@@ -636,7 +637,7 @@ class TestProcessCommitWorker:
         """Worker should return empty set when repo fails."""
         mock_repo_cls.side_effect = Exception("repo gone")
         result = process_commit_worker("/bad/path", "sha123", "Foo.java", 30)
-        assert result == set()
+        assert result == (set(), None)
 
     @patch("genec.core.evolutionary_miner.Repo")
     @patch("genec.core.evolutionary_miner.HybridDependencyAnalyzer")
@@ -654,7 +655,10 @@ class TestProcessCommitWorker:
         ):
             result = process_commit_worker("/fake/repo", "abc123", "Foo.java", 30)
 
-        assert result == {"foo()", "bar()"}
+        changed_methods, commit_date = result
+        assert changed_methods == {"foo()", "bar()"}
+        # commit_date comes from the mock commit object
+        assert commit_date == mock_commit.committed_datetime
 
 
 # ---------------------------------------------------------------------------

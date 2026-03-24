@@ -46,6 +46,12 @@ class EvolutionConfig(BaseModel):
     min_commits: int = Field(
         default=1, ge=1, description="Minimum commits required for coupling analysis."
     )
+    recency_decay: float = Field(
+        default=0.8,
+        ge=0.0,
+        le=1.0,
+        description="Decay factor for time-weighted coupling (0.0=ignore old, 1.0=no decay).",
+    )
 
 
 class ClusteringConfig(BaseModel):

@@ -624,6 +624,61 @@ class LLMInterface:
         except (LLMServiceUnavailable, LLMRequestFailed):
             raise
 
+    def repair_extraction(
+        self,
+        original_code: str,
+        new_class_code: str,
+        modified_original_code: str,
+        error_message: str,
+        class_name: str,
+    ) -> tuple[str, str] | None:
+        """
+        Ask LLM to fix compilation errors in extracted code.
+
+        Returns:
+            Tuple of (fixed_new_class_code, fixed_modified_original_code) or None if repair failed.
+        """
+        if not self._available:
+            return None
+
+        prompt = (
+            "You are fixing a Java Extract Class refactoring that failed compilation.\n\n"
+            f"Original class: {class_name}\n"
+            f"Compilation error: {error_message}\n\n"
+            "The extracted class code:\n"
+            "```java\n"
+            f"{new_class_code}\n"
+            "```\n\n"
+            "The modified original class:\n"
+            "```java\n"
+            f"{modified_original_code}\n"
+            "```\n\n"
+            "Fix the compilation error. Return ONLY the fixed code in XML tags:\n"
+            "<new_class_code>\n"
+            "...fixed extracted class...\n"
+            "</new_class_code>\n"
+            "<modified_original_code>\n"
+            "...fixed modified original...\n"
+            "</modified_original_code>"
+        )
+
+        try:
+            response = self._call_llm(prompt, cluster_key=f"repair_{class_name}")
+            if not response:
+                return None
+
+            fixed_new = self._extract_xml_tag(response, "new_class_code")
+            fixed_modified = self._extract_xml_tag(response, "modified_original_code")
+
+            if not fixed_new or not fixed_modified:
+                self.logger.warning("Failed to parse repair response")
+                return None
+
+            return (fixed_new.strip(), fixed_modified.strip())
+        except Exception as e:
+            self.logger.warning(f"Repair extraction failed: {e}")
+            return None
+
     def _parse_response(self, response: str, cluster: Cluster) -> RefactoringSuggestion | None:
         """
         Parse Claude's response to extract structured information.

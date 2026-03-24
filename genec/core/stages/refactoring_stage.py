@@ -129,6 +129,17 @@ class RefactoringStage(PipelineStage):
                             f"{application_result.error_message}"
                         )
             else:
+                # Verification failed — attempt self-reflection repair
+                max_repairs = app_config.get("max_repair_attempts", 2)
+                if max_repairs > 0 and verification_result.error_message:
+                    repaired = self._attempt_repair(
+                        suggestion, verification_result, context, max_repairs
+                    )
+                    if repaired:
+                        verified_suggestions.append(suggestion)
+                        suggestion.verification_status = "verified_after_repair"
+                        continue
+
                 self.logger.warning(f"Suggestion {suggestion.proposed_class_name} failed verification")
                 suggestion.verification_status = "failed"
 
@@ -155,3 +166,57 @@ class RefactoringStage(PipelineStage):
             })
 
         return True
+
+    def _attempt_repair(self, suggestion, verification_result, context, max_attempts):
+        """Attempt to repair failed extraction using LLM feedback."""
+        llm = context.get("llm_interface")
+        if not llm or not llm._available:
+            return False
+
+        error_msg = verification_result.error_message or "Verification failed"
+        try:
+            with open(context.class_file, encoding="utf-8") as f:
+                original_code = f.read()
+        except Exception as e:
+            self.logger.warning(f"Failed to read original file for repair: {e}")
+            return False
+
+        for attempt in range(max_attempts):
+            self.logger.info(
+                f"Repair attempt {attempt + 1}/{max_attempts} for "
+                f"{suggestion.proposed_class_name}: {error_msg[:100]}"
+            )
+
+            result = llm.repair_extraction(
+                original_code=original_code,
+                new_class_code=suggestion.new_class_code,
+                modified_original_code=suggestion.modified_original_code,
+                error_message=error_msg,
+                class_name=suggestion.proposed_class_name,
+            )
+
+            if result is None:
+                self.logger.warning(f"Repair attempt {attempt + 1} returned no result")
+                continue
+
+            new_code, modified_code = result
+            suggestion.new_class_code = new_code
+            suggestion.modified_original_code = modified_code
+
+            # Re-verify
+            class_deps = context.get("class_deps")
+            vr = self.verification_engine.verify_refactoring(
+                suggestion=suggestion,
+                original_code=original_code,
+                original_class_file=context.class_file,
+                repo_path=context.repo_path,
+                class_deps=class_deps,
+            )
+
+            if vr.is_valid:
+                self.logger.info(f"Repair succeeded on attempt {attempt + 1}")
+                return True
+
+            error_msg = vr.error_message or "Verification failed after repair"
+
+        return False

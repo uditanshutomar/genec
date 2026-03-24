@@ -209,6 +209,7 @@ class GenECPipeline:
             "evolution": {
                 "window_months": 120,
                 "min_commits": 2,
+                "recency_decay": 0.8,
             },  # 10 years to capture full history
             "clustering": {
                 "algorithm": "leiden",
@@ -259,6 +260,7 @@ class GenECPipeline:
                 "create_backups": True,
                 "backup_dir": ".genec_backups",
                 "dry_run": True,
+                "max_repair_attempts": 2,
             },
             "naming": {
                 "min_confidence_threshold": 0.0,
@@ -287,6 +289,7 @@ class GenECPipeline:
             min_coupling_threshold=evolution_config.get("min_coupling_threshold", 0.1),
             max_changeset_size=evolution_config.get("max_changeset_size", 30),
             min_revisions=evolution_config.get("min_revisions", 1),
+            recency_decay=evolution_config.get("recency_decay", 0.8),
         )
 
         # Graph builder
@@ -495,6 +498,9 @@ class GenECPipeline:
             # Attach pipeline recorder for metrics collection
             recorder = PipelineRecorder(class_name=Path(class_file).stem)
             context.recorder = recorder
+
+            # Pass LLM interface for repair loop in refactoring stage
+            context.set("llm_interface", self.llm_interface)
 
             # Initialize stages
             stages = [
