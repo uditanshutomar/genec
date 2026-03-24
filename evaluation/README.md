@@ -44,13 +44,13 @@ preservation via Maven builds.
 
 Results in `results/live_evaluation/aggregate_results.json`:
 - 23 classes evaluated end-to-end
-- 505 total clusters detected, 77 post-filter suggestions
-- **70/77 verified (90.9%)** — compilation + semantic + behavioral tests
-- Average runtime: 73s per class
+- 419 total clusters detected, 53 post-filter suggestions
+- **41/53 verified (77.4%)** — compilation + semantic + behavioral tests
+- Average runtime: 66s per class
 
 ### Key Contributions
 
-- **Verification rate**: 90.9% of suggestions pass compilation, semantic
+- **Verification rate**: 77.4% of suggestions pass compilation, semantic
   equivalence, and behavioral verification via Maven builds.
 - **Compilable code generation**: Every accepted suggestion produces code
   that compiles under the project's own build system.

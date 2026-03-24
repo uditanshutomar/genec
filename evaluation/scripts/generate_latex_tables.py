@@ -196,7 +196,7 @@ def generate_table_verification(results_dir: Path) -> str:
         suggestions = data.get("suggestions", [])
 
         for s in suggestions:
-            tier = s.get("quality_tier", "unknown") or "unknown"
+            tier = (s.get("quality_tier") or "unknown").upper()
             if tier not in tier_counts:
                 tier_counts[tier] = {"total": 0, "verified": 0}
             tier_counts[tier]["total"] += 1
