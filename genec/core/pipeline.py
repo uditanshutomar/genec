@@ -261,6 +261,7 @@ class GenECPipeline:
                 "backup_dir": ".genec_backups",
                 "dry_run": True,
                 "max_repair_attempts": 2,
+                "max_passes": 1,
             },
             "naming": {
                 "min_confidence_threshold": 0.0,
@@ -576,6 +577,71 @@ class GenECPipeline:
                     summary = self._run_structural_compile_check(repo_path)
                     if summary:
                         result.structural_actions.append(summary)
+
+            # --- Incremental decomposition: re-analyze after extraction ---
+            max_passes = self.config.get("refactoring_application", {}).get("max_passes", 1)
+            all_suggestions = list(result.suggestions)
+            all_verified = list(result.verified_suggestions)
+
+            pass_number = 1
+            while pass_number < max_passes and result.verified_suggestions:
+                pass_number += 1
+                self.logger.info(f"=== Incremental pass {pass_number}/{max_passes} ===")
+
+                # Get modified original code from the last verified suggestion
+                last_verified = result.verified_suggestions[-1]
+                if not last_verified.modified_original_code:
+                    self.logger.info("No modified code available for incremental pass")
+                    break
+
+                # Write modified code to a temp file for re-analysis
+                # Must be in SAME directory (so imports resolve) with .java suffix
+                import tempfile
+
+                with tempfile.NamedTemporaryFile(
+                    suffix=".java",
+                    mode="w",
+                    delete=False,
+                    dir=str(Path(class_file).parent),
+                    prefix=f".genec_pass{pass_number}_",
+                ) as tmp:
+                    tmp.write(last_verified.modified_original_code)
+                    tmp_path = tmp.name
+
+                try:
+                    # Recursive call with max_passes=1 to prevent infinite recursion
+                    original_max_passes = self.config.get("refactoring_application", {}).get(
+                        "max_passes", 1
+                    )
+                    self.config.setdefault("refactoring_application", {})["max_passes"] = 1
+
+                    try:
+                        pass_result = self.run_full_pipeline(tmp_path, repo_path, max_suggestions)
+                    finally:
+                        self.config["refactoring_application"]["max_passes"] = original_max_passes
+
+                    if pass_result and pass_result.verified_suggestions:
+                        self.logger.info(
+                            f"Pass {pass_number}: found {len(pass_result.verified_suggestions)} "
+                            f"additional verified suggestions"
+                        )
+                        all_suggestions.extend(pass_result.suggestions)
+                        all_verified.extend(pass_result.verified_suggestions)
+                        # Update result for potential next pass
+                        result = pass_result
+                    else:
+                        self.logger.info(
+                            f"Pass {pass_number}: no new suggestions found, stopping"
+                        )
+                        break
+                finally:
+                    # Clean up temp file
+                    Path(tmp_path).unlink(missing_ok=True)
+
+            # Update final result with all passes
+            result.suggestions = all_suggestions
+            result.verified_suggestions = all_verified
+            # --- End incremental decomposition ---
 
             result.execution_time = time.time() - start_time
             self.logger.info(f"Execution time: {result.execution_time:.2f} seconds")

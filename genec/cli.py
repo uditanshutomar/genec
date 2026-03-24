@@ -83,6 +83,12 @@ def create_parser() -> argparse.ArgumentParser:
         default=None,
         help="Random seed for reproducible clustering (default: 42 from config)",
     )
+    parser.add_argument(
+        "--max-passes",
+        type=int,
+        default=1,
+        help="Maximum decomposition passes (default: 1, set >1 for iterative extraction)",
+    )
     return parser
 
 
@@ -252,6 +258,9 @@ def _build_config_overrides(args) -> dict:
             config_overrides["llm"]["cache_dir"] = args.cache_dir
         if args.use_cache:
             config_overrides["llm"]["use_cache"] = True
+
+    if hasattr(args, "max_passes") and args.max_passes > 1:
+        config_overrides.setdefault("refactoring_application", {})["max_passes"] = args.max_passes
 
     return config_overrides
 
