@@ -486,7 +486,11 @@ export function activate(context: vscode.ExtensionContext) {
         })
     );
 
-    // Register disposables
+    // Register disposables for providers and services
+    context.subscriptions.push(codeLensProvider);
+    context.subscriptions.push(suggestionsProvider);
+    context.subscriptions.push(historyProvider);
+    context.subscriptions.push(settingsProvider);
     context.subscriptions.push(genecService);
     context.subscriptions.push(stateManager);
 }

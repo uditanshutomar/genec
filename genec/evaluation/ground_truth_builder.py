@@ -97,6 +97,11 @@ class GroundTruthBuilder:
         """
         Parse RefactoringMiner JSON output.
 
+        NOTE: This parser targets RefactoringMiner 1.x output format.
+        RefactoringMiner 2.x/3.x uses a different schema with
+        leftSideLocations/rightSideLocations. Update needed for
+        modern RefactoringMiner versions.
+
         Args:
             json_file: Path to JSON file
 
@@ -118,7 +123,7 @@ class GroundTruthBuilder:
                     ref_type = refactoring.get("type", "")
 
                     if ref_type == "Extract Class":
-                        # Extract details
+                        # Extract details (RefactoringMiner 1.x schema)
                         source_class = refactoring.get("sourceClass", "")
                         extracted_class = refactoring.get("extractedClass", "")
 

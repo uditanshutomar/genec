@@ -91,7 +91,7 @@ class LLMOnlyBaseline:
                     id=idx,
                     member_names=member_list,
                     method_signatures=methods,
-                    get_methods=lambda ml=member_list: ml,
+                    get_methods=lambda ml=methods: ml,
                 )
                 suggestions.append(
                     RefactoringSuggestion(

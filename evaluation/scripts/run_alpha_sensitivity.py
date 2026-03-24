@@ -96,7 +96,8 @@ def run_alpha_sensitivity(benchmark_file: str, output_dir: str, max_classes: int
 
 def main():
     parser = argparse.ArgumentParser(description="Run alpha sensitivity analysis")
-    parser.add_argument("--benchmark-file", required=True, help="Path to benchmark JSON")
+    parser.add_argument("--benchmark-file", required=True,
+                        help="Path to benchmark JSON (e.g. evaluation/benchmarks/benchmark_classes.json)")
     parser.add_argument("--output-dir", default="evaluation/results", help="Output directory")
     parser.add_argument("--max-classes", type=int, default=20, help="Max classes to evaluate")
     args = parser.parse_args()

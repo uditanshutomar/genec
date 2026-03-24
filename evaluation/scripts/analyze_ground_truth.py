@@ -15,7 +15,10 @@ Usage:
 import argparse
 import json
 import logging
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from genec.evaluation.ground_truth_builder import GroundTruthBuilder
 
@@ -99,9 +102,6 @@ def analyze(
         suggestions = data.get("suggestions", [])
         class_suggestions[cname] = suggestions
 
-    # Track which (class_key, suggestion_index) pairs matched a ground truth entry
-    matched_suggestion_keys: set[tuple[str, int]] = set()
-
     for gt in ground_truth_entries:
         source_class = gt.get("source_class", "")
         extracted_class = gt.get("extracted_class", "")
@@ -147,10 +147,6 @@ def analyze(
         # Threshold hits
         threshold_hits = {str(t): best_jaccard >= t for t in thresholds}
 
-        # Track matched suggestion for FP calculation (match at lowest threshold)
-        if best_suggestion is not None and best_jaccard >= thresholds[0] and matching_key is not None:
-            matched_suggestion_keys.add((matching_key, best_suggestion_idx))
-
         # Classify mismatch
         if best_suggestion is not None:
             s_members = set(best_suggestion.get("members", []))
@@ -171,6 +167,8 @@ def analyze(
                 "confidence": best_suggestion.get("confidence", 0.0) if best_suggestion else None,
             },
             "best_jaccard": round(best_jaccard, 4),
+            "best_suggestion_idx": best_suggestion_idx,
+            "matching_key": matching_key,
             "category": category,
             "thresholds": threshold_hits,
         }
@@ -187,15 +185,26 @@ def analyze(
         per_case_results.append(case_result)
 
     # Aggregate P/R/F1 per threshold
+    # Compute matched_suggestion_keys per-threshold to avoid using a single
+    # lowest-threshold match set for all thresholds (which inflates precision
+    # at higher thresholds).
     threshold_metrics = {}
     for t in thresholds:
-        tp = sum(1 for c in per_case_results if c["thresholds"].get(str(t), False))
+        matched_at_threshold: set[tuple[str, int]] = set()
+        tp = 0
+        for c in per_case_results:
+            if c["thresholds"].get(str(t), False):
+                tp += 1
+                mk = c.get("matching_key")
+                si = c.get("best_suggestion_idx", -1)
+                if mk is not None and si >= 0:
+                    matched_at_threshold.add((mk, si))
         fn = len(per_case_results) - tp
-        # Per-class FP calculation: count suggestions not matched to any ground truth
+        # Per-class FP calculation: count suggestions not matched to any ground truth at THIS threshold
         fp = 0
         for cls, suggestions in class_suggestions.items():
             for idx, _s in enumerate(suggestions):
-                if (cls, idx) not in matched_suggestion_keys:
+                if (cls, idx) not in matched_at_threshold:
                     fp += 1
 
         prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0

@@ -125,7 +125,7 @@ class FieldSharingBaseline:
                 id=idx,
                 member_names=members,
                 method_signatures=methods_list,
-                get_methods=lambda ml=members: ml,
+                get_methods=lambda ml=methods_list: ml,
             )
             suggestion = RefactoringSuggestion(
                 cluster_id=idx,

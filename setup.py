@@ -12,12 +12,14 @@ setup(
         "networkx>=3.2",  # 3.2+ required for NumPy 2.0 compatibility
         "python-louvain==0.16",
         "anthropic>=0.40.0",
-        "pandas>=2.0.0",
         "numpy>=1.24.0",
-        "matplotlib>=3.7.0",
-        "pytest>=7.4.0",
         "pyyaml>=6.0.0",
         "scikit-learn>=1.3.0",
+        "leidenalg>=0.10.0",
+        "python-igraph>=0.11.0",
+        "pydantic>=2.0.0",
+        "scipy>=1.11.0",
+        "python-dotenv>=1.0.0",
     ],
     python_requires=">=3.10",
     classifiers=[

@@ -6,7 +6,7 @@ of each component (evolutionary mining, LLM naming, verification, fusion weight)
 
 Usage:
     python -m evaluation.scripts.run_ablation \
-        --benchmark-file evaluation/configs/benchmark.json \
+        --benchmark-file evaluation/benchmarks/benchmark_classes.json \
         --output-dir evaluation/results \
         --max-classes 15
 """
@@ -126,7 +126,8 @@ def _run_variant(variant_name: str, overrides: dict, class_file: str, repo_path:
 
 def main():
     parser = argparse.ArgumentParser(description="Run GenEC ablation study.")
-    parser.add_argument("--benchmark-file", required=True, type=Path, help="JSON listing benchmark classes")
+    parser.add_argument("--benchmark-file", required=True, type=Path,
+                        help="JSON listing benchmark classes (e.g. evaluation/benchmarks/benchmark_classes.json)")
     parser.add_argument("--output-dir", type=Path, default=Path("evaluation/results"), help="Output directory")
     parser.add_argument("--max-classes", type=int, default=15, help="Max benchmark classes to evaluate (default: 15)")
     args = parser.parse_args()
