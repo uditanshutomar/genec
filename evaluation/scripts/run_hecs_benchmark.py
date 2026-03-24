@@ -482,29 +482,29 @@ def run_benchmark(args: argparse.Namespace) -> dict:
             default_branches[repo_name] = get_default_branch(repo_path)
 
         # Checkout parent of refactoring commit
-        if not checkout_commit_parent(repo_path, commit_sha):
-            logger.warning("  Checkout failed for %s^, skipping", commit_sha[:8])
-            errors.append({"key": key, "error": f"checkout {commit_sha[:8]}^ failed"})
+        has_evo_context = checkout_commit_parent(repo_path, commit_sha)
+        if not has_evo_context:
+            logger.info("  Commit %s^ not found — falling back to static-only (old.java)", commit_sha[:8])
             restore_repo(repo_path, default_branches[repo_name])
-            continue
 
-        # Find the Java file in the repo.
-        # We prefer using old.java from the dataset (guaranteed correct content)
-        # but need the repo checked out for evolutionary coupling mining.
-        # Strategy: copy old.java to a temp location if the repo file doesn't
-        # match or doesn't exist.
+        # Find the Java file to analyze.
+        # If checkout succeeded, use the repo file (enables evo coupling).
+        # Otherwise, fall back to old.java from the dataset (static-only).
         java_file = None
-        if file_path:
+        use_repo_for_evo = False
+
+        if has_evo_context and file_path:
             candidate = Path(repo_path) / file_path
             if candidate.exists():
                 java_file = str(candidate)
+                use_repo_for_evo = True
 
         # Fallback: use old.java from the dataset directly
         if not java_file:
-            # Copy old.java into a temp dir with proper name
             old_java = instance_dir / "old.java"
             java_file = str(old_java)
-            logger.info("  Using old.java from dataset (repo file not found)")
+            # Use repo_path even without checkout — adaptive alpha handles no evo data
+            logger.info("  Using old.java from dataset (static-only analysis)")
 
         # Run GenEC
         result_entry = {
@@ -515,6 +515,7 @@ def run_benchmark(args: argparse.Namespace) -> dict:
             "commit_sha": commit_sha,
             "members_total": len(members),
             "members_to_extract": true_extract_count,
+            "has_evo_context": use_repo_for_evo,
         }
 
         try:
