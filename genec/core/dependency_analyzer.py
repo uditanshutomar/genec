@@ -127,7 +127,7 @@ def build_dependency_matrix(
                 if called_idx != method_idx:  # Skip self-reference
                     matrix[method_idx][called_idx] = weight_method_call
             elif len(overloaded_methods) > 1:
-                weight = weight_method_call * 0.5  # Reduced certainty for ambiguous overloads
+                weight = weight_method_call * 0.2  # Low weight: can't determine which overload is called
                 for overloaded_method in overloaded_methods:
                     called_idx = method_to_idx[overloaded_method.signature]
                     if called_idx == method_idx:  # Skip self-reference

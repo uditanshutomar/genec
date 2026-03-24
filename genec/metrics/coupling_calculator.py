@@ -226,14 +226,38 @@ class CouplingCalculator:
             "char", "void",
         }
         java_stdlib = {
+            # java.lang
             "String", "Object", "Integer", "Long", "Short", "Byte", "Float",
             "Double", "Boolean", "Character", "Void", "Number", "Math",
             "Class", "System", "Thread", "Throwable", "Exception",
-            "RuntimeException", "Error",
-            "List", "Map", "Set", "Collection", "Iterator", "Iterable",
-            "ArrayList", "HashMap", "HashSet", "LinkedList", "TreeMap",
-            "Optional", "Stream", "Comparable", "Comparator",
-            "StringBuilder", "StringBuffer", "Enum",
+            "RuntimeException", "Error", "Enum", "StringBuilder", "StringBuffer",
+            "Comparable", "Comparator", "Iterable", "AutoCloseable", "Cloneable",
+            "Appendable", "CharSequence", "Readable",
+            # java.util
+            "List", "Map", "Set", "Collection", "Iterator", "Queue", "Deque",
+            "ArrayList", "HashMap", "HashSet", "LinkedList", "TreeMap", "TreeSet",
+            "LinkedHashMap", "LinkedHashSet", "Collections", "Arrays", "Objects",
+            "Optional", "Stream", "Properties", "Date", "Calendar", "UUID",
+            "Locale", "Random", "Scanner", "Timer", "BitSet",
+            # java.util.function
+            "Consumer", "Supplier", "Function", "Predicate", "BiFunction",
+            "BiConsumer", "BiPredicate", "UnaryOperator", "BinaryOperator",
+            # java.io
+            "File", "InputStream", "OutputStream", "Reader", "Writer",
+            "BufferedReader", "BufferedWriter", "BufferedInputStream", "BufferedOutputStream",
+            "FileInputStream", "FileOutputStream", "FileReader", "FileWriter",
+            "InputStreamReader", "OutputStreamWriter", "PrintStream", "PrintWriter",
+            "Closeable", "Serializable", "Flushable",
+            "ByteArrayInputStream", "ByteArrayOutputStream",
+            "StringReader", "StringWriter",
+            # java.nio
+            "ByteBuffer", "CharBuffer", "Path", "Paths", "Files",
+            "Channel", "ReadableByteChannel", "WritableByteChannel",
+            "Charset", "StandardCharsets",
+            # java.net
+            "URL", "URI", "Socket", "ServerSocket", "URLConnection",
+            # Generic type parameters
+            "T", "E", "K", "V", "R", "S", "U",
         }
         return class_name not in java_primitives and class_name not in java_stdlib
 

@@ -204,10 +204,12 @@ def run_single_class(entry: dict) -> dict:
 
         # Post-refactoring metrics: what the class would look like after extraction
         original_methods = result.original_metrics.get("num_methods", 0)
-        extracted_methods = sum(
-            len(s.cluster.get_methods()) if s.cluster else 0
-            for s in result.verified_suggestions
-        )
+        # Use unique method counting to avoid double-counting shared helpers
+        extracted_method_set = set()
+        for s in result.verified_suggestions:
+            if s.cluster:
+                extracted_method_set.update(s.cluster.get_methods())
+        extracted_methods = len(extracted_method_set)
         remaining_methods = max(original_methods - extracted_methods, 0)
         result_data["post_refactoring"] = {
             "methods_extracted": extracted_methods,
