@@ -103,18 +103,21 @@ containing 92 Extract Class refactoring oracles across 18 open-source projects.
 | Instances without Git history | 71 | 0.057 | 0.161 | 0.076 |
 | Multi-member extractions | 49 | 0.228 | 0.476 | 0.281 |
 
-**Controlled ablation on the 21 instances with Git history:** Running GenEC
-with `--no-evo` on the same 21 instances produces identical F1 (0.478).
-This means the F1 difference between the 21-instance and 71-instance
-subsets is due to **project context** (having a compilable repo with imports
-and dependencies) rather than evolutionary coupling specifically. The
-71 static-only instances use standalone `old.java` files without project
-context, which degrades dependency analysis quality.
+**Controlled ablation (evolutionary coupling):** On the HECS benchmark,
+a controlled 21-instance comparison shows identical member-selection
+performance with and without evolutionary coupling (macro F1 = 0.478 in
+both settings). On our live benchmark, however, evolutionary coupling
+increases the number of extracted-class candidates from 53.9 to 68.6
+on average (+27.4%). This suggests its main benefit is **candidate
+discovery** — surfacing refactoring opportunities that static structure
+alone does not reveal — rather than improving within-cluster member
+selection.
 
-On the **live 23-class benchmark** (where full repos with build systems are
-available), evolutionary coupling adds 21% more clusters (ablation:
-68.6 vs 53.9 clusters), demonstrating its value when combined with
-rich project context.
+The F1 difference between the 21-instance (0.478) and 71-instance
+(0.076) subsets is due to **project context** (having a compilable repo
+with imports and dependencies) rather than evolutionary coupling. The
+71 instances use standalone `old.java` files without project context,
+which degrades dependency analysis quality.
 
 ## User Study
 
