@@ -504,7 +504,7 @@ We structure our evaluation around four research questions that assess GenEC's e
 - Total end-to-end latency per class
 - Peak memory consumption
 
-**Finding:** Total latency averaged 201.3 seconds (approximately 3.4 minutes) per class across all 23 subjects, with total wall-clock time of 4,629 seconds. IOUtils (172 methods) completed in only 18.8 seconds due to its sparse dependency structure, while larger classes like JFreeChart's DefaultPolarItemRenderer took longer. See Section 6.2.
+**Finding:** Total latency averaged 201.3 seconds (approximately 3.4 minutes) per class across all 23 subjects, with total wall-clock time of 4,629 seconds. IOUtils (172 methods) completed in only 18.8 seconds due to its sparse dependency structure, while larger classes like JFreeChart's CategoryPlot and XYPlot took longer (up to 569 seconds). See Section 6.2.
 
 ## 6 Empirical Evaluation
 
@@ -514,10 +514,10 @@ We structure our evaluation around four research questions that assess GenEC's e
 
 - **23 God Classes** from 6 open-source projects:
   - Apache Commons IO (3 classes): IOUtils, FileUtils, FilenameUtils
-  - Apache Commons Lang (5 classes): StringUtils, NumberUtils, ClassUtils, ArrayUtils, DateUtils
-  - Apache Commons Collections (3 classes): CollectionUtils, MapUtils, ListUtils
-  - Apache Commons Text (3 classes): StringSubstitutor, StrBuilder, WordUtils
-  - Apache Commons Math (4 classes): FastMath, MathArrays, ArithmeticUtils, Fraction
+  - Apache Commons Lang (5 classes): StringUtils, NumberUtils, ArrayUtils, DateUtils, SystemUtils
+  - Apache Commons Collections (3 classes): CollectionUtils, MapUtils, IteratorUtils
+  - Apache Commons Text (3 classes): StringSubstitutor, TextStringBuilder, StringLookupFactory
+  - Apache Commons Math (4 classes): AccurateMath, Dfp, BOBYQAOptimizer, DSCompiler
   - JFreeChart (5 classes): various plot and renderer classes
 
 **Baselines.**
