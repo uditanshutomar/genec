@@ -190,7 +190,7 @@ class TestDependencyMatrix:
         pa_idx = deps.member_names.index(m_process_a.signature)
         pb_idx = deps.member_names.index(m_process_b.signature)
 
-        expected = WEIGHT_METHOD_CALL * 0.9
+        expected = WEIGHT_METHOD_CALL * 0.5  # Reduced certainty for ambiguous overloads
         assert deps.dependency_matrix[caller_idx][pa_idx] == pytest.approx(expected)
         assert deps.dependency_matrix[caller_idx][pb_idx] == pytest.approx(expected)
 

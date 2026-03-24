@@ -616,6 +616,18 @@ class JavaParser:
             self.logger.error(f"Failed to convert inspector payload: {exc}")
             return None
 
+    def _strip_method_declaration(self, method_body: str) -> str:
+        """Strip method declaration from body, keeping only the inner code."""
+        # Find the first opening brace
+        brace_pos = method_body.find('{')
+        if brace_pos == -1:
+            return method_body
+        # Find matching closing brace from the end
+        close_pos = method_body.rfind('}')
+        if close_pos == -1 or close_pos <= brace_pos:
+            return method_body
+        return method_body[brace_pos + 1 : close_pos]
+
     def extract_method_calls(self, method_body: str) -> set[str]:
         """
         Extract method calls from method body.
@@ -630,8 +642,9 @@ class JavaParser:
 
         try:
             # Try to parse as a method body
-            # Wrap in a dummy class and method for parsing
-            wrapped = f"class Dummy {{ void dummy() {{ {method_body} }} }}"
+            # Strip method declaration to avoid nested declarations
+            inner_body = self._strip_method_declaration(method_body)
+            wrapped = f"class Dummy {{ void dummy() {{ {inner_body} }} }}"
             tree = javalang.parse.parse(wrapped)
 
             for path, node in tree.filter(javalang.tree.MethodInvocation):
@@ -666,7 +679,8 @@ class JavaParser:
         calls: list[tuple[str, int | None]] = []
 
         try:
-            wrapped = f"class Dummy {{ void dummy() {{ {method_body} }} }}"
+            inner_body = self._strip_method_declaration(method_body)
+            wrapped = f"class Dummy {{ void dummy() {{ {inner_body} }} }}"
             tree = javalang.parse.parse(wrapped)
 
             for _, node in tree.filter(javalang.tree.MethodInvocation):
@@ -705,7 +719,8 @@ class JavaParser:
 
         try:
             # Try to parse as a method body
-            wrapped = f"class Dummy {{ void dummy() {{ {method_body} }} }}"
+            inner_body = self._strip_method_declaration(method_body)
+            wrapped = f"class Dummy {{ void dummy() {{ {inner_body} }} }}"
             tree = javalang.parse.parse(wrapped)
 
             for path, node in tree.filter(javalang.tree.MemberReference):

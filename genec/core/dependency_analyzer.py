@@ -116,18 +116,22 @@ def build_dependency_matrix(
         for called_method in class_deps.method_calls.get(method.signature, []):
             if "(" in called_method and called_method in method_to_idx:
                 called_idx = method_to_idx[called_method]
-                matrix[method_idx][called_idx] = weight_method_call
+                if called_idx != method_idx:  # Skip self-reference
+                    matrix[method_idx][called_idx] = weight_method_call
                 continue
 
             called_name = called_method.split("(", 1)[0] if "(" in called_method else called_method
             overloaded_methods = name_to_methods.get(called_name, [])
             if len(overloaded_methods) == 1:
                 called_idx = method_to_idx[overloaded_methods[0].signature]
-                matrix[method_idx][called_idx] = weight_method_call
+                if called_idx != method_idx:  # Skip self-reference
+                    matrix[method_idx][called_idx] = weight_method_call
             elif len(overloaded_methods) > 1:
-                weight = weight_method_call * 0.9
+                weight = weight_method_call * 0.5  # Reduced certainty for ambiguous overloads
                 for overloaded_method in overloaded_methods:
                     called_idx = method_to_idx[overloaded_method.signature]
+                    if called_idx == method_idx:  # Skip self-reference
+                        continue
                     matrix[method_idx][called_idx] = max(matrix[method_idx][called_idx], weight)
 
         # Field accesses

@@ -68,7 +68,7 @@ class EvolutionaryMiner:
         cache_dir: str | None = None,
         min_coupling_threshold: float = 0.3,
         max_changeset_size: int = 30,
-        min_revisions: int = 5,
+        min_revisions: int = 2,
         prefer_spoon: bool = False,
     ):
         """
@@ -78,7 +78,7 @@ class EvolutionaryMiner:
             cache_dir: Directory for caching mining results
             min_coupling_threshold: Minimum coupling threshold (default 0.3 like Code-Maat)
             max_changeset_size: Maximum changeset size to avoid refactoring noise (default 30)
-            min_revisions: Minimum revisions required for method (default 5)
+            min_revisions: Minimum revisions required for method (default 2)
             prefer_spoon: Whether to prefer Spoon (JVM) over lightweight parser (default: False)
         """
         # Use hybrid analyzer (Spoon + JavaParser fallback)
@@ -754,11 +754,20 @@ class EvolutionaryMiner:
             if commits_m1 > 0 and commits_m2 > 0:
                 coupling = cochange_count / np.sqrt(commits_m1 * commits_m2)
 
+                # Discount same-name overloads: they co-change trivially
+                # because they're adjacent in the file. Reduce weight by 50%.
+                m1_base = m1.split("(")[0] if "(" in m1 else m1
+                m2_base = m2.split("(")[0] if "(" in m2 else m2
+                if m1_base == m2_base:
+                    coupling *= 0.5
+
                 # Apply minimum coupling threshold filter
                 # FIX 2: Store only ONE ordering (sorted tuple key) to avoid 2x inflation
                 if coupling >= self.min_coupling_threshold:
                     key = tuple(sorted([m1, m2]))
-                    evo_data.coupling_strengths[key] = coupling
+                    evo_data.coupling_strengths[key] = max(
+                        evo_data.coupling_strengths.get(key, 0.0), coupling
+                    )
 
     def get_coupling_strength(
         self, evo_data: EvolutionaryData, method1: str, method2: str

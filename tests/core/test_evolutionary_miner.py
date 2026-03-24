@@ -80,7 +80,7 @@ class TestEvolutionaryMinerInit:
             miner = EvolutionaryMiner()
         assert miner.min_coupling_threshold == 0.3
         assert miner.max_changeset_size == 30
-        assert miner.min_revisions == 5
+        assert miner.min_revisions == 2
         assert miner.cache_dir is None
 
     def test_cache_dir_created(self):
