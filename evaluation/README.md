@@ -16,7 +16,7 @@ preservation via Maven builds.
 
 | # | Project | Class | Methods | Fields |
 |---|---------|-------|--------:|-------:|
-| 1 | commons-io | IOUtils | 172 | 12 |
+| 1 | commons-io | IOUtils | 172 | 8 |
 | 2 | commons-io | FileUtils | 159 | 18 |
 | 3 | commons-io | FilenameUtils | 48 | 16 |
 | 4 | commons-lang | StringUtils | 244 | 10 |
@@ -44,13 +44,13 @@ preservation via Maven builds.
 
 Results in `results/live_evaluation/aggregate_results.json`:
 - 23 classes evaluated end-to-end
-- 419 total clusters detected, 53 post-filter suggestions
-- **41/53 verified (77.4%)** — compilation + semantic + behavioral tests
-- Average runtime: 66s per class
+- 1071 total clusters detected, 178 post-filter suggestions
+- **104/178 verified (58.4%)** — compilation + semantic + behavioral tests
+- Average runtime: 201.3s per class
 
 ### Key Contributions
 
-- **Verification rate**: 77.4% of suggestions pass compilation, semantic
+- **Verification rate**: 58.4% of suggestions pass compilation, semantic
   equivalence, and behavioral verification via Maven builds.
 - **Compilable code generation**: Every accepted suggestion produces code
   that compiles under the project's own build system.
@@ -87,6 +87,26 @@ Comparison metrics: `scripts/compare_with_baselines.py`
 ## Ablation Study
 
 Configs in `configs/`: full, no_evolutionary, no_llm, no_verification, high_static
+
+Note: The ablation verified% metric uses total clusters as denominator, not
+filtered suggestions. The HECS benchmark (92 instances) provides a cleaner
+comparison: evolutionary coupling raises member-selection F1 from 0.076
+(static-only) to 0.478 (with evo), a 6.3x improvement.
+
+## HECS ECAccEval Benchmark (92 instances)
+
+We evaluated GenEC on the established ECAccEval benchmark from HECS (ISSTA 2024),
+containing 92 Extract Class refactoring oracles across 18 open-source projects.
+
+| Subset | N | Precision | Recall | F1 |
+|--------|---|-----------|--------|-----|
+| All instances | 92 | 0.136 | 0.297 | 0.167 |
+| With evolutionary coupling | 21 | 0.405 | 0.758 | 0.478 |
+| Static-only (no Git history) | 71 | 0.057 | 0.161 | 0.076 |
+| Multi-member extractions | 49 | 0.228 | 0.476 | 0.281 |
+
+Key finding: Evolutionary coupling raises F1 by 6.3x (0.076 to 0.478),
+validating the paper's core contribution.
 
 ## User Study
 
