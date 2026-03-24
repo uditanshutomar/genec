@@ -132,7 +132,9 @@ class RefactoringApplicator:
             original_branch = None
             if self.enable_git and self.git_wrapper and self.git_wrapper.is_available():
                 if create_branch:
-                    branch_name = f"genec/refactor-{suggestion.proposed_class_name}"
+                    # Sanitize class name for git branch (remove spaces, special chars)
+                    safe_name = re.sub(r'[^a-zA-Z0-9_-]', '-', suggestion.proposed_class_name)
+                    branch_name = f"genec/refactor-{safe_name}"
                     status = self.git_wrapper.get_status()
                     original_branch = status.current_branch
 
@@ -169,14 +171,25 @@ class RefactoringApplicator:
             self._validate_code_safety(suggestion.new_class_code, "new class code")
             self._validate_code_safety(suggestion.modified_original_code, "modified original code")
 
-            # Write new class file
+            # Write both files with rollback on partial failure
             new_class_path.parent.mkdir(parents=True, exist_ok=True)
-            self._write_file(new_class_path, suggestion.new_class_code)
-            self.logger.info(f"Created new class: {new_class_path}")
+            try:
+                self._write_file(new_class_path, suggestion.new_class_code)
+                self.logger.info(f"Created new class: {new_class_path}")
 
-            # Update original class file
-            self._write_file(original_path, suggestion.modified_original_code)
-            self.logger.info(f"Updated original class: {original_path}")
+                self._write_file(original_path, suggestion.modified_original_code)
+                self.logger.info(f"Updated original class: {original_path}")
+            except Exception as write_err:
+                # Rollback: remove new class file if it was created
+                if new_class_path.exists():
+                    new_class_path.unlink()
+                    self.logger.info(f"Rolled back: removed {new_class_path}")
+                # Restore original from backup if available
+                if backup_path and Path(backup_path).exists():
+                    import shutil
+                    shutil.copy2(backup_path, original_path)
+                    self.logger.info(f"Rolled back: restored {original_path} from backup")
+                raise write_err
 
             # Git: Create atomic commit
             commit_hash = None
