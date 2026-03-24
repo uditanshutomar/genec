@@ -474,7 +474,7 @@ GenEC uses a hierarchical YAML configuration:
 ```yaml
 # Graph fusion weight (0.0 = only evolutionary, 1.0 = only static)
 fusion:
-  alpha: 0.6                              # 60% static, 40% evolutionary
+  alpha: 0.8                              # 80% static, 20% evolutionary
   edge_threshold: 0.05
 
 # Clustering constraints

@@ -46,24 +46,22 @@
 
 ---
 
-## Suggestion 1 of 5: DateUtils → DateConverter
+## Suggestion 1 of 5: DateUtils → DateParser
 
 **Source project**: Apache Commons Lang
-**Original class**: `DateUtils` (806 LOC, 45 methods, 4 fields)
+**Original class**: `DateUtils` (67 methods, 12 fields)
 **Verification**: Compiles (Maven) ✓ | Tests pass ✓
 
-**Methods to extract (7)**:
-- `toLocalDateTime(Date)`
-- `toLocalDateTime(Date, TimeZone)`
-- `toOffsetDateTime(Date)`
-- `toOffsetDateTime(Date, TimeZone)`
-- `toZonedDateTime(Date)`
-- `toZonedDateTime(Date, TimeZone)`
-- `toZoneId(TimeZone)`
+**Methods to extract (5)**:
+- `parseDate(String, Locale, String[])`
+- `parseDate(String, String[])`
+- `parseDateStrictly(String, Locale, String[])`
+- `parseDateStrictly(String, String[])`
+- `parseDateWithLeniency(String, Locale, String[], boolean)`
 
-**Proposed class name**: `DateConverter`
+**Proposed class name**: `DateParser`
 
-**Tool's rationale**: "These methods form a cohesive conversion unit that transforms legacy Date objects to modern java.time types. They share the same conversion pattern and represent a single responsibility of bridging old and new date APIs."
+**Tool's rationale**: "These methods form a cohesive date parsing unit that converts string representations to Date objects using pattern matching. They share parsing logic, locale handling, and leniency configuration, representing a single well-defined responsibility that should be extracted into a dedicated DateParser class."
 
 ### Evaluation Questions
 
@@ -80,8 +78,8 @@
 |---|---|---|---|---|
 
 **Q3b. Naming comparison** — Which name better describes this class's responsibility?
-- [ ] Name A: `DateConverter`
-- [ ] Name B: `ToLocalDateTimeGroup`
+- [ ] Name A: `DateParser`
+- [ ] Name B: `ParseDateGroup`
 - [ ] Both equally good
 - [ ] Neither is good (suggest: _______________)
 
@@ -95,10 +93,10 @@ _______________________________________________
 
 ---
 
-## Suggestion 2 of 5: CollectionUtils → CollectionMerger
+## Suggestion 2 of 5: CollectionUtils → SortedMerger
 
 **Source project**: Apache Commons Collections
-**Original class**: `CollectionUtils` (1,493 LOC, 83 methods, 0 fields)
+**Original class**: `CollectionUtils` (71 methods, 6 fields)
 **Verification**: Compiles (Maven) ✓ | Tests pass ✓
 
 **Methods to extract (4)**:
@@ -107,9 +105,9 @@ _______________________________________________
 - `collate(Iterable, Iterable, Comparator)`
 - `collate(Iterable, Iterable, Comparator, boolean)`
 
-**Proposed class name**: `CollectionMerger`
+**Proposed class name**: `SortedMerger`
 
-**Tool's rationale**: "These methods implement a cohesive merge algorithm that combines two sorted iterables into a single sorted list. Extracting them into a CollectionMerger class isolates this specific algorithmic responsibility from the general-purpose collection utility class."
+**Tool's rationale**: "These methods form a cohesive unit responsible for merging two sorted iterables into a single sorted list. They represent a specific algorithmic operation (sorted merge) that should be extracted to improve separation of concerns and create a reusable component for merge operations."
 
 ### Evaluation Questions
 
@@ -126,7 +124,7 @@ _______________________________________________
 |---|---|---|---|---|
 
 **Q3b. Which name better describes this class's responsibility?**
-- [ ] Name A: `CollectionMerger`
+- [ ] Name A: `SortedMerger`
 - [ ] Name B: `CollateGroup`
 - [ ] Both equally good
 - [ ] Neither (suggest: _______________)
@@ -141,25 +139,21 @@ _______________________________________________
 
 ---
 
-## Suggestion 3 of 5: IOUtils → BufferedIOOperator
+## Suggestion 3 of 5: IOUtils → ResourceLoader
 
 **Source project**: Apache Commons IO
-**Original class**: `IOUtils` (4,012 LOC, 171 methods, 12 fields)
+**Original class**: `IOUtils` (172 methods, 8 fields)
 **Verification**: Compiles (Maven) ✓ | Tests pass ✓
 
-**Methods to extract (15)**:
-- `byteArray()`, `charArray()`, `charArray(int)`
-- `contentEquals(InputStream, InputStream)`, `contentEquals(Reader, Reader)`, `contentEquals(Iterator, Iterator)`, `contentEquals(Stream, Stream)`
-- `copy(Reader, Appendable)`, `copyLarge(InputStream, OutputStream)`, `copyToOutputStream(InputStream, long, int)`
-- `skip(ReadableByteChannel, long)`
-- `toByteArray(InputStream)`, `toByteArray(IOTriFunction, int)`
-- `writeChunked(byte[], OutputStream)`, `writeChunked(char[], Writer)`
+**Methods to extract (4)**:
+- `resourceToString(String, Charset)`
+- `resourceToString(String, Charset, ClassLoader)`
+- `resourceToURL(String)`
+- `resourceToURL(String, ClassLoader)`
 
-**Fields used**: `DEFAULT_BUFFER_SIZE`, `EOF`, `SOFT_MAX_ARRAY_LENGTH`
+**Proposed class name**: `ResourceLoader`
 
-**Proposed class name**: `BufferedIOOperator`
-
-**Tool's rationale**: "These methods form a cohesive unit responsible for buffer-based I/O operations including buffer allocation, content comparison, data copying, and chunked writing. They share buffer size constants and represent the core stream processing subsystem."
+**Tool's rationale**: "These methods form a cohesive unit responsible for loading classpath resources and converting them to strings. They handle the complete workflow from resource discovery to content conversion, making them ideal candidates for extraction into a specialized ResourceLoader class that encapsulates classpath resource access patterns."
 
 ### Evaluation Questions
 
@@ -176,8 +170,8 @@ _______________________________________________
 |---|---|---|---|---|
 
 **Q3b. Which name?**
-- [ ] Name A: `BufferedIOOperator`
-- [ ] Name B: `ByteArrayGroup`
+- [ ] Name A: `ResourceLoader`
+- [ ] Name B: `ResourceToStringGroup`
 - [ ] Both equally good
 - [ ] Neither (suggest: _______________)
 
@@ -191,22 +185,22 @@ _______________________________________________
 
 ---
 
-## Suggestion 4 of 5: FilenameUtils → FilenameComparator
+## Suggestion 4 of 5: FilenameUtils → WildcardMatcher
 
 **Source project**: Apache Commons IO
-**Original class**: `FilenameUtils` (1,380 LOC, 43 methods, 12 fields)
+**Original class**: `FilenameUtils` (48 methods, 16 fields)
 **Verification**: Compiles (Maven) ✓ | Tests pass ✓
 
 **Methods to extract (5)**:
-- `equals(String, String)`
-- `equals(String, String, boolean, IOCase)`
-- `equalsNormalized(String, String)`
-- `equalsNormalizedOnSystem(String, String)`
-- `equalsOnSystem(String, String)`
+- `wildcardMatch(String, String)`
+- `wildcardMatch(String, String, IOCase)`
+- `wildcardMatchOnSystem(String, String)`
+- `isEmpty(String)`
+- `splitOnTokens(String)`
 
-**Proposed class name**: `FilenameComparator`
+**Proposed class name**: `WildcardMatcher`
 
-**Tool's rationale**: "These methods form a cohesive unit focused solely on comparing filenames for equality under different conditions (case sensitivity, normalization). Extracting them into a FilenameComparator class creates a focused, reusable comparison utility."
+**Tool's rationale**: "These methods form a cohesive wildcard pattern matching system that implements a complete algorithm for matching strings against wildcard expressions. Extracting them creates a focused, reusable component that encapsulates the complex backtracking logic and can be applied beyond just filename matching scenarios."
 
 ### Evaluation Questions
 
@@ -223,8 +217,8 @@ _______________________________________________
 |---|---|---|---|---|
 
 **Q3b. Which name?**
-- [ ] Name A: `FilenameComparator`
-- [ ] Name B: `EqualsGroup`
+- [ ] Name A: `WildcardMatcher`
+- [ ] Name B: `WildcardMatchGroup`
 - [ ] Both equally good
 - [ ] Neither (suggest: _______________)
 
@@ -238,20 +232,20 @@ _______________________________________________
 
 ---
 
-## Suggestion 5 of 5: IteratorUtils → IteratorIndexAccessor
+## Suggestion 5 of 5: IteratorUtils → IteratorFactory
 
 **Source project**: Apache Commons Collections
-**Original class**: `IteratorUtils` (981 LOC, 65 methods, 2 fields)
+**Original class**: `IteratorUtils` (78 methods, 6 fields)
 **Verification**: Compiles (Maven) ✓ | Tests pass ✓
 
 **Methods to extract (3)**:
-- `first(Iterator)`
-- `get(Iterator, int)`
-- `get(Iterator, int, IntFunction)`
+- `emptyIterator()`
+- `getIterator(Object)`
+- `singletonIterator(E)`
 
-**Proposed class name**: `IteratorIndexAccessor`
+**Proposed class name**: `IteratorFactory`
 
-**Tool's rationale**: "These methods form a cohesive unit responsible for providing indexed access to Iterator elements. They share the common purpose of converting sequential iteration into positional access patterns."
+**Tool's rationale**: "These methods form a cohesive factory for creating Iterator instances from various object types. They encapsulate the complex logic of type detection and iterator instantiation, following the Factory pattern to provide a unified interface for iterator creation from diverse input sources."
 
 ### Evaluation Questions
 
@@ -268,8 +262,8 @@ _______________________________________________
 |---|---|---|---|---|
 
 **Q3b. Which name?**
-- [ ] Name A: `IteratorIndexAccessor`
-- [ ] Name B: `FirstGroup`
+- [ ] Name A: `IteratorFactory`
+- [ ] Name B: `EmptyIteratorGroup`
 - [ ] Both equally good
 - [ ] Neither (suggest: _______________)
 
@@ -318,7 +312,7 @@ _______________________________________________
 - Half participants see GenEC name as A, half as B
 
 ### Expected Analysis
-- Per-question Likert means ± SD
+- Per-question Likert means +/- SD
 - Naming preference: proportion choosing GenEC vs auto-name
 - Inter-rater agreement: Krippendorff's alpha or Fleiss' kappa
 - Wilcoxon signed-rank for paired naming comparison

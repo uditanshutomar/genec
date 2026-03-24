@@ -18,8 +18,8 @@ pip install -e .
 
 This installs all dependencies including:
 - javalang, gitpython, networkx, leidenalg
-- anthropic, numpy, pandas, scikit-learn
-- matplotlib, pyyaml, pytest
+- anthropic, numpy, scikit-learn
+- pyyaml, python-dotenv, websockets
 
 ## Step 2: Configure API Key (30 seconds)
 

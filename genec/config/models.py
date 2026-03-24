@@ -41,7 +41,7 @@ class EvolutionConfig(BaseModel):
     """Configuration for evolutionary coupling analysis."""
 
     window_months: int = Field(
-        default=36, ge=1, description="Number of months of history to analyze."
+        default=120, ge=1, description="Number of months of history to analyze."
     )
     min_commits: int = Field(
         default=1, ge=1, description="Minimum commits required for coupling analysis."
@@ -62,15 +62,15 @@ class ClusteringConfig(BaseModel):
         default=3, ge=2, description="Minimum number of members in a cluster."
     )
     max_cluster_size: int = Field(
-        default=50, ge=2, description="Maximum number of members in a cluster."
+        default=30, ge=2, description="Maximum number of members in a cluster."
     )
     min_cohesion: float = Field(
         default=0.3, ge=0.0, le=1.0, description="Minimum cohesion score for a cluster (0-1)."
     )
     resolution: float = Field(
-        default=0.8,
+        default=2.0,
         ge=0.0,
-        description="Resolution parameter for Louvain algorithm. Higher = more clusters.",
+        description="Resolution parameter for Leiden algorithm. Higher = more clusters.",
     )
     seed: int | None = Field(
         default=42, description="Random seed for reproducible clustering (None for non-deterministic)."

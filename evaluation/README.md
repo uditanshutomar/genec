@@ -115,7 +115,7 @@ Protocol in `user_study/study_protocol.md`. Participant results pending.
 ## Prerequisites
 
 - Python 3.10+
-- Java 11+ (for JDT wrapper and RefactoringMiner)
+- Java 17+ (for JDT wrapper and RefactoringMiner)
 - Anthropic API key (set `ANTHROPIC_API_KEY` environment variable)
 - GenEC installed: `pip install -e .`
 - JDT wrapper built: `cd genec-jdt-wrapper && mvn package`
@@ -176,8 +176,8 @@ python evaluation/scripts/generate_latex_tables.py \
 
 - **LLM Model**: Claude Sonnet 4 (`claude-sonnet-4-20250514`)
 - **Temperature**: 0.2 (for naming consistency)
-- **Graph fusion**: alpha=0.6 (60% static, 40% evolutionary)
-- **Clustering**: Leiden algorithm, resolution=0.5, min_size=3
+- **Graph fusion**: alpha=0.8 (80% static, 20% evolutionary)
+- **Clustering**: Leiden algorithm, resolution=2.0, min_size=3
 
 ## API Costs
 

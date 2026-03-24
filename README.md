@@ -107,6 +107,8 @@ genec --target path/to/Class.java --repo path/to/repo \
 | `--max-cluster-size` | Override maximum cluster size |
 | `--min-cohesion` | Override minimum cohesion threshold |
 | `--check-coverage` | Verify test coverage of extracted classes (requires JaCoCo) |
+| `--seed INT` | Random seed for reproducible clustering |
+| `--max-passes INT` | Maximum decomposition passes (default: 1) |
 | `--no-build` | Disable automatic building of dependencies |
 | `--websocket PORT` | Enable WebSocket progress server on the given port |
 | `--multi-file` | Enable multi-file dependency analysis mode |
