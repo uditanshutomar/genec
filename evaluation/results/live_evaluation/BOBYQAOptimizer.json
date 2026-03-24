@@ -3,24 +3,155 @@
   "class_name": "BOBYQAOptimizer",
   "class_file": "commons-math-legacy/src/main/java/org/apache/commons/math4/legacy/optim/nonlinear/scalar/noderiv/BOBYQAOptimizer.java",
   "status": "success",
-  "execution_time": 2.2,
+  "execution_time": 50.1,
   "original_metrics": {
-    "lcom5": 0.8086,
-    "tcc": 0.6795,
-    "cbo": 0,
+    "lcom5": 0.9257,
+    "tcc": 0.641,
+    "cbo": 3,
     "num_methods": 13,
     "num_fields": 37
   },
-  "clusters_found": 1,
-  "clusters_filtered": 0,
+  "clusters_found": 10,
+  "clusters_filtered": 9,
   "clusters_rejected": 1,
-  "filter_pass_rate": 0.0,
-  "suggestions_total": 0,
-  "suggestions_verified": 0,
-  "suggestions": [],
+  "filter_pass_rate": 90.0,
+  "suggestions_total": 3,
+  "suggestions_verified": 3,
+  "suggestions": [
+    {
+      "name": "CallerGroup",
+      "methods": [
+        "caller(int)",
+        "printState(int)",
+        "printMethod()"
+      ],
+      "fields": [],
+      "members": [
+        "caller(int)",
+        "printState(int)",
+        "printMethod()"
+      ],
+      "member_types": {
+        "caller(int)": "method",
+        "printState(int)": "method",
+        "printMethod()": "method"
+      },
+      "cluster_id": 6,
+      "quality_tier": "could",
+      "quality_score": 50.0,
+      "quality_reasons": [],
+      "internal_cohesion": 1.0,
+      "external_coupling": 1.0,
+      "modularity": 20.91050583657579,
+      "silhouette_score": null,
+      "conductance": null,
+      "coverage": null,
+      "is_connected": true,
+      "stability_score": null,
+      "verified": true,
+      "verification_status": "verified",
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)",
+      "reasoning": null,
+      "naming_votes": null,
+      "naming_agreement": null,
+      "post_lcom5": 0.9257,
+      "post_tcc": 0.6154
+    },
+    {
+      "name": "initGroup",
+      "methods": [
+        "<init>(int)"
+      ],
+      "fields": [
+        "DEFAULT_INITIAL_RADIUS",
+        "DEFAULT_STOPPING_RADIUS",
+        "numberOfInterpolationPoints"
+      ],
+      "members": [
+        "<init>(int)",
+        "DEFAULT_INITIAL_RADIUS",
+        "DEFAULT_STOPPING_RADIUS",
+        "numberOfInterpolationPoints"
+      ],
+      "member_types": {
+        "<init>(int)": "method",
+        "DEFAULT_INITIAL_RADIUS": "field",
+        "DEFAULT_STOPPING_RADIUS": "field",
+        "numberOfInterpolationPoints": "field"
+      },
+      "cluster_id": 3,
+      "quality_tier": "could",
+      "quality_score": 50.0,
+      "quality_reasons": [],
+      "internal_cohesion": 0.8000000000000002,
+      "external_coupling": 1.0,
+      "modularity": 20.91050583657579,
+      "silhouette_score": null,
+      "conductance": null,
+      "coverage": null,
+      "is_connected": true,
+      "stability_score": null,
+      "verified": true,
+      "verification_status": "verified",
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)",
+      "reasoning": null,
+      "naming_votes": null,
+      "naming_agreement": null,
+      "post_lcom5": 0.9398,
+      "post_tcc": 0.5
+    },
+    {
+      "name": "initGroup",
+      "methods": [
+        "<init>(int,double,double)"
+      ],
+      "fields": [
+        "initialTrustRegionRadius",
+        "stoppingTrustRegionRadius"
+      ],
+      "members": [
+        "<init>(int,double,double)",
+        "initialTrustRegionRadius",
+        "stoppingTrustRegionRadius"
+      ],
+      "member_types": {
+        "<init>(int,double,double)": "method",
+        "initialTrustRegionRadius": "field",
+        "stoppingTrustRegionRadius": "field"
+      },
+      "cluster_id": 7,
+      "quality_tier": "could",
+      "quality_score": 50.0,
+      "quality_reasons": [],
+      "internal_cohesion": 0.8,
+      "external_coupling": 1.0,
+      "modularity": 20.91050583657579,
+      "silhouette_score": null,
+      "conductance": null,
+      "coverage": null,
+      "is_connected": true,
+      "stability_score": null,
+      "verified": true,
+      "verification_status": "verified",
+      "confidence": 0.5,
+      "rationale": "Auto-generated name (LLM unavailable or failed for this cluster)",
+      "reasoning": null,
+      "naming_votes": null,
+      "naming_agreement": null,
+      "post_lcom5": 0.9333,
+      "post_tcc": 0.6282
+    }
+  ],
   "post_refactoring": {
-    "methods_extracted": 0,
-    "methods_remaining": 13,
-    "extraction_coverage": 0.0
+    "methods_extracted": 5,
+    "methods_remaining": 8,
+    "extraction_coverage": 38.5,
+    "single_extraction_lcom5": 0.9333,
+    "single_extraction_tcc": 0.6282,
+    "cumulative_methods_remaining": 8,
+    "cumulative_lcom5": 0.9189,
+    "cumulative_tcc": 0.5556
   }
 }
