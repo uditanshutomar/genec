@@ -1,5 +1,22 @@
 #!/usr/bin/env python3
-"""Run baselines on the same benchmark classes as GenEC."""
+"""Run baselines on the same benchmark classes as GenEC.
+
+Baseline Comparison Strategy
+----------------------------
+We compare GenEC against three baselines:
+
+1. Field-Sharing Heuristic: Agglomerative clustering based on shared field access
+   patterns (inspired by JDeodorant's Entity Placement, but simplified -- we do NOT
+   claim this IS JDeodorant). This represents the structural-only approach.
+2. Random Partitioning: Deterministic random grouping of methods (seed=42).
+   Lower bound showing that structure matters.
+3. LLM-Only: Sends entire class to Claude with no graph analysis.
+   Upper bound of what a naive LLM approach can achieve without static analysis.
+
+For direct comparison with JDeodorant and HECS (ISSTA 2024), we cite their
+published results on their respective datasets. Direct tool-to-tool comparison
+on the same dataset is left as future work due to tool availability constraints.
+"""
 
 import json
 import os
