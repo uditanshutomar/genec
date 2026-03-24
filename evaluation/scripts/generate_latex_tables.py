@@ -307,7 +307,7 @@ def _load_per_class(results_dir: Path) -> dict[str, dict]:
 
 def main():
     parser = argparse.ArgumentParser(description="Generate LaTeX tables for GenEC paper.")
-    parser.add_argument("--results-dir", type=Path, default=Path("evaluation/results"))
+    parser.add_argument("--results-dir", type=Path, default=Path("evaluation/results/live_evaluation"))
     parser.add_argument("--output-dir", type=Path, default=None,
                         help="Output directory (default: <results-dir>/tables)")
     args = parser.parse_args()

@@ -5,7 +5,7 @@
       "wilcoxon": {
         "statistic": 37.0,
         "p_value": 0.006099494745057189,
-        "significant": "True",
+        "significant": true,
         "n_nonzero": 21
       },
       "cliffs_delta": {
