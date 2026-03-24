@@ -27,6 +27,7 @@ class Cluster:
     member_names: list[str]
     member_types: dict[str, str] = field(default_factory=dict)  # name -> 'method' or 'field'
     quality_score: float = 0.0
+    cohesion_coupling_score: float = 0.0
     modularity: float = 0.0
     internal_cohesion: float = 0.0
     external_coupling: float = 0.0

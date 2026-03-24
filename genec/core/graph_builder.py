@@ -157,6 +157,17 @@ class GraphBuilder:
             f"adaptive={adaptive_fusion}"
         )
 
+        # FIX 3: If evolutionary graph has no edges, return static graph unmodified
+        # to avoid unnecessarily attenuating static weights by (1-alpha)
+        if G_evo.number_of_edges() == 0:
+            self.logger.info("Evolutionary graph has no edges; using static graph only")
+            G_fused = G_static.copy()
+            # Apply edge threshold
+            edges_to_remove = [(u, v) for u, v, d in G_fused.edges(data=True)
+                                if d.get("weight", 0) < edge_threshold]
+            G_fused.remove_edges_from(edges_to_remove)
+            return G_fused
+
         # Validate beta
         use_conceptual = beta > 0 and G_conceptual is not None and G_conceptual.number_of_edges() > 0
         if beta > 0 and G_conceptual is None:

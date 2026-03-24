@@ -234,7 +234,7 @@ class TestFuseGraphs:
         assert G["a"]["b"]["weight"] == pytest.approx(0.0)
 
     def test_empty_evolutionary_preserves_static(self):
-        """Empty evolutionary graph should keep static edges (scaled by alpha)."""
+        """Empty evolutionary graph should return static graph unmodified (FIX 3)."""
         builder = GraphBuilder()
         G_s = nx.Graph()
         G_s.add_edge("a", "b", weight=0.8)
@@ -243,8 +243,8 @@ class TestFuseGraphs:
         G = builder.fuse_graphs(G_s, G_e, alpha=0.6, edge_threshold=0.0)
 
         assert G.has_edge("a", "b")
-        # normalized static weight = 0.8/0.8 = 1.0, fused = 0.6 * 1.0 = 0.6
-        assert G["a"]["b"]["weight"] == pytest.approx(0.6)
+        # FIX 3: With no evo edges, static graph is returned unmodified (not scaled by alpha)
+        assert G["a"]["b"]["weight"] == pytest.approx(0.8)
 
     def test_empty_static_preserves_evolutionary(self):
         """Empty static graph should keep evo edges (scaled by 1-alpha)."""
@@ -294,7 +294,23 @@ class TestFuseGraphs:
         assert G["a"]["b"]["weight"] == pytest.approx(1.0)
 
     def test_nodes_from_both_graphs_present(self):
-        """All nodes from both graphs should appear in the fused graph."""
+        """All nodes from both graphs should appear in the fused graph when evo has edges."""
+        builder = GraphBuilder()
+        G_s = nx.Graph()
+        G_s.add_node("a", type="method")
+        G_e = nx.Graph()
+        G_e.add_node("b", type="method")
+        # FIX 3: evo graph needs edges to trigger fusion; otherwise static graph is returned as-is
+        G_e.add_edge("b", "c", weight=0.5)
+        G_e.add_node("c", type="method")
+
+        G = builder.fuse_graphs(G_s, G_e, alpha=0.5, edge_threshold=0.0)
+
+        assert "a" in G.nodes
+        assert "b" in G.nodes
+
+    def test_empty_evo_returns_static_only_nodes(self):
+        """When evo graph has no edges, only static nodes should be present (FIX 3)."""
         builder = GraphBuilder()
         G_s = nx.Graph()
         G_s.add_node("a", type="method")
@@ -304,7 +320,8 @@ class TestFuseGraphs:
         G = builder.fuse_graphs(G_s, G_e, alpha=0.5)
 
         assert "a" in G.nodes
-        assert "b" in G.nodes
+        # "b" is evo-only node with no edges; static graph is returned as-is
+        assert "b" not in G.nodes
 
 
 # ---------------------------------------------------------------------------

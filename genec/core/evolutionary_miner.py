@@ -222,6 +222,12 @@ class EvolutionaryMiner:
 
         # Filter methods by minimum commits (use min_revisions if not explicitly set)
         min_threshold = max(min_commits, self.min_revisions)
+        # FIX 6: Log when min_revisions silently overrides the configured min_commits
+        if min_threshold != min_commits:
+            self.logger.info(
+                f"min_commits={min_commits} overridden by min_revisions={self.min_revisions}, "
+                f"effective threshold={min_threshold}"
+            )
         filtered_methods = {
             m for m, count in evo_data.method_commits.items() if count >= min_threshold
         }
@@ -749,9 +755,10 @@ class EvolutionaryMiner:
                 coupling = cochange_count / np.sqrt(commits_m1 * commits_m2)
 
                 # Apply minimum coupling threshold filter
+                # FIX 2: Store only ONE ordering (sorted tuple key) to avoid 2x inflation
                 if coupling >= self.min_coupling_threshold:
-                    evo_data.coupling_strengths[(m1, m2)] = coupling
-                    evo_data.coupling_strengths[(m2, m1)] = coupling  # Symmetric
+                    key = tuple(sorted([m1, m2]))
+                    evo_data.coupling_strengths[key] = coupling
 
     def get_coupling_strength(
         self, evo_data: EvolutionaryData, method1: str, method2: str
@@ -973,7 +980,7 @@ class EvolutionaryMiner:
 
     def get_method_hotspots(
         self, evo_data: EvolutionaryData, top_n: int = 10, min_commits: int = 3
-    ) -> list[tuple[str, int, float]]:
+    ) -> list[dict]:
         """
         Identify method hotspots (frequently changed + highly coupled).
 
@@ -992,7 +999,7 @@ class EvolutionaryMiner:
             min_commits: Minimum commits to consider a method
 
         Returns:
-            List of (method_signature, commit_count, hotspot_score) tuples
+            List of dicts with keys: method, commit_count, hotspot_score
         """
         # Get sum-of-coupling for all methods
         sum_of_coupling_data = dict(self.get_sum_of_coupling(evo_data))
@@ -1008,7 +1015,19 @@ class EvolutionaryMiner:
         # Sort by hotspot score (descending)
         hotspots.sort(key=lambda x: x[2], reverse=True)
 
-        return hotspots[:top_n]
+        # FIX 5: Normalize hotspot scores to [0, 1] to prevent unbounded values
+        # that would produce negative alpha in adaptive fusion
+        if hotspots:
+            max_score = max(score for _, _, score in hotspots)
+            if max_score > 0:
+                hotspots = [(m, c, s / max_score) for m, c, s in hotspots]
+
+        # FIX 1: Return list[dict] so fuse_graphs() can use .get("method") / .get("hotspot_score")
+        hotspot_list = hotspots[:top_n]
+        return [
+            {"method": method, "commit_count": count, "hotspot_score": score}
+            for method, count, score in hotspot_list
+        ]
 
     def mine_cross_file_method_cochanges(
         self, class_files: list[str], repo_path: str, window_months: int = 12, min_commits: int = 2
@@ -1096,6 +1115,11 @@ class EvolutionaryMiner:
 
         # Filter methods by minimum commits
         min_threshold = max(min_commits, self.min_revisions)
+        if min_threshold != min_commits:
+            self.logger.info(
+                f"min_commits={min_commits} overridden by min_revisions={self.min_revisions}, "
+                f"effective threshold={min_threshold}"
+            )
         filtered_methods = {
             m for m, count in evo_data.method_commits.items() if count >= min_threshold
         }
@@ -1106,7 +1130,7 @@ class EvolutionaryMiner:
 
         self.logger.info(
             f"Found {len(evo_data.method_names)} methods across {len(class_files)} files "
-            f"with >= {min_commits} commits"
+            f"with >= {min_threshold} commits"
         )
 
         return evo_data

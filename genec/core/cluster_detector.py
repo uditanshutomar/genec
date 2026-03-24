@@ -39,6 +39,13 @@ except ImportError:
 logger = get_logger(__name__)
 
 
+def _normalize_method_for_coupling(method: str) -> str:
+    """Strip parameters for coupling lookup (handles signature variants)."""
+    if '(' in method:
+        return method[:method.index('(')]
+    return method
+
+
 def calculate_quality_tier(cluster: Cluster, evo_data=None) -> QualityTier:
     """
     Calculate quality tier for a cluster based on multiple factors.
@@ -67,9 +74,18 @@ def calculate_quality_tier(cluster: Cluster, evo_data=None) -> QualityTier:
 
         for i, method1 in enumerate(cluster_methods):
             for method2 in cluster_methods[i + 1 :]:
+                # FIX 4: Try exact key first, then normalized (stripped params) key
                 pair = tuple(sorted([method1, method2]))
                 if pair in evo_data.coupling_strengths:
                     coupling_values.append(evo_data.coupling_strengths[pair])
+                else:
+                    # Try with normalized method names (strip parameters)
+                    norm_pair = tuple(sorted([
+                        _normalize_method_for_coupling(method1),
+                        _normalize_method_for_coupling(method2),
+                    ]))
+                    if norm_pair != pair and norm_pair in evo_data.coupling_strengths:
+                        coupling_values.append(evo_data.coupling_strengths[norm_pair])
 
         if coupling_values:
             avg_coupling = sum(coupling_values) / len(coupling_values)
@@ -1120,8 +1136,8 @@ class ClusterDetector:
                 1.0, cluster.external_coupling / cluster.internal_cohesion
             )
 
-        # Calculate overall quality score
-        cluster.quality_score = cluster.internal_cohesion * (1.0 - cluster.external_coupling)
+        # FIX 7: Use cohesion_coupling_score to avoid collision with tier-based quality_score
+        cluster.cohesion_coupling_score = cluster.internal_cohesion * (1.0 - cluster.external_coupling)
 
     def _calculate_size_score(self, size: int) -> float:
         """

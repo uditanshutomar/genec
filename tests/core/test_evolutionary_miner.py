@@ -506,9 +506,12 @@ class TestCalculateCouplingStrengths:
         miner._calculate_coupling_strengths(data)
 
         expected = 5 / np.sqrt(10 * 10)  # 0.5
-        assert abs(data.coupling_strengths[("a()", "b()")] - expected) < 1e-6
-        # Should be symmetric
-        assert abs(data.coupling_strengths[("b()", "a()")] - expected) < 1e-6
+        # FIX 2: coupling_strengths now stores only sorted key
+        sorted_key = tuple(sorted(["a()", "b()"]))
+        assert abs(data.coupling_strengths[sorted_key] - expected) < 1e-6
+        # Reverse key should NOT exist (no longer stored)
+        reverse_key = tuple(reversed(sorted_key))
+        assert reverse_key not in data.coupling_strengths or reverse_key == sorted_key
 
     @patch("genec.core.evolutionary_miner.HybridDependencyAnalyzer")
     def test_coupling_threshold_filters(self, mock_hda):
@@ -543,9 +546,10 @@ class TestGetCouplingStrength:
     @patch("genec.core.evolutionary_miner.HybridDependencyAnalyzer")
     def test_returns_stored_value(self, mock_hda):
         miner = EvolutionaryMiner()
+        # FIX 2: coupling_strengths now stores only sorted key
         data = EvolutionaryData(
             class_file="X.java",
-            coupling_strengths={("a()", "b()"): 0.75, ("b()", "a()"): 0.75},
+            coupling_strengths={("a()", "b()"): 0.75},
         )
         assert miner.get_coupling_strength(data, "a()", "b()") == 0.75
         assert miner.get_coupling_strength(data, "b()", "a()") == 0.75
