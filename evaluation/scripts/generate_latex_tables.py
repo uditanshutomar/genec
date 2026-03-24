@@ -9,8 +9,8 @@ Produces:
 
 Usage:
     python -m evaluation.scripts.generate_latex_tables \
-        --results-dir evaluation/results \
-        --output-dir evaluation/results/tables
+        --results-dir evaluation/results/live_evaluation \
+        --output-dir evaluation/results/live_evaluation/tables
 """
 
 import argparse

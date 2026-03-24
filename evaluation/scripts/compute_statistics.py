@@ -9,8 +9,7 @@ Computes:
 
 Usage:
     python -m evaluation.scripts.compute_statistics \
-        --results-dir evaluation/results \
-        --ground-truth-file evaluation/ground_truth/ground_truth.json
+        --results-dir evaluation/results/live_evaluation
 """
 
 import argparse
