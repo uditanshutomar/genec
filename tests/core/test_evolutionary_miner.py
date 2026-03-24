@@ -78,7 +78,7 @@ class TestEvolutionaryMinerInit:
     def test_default_params(self):
         with patch("genec.core.evolutionary_miner.HybridDependencyAnalyzer"):
             miner = EvolutionaryMiner()
-        assert miner.min_coupling_threshold == 0.3
+        assert miner.min_coupling_threshold == 0.15
         assert miner.max_changeset_size == 30
         assert miner.min_revisions == 2
         assert miner.cache_dir is None
@@ -197,8 +197,9 @@ class TestMineMethodCochanges:
         # add(int) appeared in 2 commits
         assert result.method_commits.get("add(int)") == 2
         # (add(int), subtract(int)) co-changed in commit1
+        # IDF weighting: commit touched 2 methods → weight = 1/sqrt(2) ≈ 0.707
         key = ("add(int)", "subtract(int)")
-        assert result.cochange_matrix.get(key, 0) == 1
+        assert result.cochange_matrix.get(key, 0) > 0.5  # IDF-weighted, not raw count
 
     @patch("genec.core.evolutionary_miner.HybridDependencyAnalyzer")
     def test_respects_window_months(self, mock_hda):

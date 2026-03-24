@@ -66,7 +66,7 @@ class EvolutionaryMiner:
     def __init__(
         self,
         cache_dir: str | None = None,
-        min_coupling_threshold: float = 0.3,
+        min_coupling_threshold: float = 0.15,
         max_changeset_size: int = 30,
         min_revisions: int = 2,
         prefer_spoon: bool = False,
@@ -76,7 +76,7 @@ class EvolutionaryMiner:
 
         Args:
             cache_dir: Directory for caching mining results
-            min_coupling_threshold: Minimum coupling threshold (default 0.3 like Code-Maat)
+            min_coupling_threshold: Minimum coupling threshold (default 0.15, lowered for IDF-weighted co-changes)
             max_changeset_size: Maximum changeset size to avoid refactoring noise (default 30)
             min_revisions: Minimum revisions required for method (default 2)
             prefer_spoon: Whether to prefer Spoon (JVM) over lightweight parser (default: False)
@@ -208,13 +208,21 @@ class EvolutionaryMiner:
                         evo_data.method_names.add(method)
                         evo_data.method_commits[method] = evo_data.method_commits.get(method, 0) + 1
 
-                    # Update co-change matrix
+                    # Update co-change matrix with IDF-like weighting.
+                    # A commit touching N methods contributes 1/sqrt(N) per pair.
+                    # This dampens bulk changes without killing the signal:
+                    # N=2: weight=0.71 (focused commit, strong signal)
+                    # N=5: weight=0.45 (moderate commit)
+                    # N=10: weight=0.32 (broad commit, weaker signal)
+                    # N=50: weight=0.14 (bulk change, weak signal)
+                    n_changed = len(changed_methods)
+                    commit_weight = 1.0 / np.sqrt(max(n_changed, 1))
                     for m1 in changed_methods:
                         for m2 in changed_methods:
                             if m1 < m2:  # Only store once (ordered pair)
                                 key = (m1, m2)
                                 evo_data.cochange_matrix[key] = (
-                                    evo_data.cochange_matrix.get(key, 0) + 1
+                                    evo_data.cochange_matrix.get(key, 0) + commit_weight
                                 )
 
                 except Exception as e:
