@@ -268,6 +268,67 @@ def main():
     output["comparisons"] = comparisons
 
     # -----------------------------------------------------------------------
+    # 1b) Bootstrap CI for verification rate + per-quality-tier rates
+    # -----------------------------------------------------------------------
+    per_class_vrates = []
+    tier_verified: dict[str, list[int]] = {"should": [], "could": [], "potential": []}
+    tier_total: dict[str, list[int]] = {"should": [], "could": [], "potential": []}
+
+    for cname, data in per_class_data.items():
+        suggestions = data.get("suggestions", [])
+        n_sug = len(suggestions)
+        n_ver = sum(1 for s in suggestions if s.get("verified"))
+        if n_sug > 0:
+            per_class_vrates.append(n_ver / n_sug)
+
+        # Per-tier counts for this class
+        class_tier_v: dict[str, int] = {"should": 0, "could": 0, "potential": 0}
+        class_tier_t: dict[str, int] = {"should": 0, "could": 0, "potential": 0}
+        for s in suggestions:
+            tier = s.get("quality_tier", "potential").lower()
+            if tier not in class_tier_t:
+                tier = "potential"
+            class_tier_t[tier] += 1
+            if s.get("verified"):
+                class_tier_v[tier] += 1
+        for t in tier_verified:
+            tier_verified[t].append(class_tier_v[t])
+            tier_total[t].append(class_tier_t[t])
+
+    vrate_ci = bootstrap_ci(per_class_vrates)
+    output["verification_rate_ci"] = {
+        "mean_pct": round(vrate_ci["mean"] * 100, 1),
+        "ci_lower_pct": round(vrate_ci["ci_lower"] * 100, 1),
+        "ci_upper_pct": round(vrate_ci["ci_upper"] * 100, 1),
+    }
+
+    per_tier_rates = {}
+    for t in ("should", "could", "potential"):
+        total = sum(tier_total[t])
+        verified = sum(tier_verified[t])
+        rate = round(verified / max(total, 1) * 100, 1)
+        per_tier_rates[t] = {"verified": verified, "total": total, "rate_pct": rate}
+    output["per_tier_verification"] = per_tier_rates
+
+    # -----------------------------------------------------------------------
+    # 1c) Extraction quality metrics for verified suggestions
+    # -----------------------------------------------------------------------
+    all_verified_methods = []
+    all_verified_cohesion = []
+    for cname, data in per_class_data.items():
+        for s in data.get("suggestions", []):
+            if s.get("verified"):
+                all_verified_methods.append(len(s.get("methods", [])))
+                coh = s.get("internal_cohesion")
+                if coh is not None:
+                    all_verified_cohesion.append(coh)
+
+    output["extraction_quality"] = {
+        "verified_avg_methods": bootstrap_ci(all_verified_methods),
+        "verified_avg_cohesion": bootstrap_ci(all_verified_cohesion),
+    }
+
+    # -----------------------------------------------------------------------
     # 2) Ground truth P/R/F1
     # -----------------------------------------------------------------------
     if args.ground_truth_file and args.ground_truth_file.exists():

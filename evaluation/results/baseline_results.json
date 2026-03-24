@@ -7863,5 +7863,12 @@
         ]
       }
     ]
+  },
+  "llm_only": {
+    "status": "pending",
+    "note": "Requires ANTHROPIC_API_KEY. The LLM-only baseline sends each class to Claude without graph-based analysis. Run: ANTHROPIC_API_KEY=sk-... python evaluation/scripts/run_baselines.py (LLM baseline runs automatically when key is present).",
+    "total_classes": 0,
+    "total_suggestions": 0,
+    "per_class": []
   }
 }

@@ -1,51 +1,41 @@
 #!/usr/bin/env bash
 # Setup benchmark repositories at pinned commits for GenEC evaluation.
-# Usage: ./setup_benchmarks.sh [--output-dir DIR]
+# Usage: ./setup_benchmarks.sh
 #
 # Clones each benchmark project and checks out the specific commit
 # used in the evaluation to ensure reproducibility.
+# Repositories are cloned to /tmp/<project> to match benchmark_classes.json paths.
 
 set -euo pipefail
 
-OUTPUT_DIR="${1:-benchmarks/repos}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BENCHMARK_FILE="$SCRIPT_DIR/benchmark_classes.json"
 
 echo "=== GenEC Benchmark Setup ==="
-echo "Output directory: $OUTPUT_DIR"
 echo ""
 
-mkdir -p "$OUTPUT_DIR"
-
-# Extract unique repositories from benchmark file
-# Uses python to parse JSON (available since we require Python 3.10+)
+# Extract repositories from the JSON and clone them
 python3 -c "
 import json, sys
 with open('$BENCHMARK_FILE') as f:
     data = json.load(f)
 
-seen = set()
-for cls in data['classes']:
-    repo_url = cls['repo_url']
-    repo_path = cls['repo_path']
-    commit = cls.get('commit_sha', 'HEAD')
-    key = repo_url
-    if key not in seen:
-        seen.add(key)
-        print(f'{repo_url}|{repo_path}|{commit}')
-" | while IFS='|' read -r repo_url repo_path commit_sha; do
-    full_path="$OUTPUT_DIR/$(basename "$repo_path")"
-
-    if [ -d "$full_path/.git" ]; then
-        echo "[SKIP] $full_path already exists"
+for name, repo in data.get('repositories', {}).items():
+    url = repo['repo_url']
+    path = repo['clone_path']
+    commit = repo.get('commit_sha', 'HEAD')
+    print(f'{name}|{url}|{path}|{commit}')
+" | while IFS='|' read -r name repo_url clone_path commit_sha; do
+    if [ -d "$clone_path/.git" ]; then
+        echo "[SKIP] $clone_path already exists"
     else
-        echo "[CLONE] $repo_url -> $full_path"
-        git clone --depth=1 "$repo_url" "$full_path" 2>/dev/null || \
-            git clone "$repo_url" "$full_path"
+        echo "[CLONE] $repo_url -> $clone_path"
+        git clone --depth=1 "$repo_url" "$clone_path" 2>/dev/null || \
+            git clone "$repo_url" "$clone_path"
 
-        if [ "$commit_sha" != "TO_BE_FILLED" ] && [ "$commit_sha" != "HEAD" ]; then
+        if [ "$commit_sha" != "HEAD" ]; then
             echo "[CHECKOUT] $commit_sha"
-            cd "$full_path"
+            cd "$clone_path"
             git fetch --depth=1 origin "$commit_sha" 2>/dev/null || true
             git checkout "$commit_sha" 2>/dev/null || echo "[WARN] Could not checkout $commit_sha"
             cd - >/dev/null
@@ -55,4 +45,17 @@ done
 
 echo ""
 echo "=== Setup complete ==="
-echo "Benchmark repositories are in: $OUTPUT_DIR"
+echo "Benchmark repositories cloned to /tmp/<project>"
+echo ""
+
+# Verify all class files exist
+echo "Verifying benchmark class files..."
+python3 -c "
+import json, os
+with open('$BENCHMARK_FILE') as f:
+    data = json.load(f)
+for cls in data['classes']:
+    full_path = os.path.join(cls['repo_path'], cls['class_file'])
+    status = 'OK' if os.path.exists(full_path) else 'MISSING'
+    print(f'  [{status}] {cls[\"class_name\"]} ({full_path})')
+"

@@ -1,4 +1,36 @@
 {
+  "repositories": {
+    "commons-io": {
+      "repo_url": "https://github.com/apache/commons-io.git",
+      "commit_sha": "HEAD",
+      "clone_path": "/tmp/commons-io"
+    },
+    "commons-lang": {
+      "repo_url": "https://github.com/apache/commons-lang.git",
+      "commit_sha": "HEAD",
+      "clone_path": "/tmp/commons-lang"
+    },
+    "commons-collections": {
+      "repo_url": "https://github.com/apache/commons-collections.git",
+      "commit_sha": "HEAD",
+      "clone_path": "/tmp/commons-collections"
+    },
+    "jfreechart": {
+      "repo_url": "https://github.com/jfree/jfreechart.git",
+      "commit_sha": "HEAD",
+      "clone_path": "/tmp/jfreechart"
+    },
+    "commons-math": {
+      "repo_url": "https://github.com/apache/commons-math.git",
+      "commit_sha": "HEAD",
+      "clone_path": "/tmp/commons-math"
+    },
+    "commons-text": {
+      "repo_url": "https://github.com/apache/commons-text.git",
+      "commit_sha": "HEAD",
+      "clone_path": "/tmp/commons-text"
+    }
+  },
   "classes": [
     {
       "class_name": "IOUtils",

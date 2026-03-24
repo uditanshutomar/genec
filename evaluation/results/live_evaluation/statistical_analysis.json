@@ -24,5 +24,39 @@
       "baseline_verified": 0,
       "baseline_note": "Field-sharing baseline does not generate compilable code; verification not applicable"
     }
+  },
+  "verification_rate_ci": {
+    "mean_pct": 68.0,
+    "ci_lower_pct": 51.9,
+    "ci_upper_pct": 83.0
+  },
+  "per_tier_verification": {
+    "should": {
+      "verified": 16,
+      "total": 18,
+      "rate_pct": 88.9
+    },
+    "could": {
+      "verified": 86,
+      "total": 149,
+      "rate_pct": 57.7
+    },
+    "potential": {
+      "verified": 2,
+      "total": 11,
+      "rate_pct": 18.2
+    }
+  },
+  "extraction_quality": {
+    "verified_avg_methods": {
+      "mean": 5.9135,
+      "ci_lower": 5.1827,
+      "ci_upper": 6.7019
+    },
+    "verified_avg_cohesion": {
+      "mean": 0.7651,
+      "ci_lower": 0.7383,
+      "ci_upper": 0.7902
+    }
   }
 }
