@@ -3,7 +3,7 @@
   "class_name": "AccurateMath",
   "class_file": "commons-math-core/src/main/java/org/apache/commons/math4/core/jdkmath/AccurateMath.java",
   "status": "success",
-  "execution_time": 113.1,
+  "execution_time": 172.8,
   "original_metrics": {
     "lcom5": 0.9876,
     "tcc": 0.0648,
@@ -115,7 +115,7 @@
       "quality_tier": "should",
       "quality_score": 70.0,
       "quality_reasons": [],
-      "internal_cohesion": 0.8833333333333333,
+      "internal_cohesion": 0.8833333333333334,
       "external_coupling": 0.0,
       "modularity": 231.38208178438683,
       "silhouette_score": null,
@@ -177,8 +177,8 @@
       "quality_tier": "could",
       "quality_score": 50.0,
       "quality_reasons": [],
-      "internal_cohesion": 0.8899999999999999,
-      "external_coupling": 0.9281875915974598,
+      "internal_cohesion": 0.8900000000000002,
+      "external_coupling": 0.9281875915974594,
       "modularity": 231.38208178438683,
       "silhouette_score": null,
       "conductance": null,
@@ -206,8 +206,8 @@
         "rint(double)",
         "IEEEremainder(double,double)",
         "tanQ(double,double,boolean)",
-        "polyCosine(double)",
-        "polySine(double)"
+        "polySine(double)",
+        "polyCosine(double)"
       ],
       "fields": [
         "LN_2_A",
@@ -234,8 +234,8 @@
         "PI_O_4_BITS",
         "TWO_POWER_52",
         "tanQ(double,double,boolean)",
-        "polyCosine(double)",
-        "polySine(double)"
+        "polySine(double)",
+        "polyCosine(double)"
       ],
       "member_types": {
         "log(double,double[])": "method",
@@ -253,15 +253,15 @@
         "PI_O_4_BITS": "field",
         "TWO_POWER_52": "field",
         "tanQ(double,double,boolean)": "method",
-        "polyCosine(double)": "method",
-        "polySine(double)": "method"
+        "polySine(double)": "method",
+        "polyCosine(double)": "method"
       },
       "cluster_id": 3,
       "quality_tier": "could",
       "quality_score": 45.0,
       "quality_reasons": [],
-      "internal_cohesion": 0.8687500000000001,
-      "external_coupling": 0.8266841072596467,
+      "internal_cohesion": 0.86875,
+      "external_coupling": 0.8266841072596468,
       "modularity": 231.38208178438683,
       "silhouette_score": null,
       "conductance": null,
@@ -291,8 +291,8 @@
         "log10(double)",
         "asin(double)",
         "cbrt(double)",
-        "log(double,double[])",
-        "atan(double,double,boolean)"
+        "atan(double,double,boolean)",
+        "log(double,double[])"
       ],
       "fields": [
         "EXP_INT_TABLE_MAX_INDEX",
@@ -315,8 +315,8 @@
         "LOG_MAX_VALUE",
         "CBRTTWO",
         "HEX_40000000",
-        "log(double,double[])",
-        "atan(double,double,boolean)"
+        "atan(double,double,boolean)",
+        "log(double,double[])"
       ],
       "member_types": {
         "cosh(double)": "method",
@@ -333,8 +333,8 @@
         "LOG_MAX_VALUE": "field",
         "CBRTTWO": "field",
         "HEX_40000000": "field",
-        "log(double,double[])": "method",
-        "atan(double,double,boolean)": "method"
+        "atan(double,double,boolean)": "method",
+        "log(double,double[])": "method"
       },
       "cluster_id": 2,
       "quality_tier": "could",

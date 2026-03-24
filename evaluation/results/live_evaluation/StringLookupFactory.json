@@ -3,7 +3,7 @@
   "class_name": "StringLookupFactory",
   "class_file": "src/main/java/org/apache/commons/text/lookup/StringLookupFactory.java",
   "status": "success",
-  "execution_time": 18.2,
+  "execution_time": 12.3,
   "original_metrics": {
     "lcom5": 0.9991,
     "tcc": 0.1695,

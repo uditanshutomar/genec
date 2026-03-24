@@ -3,7 +3,7 @@
   "class_name": "BOBYQAOptimizer",
   "class_file": "commons-math-legacy/src/main/java/org/apache/commons/math4/legacy/optim/nonlinear/scalar/noderiv/BOBYQAOptimizer.java",
   "status": "success",
-  "execution_time": 50.1,
+  "execution_time": 65.8,
   "original_metrics": {
     "lcom5": 0.9257,
     "tcc": 0.641,

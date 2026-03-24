@@ -3,7 +3,7 @@
   "class_name": "TextStringBuilder",
   "class_file": "src/main/java/org/apache/commons/text/TextStringBuilder.java",
   "status": "success",
-  "execution_time": 24.6,
+  "execution_time": 24.2,
   "original_metrics": {
     "lcom5": 0.9261,
     "tcc": 0.2953,
@@ -25,8 +25,8 @@
         "ensureCapacityInternal(int)",
         "insert(int,char)",
         "resizeBuffer(int)",
-        "reallocate(int)",
-        "createPositiveCapacity(int)"
+        "createPositiveCapacity(int)",
+        "reallocate(int)"
       ],
       "fields": [],
       "members": [
@@ -34,16 +34,16 @@
         "ensureCapacityInternal(int)",
         "insert(int,char)",
         "resizeBuffer(int)",
-        "reallocate(int)",
-        "createPositiveCapacity(int)"
+        "createPositiveCapacity(int)",
+        "reallocate(int)"
       ],
       "member_types": {
         "ensureCapacity(int)": "method",
         "ensureCapacityInternal(int)": "method",
         "insert(int,char)": "method",
         "resizeBuffer(int)": "method",
-        "reallocate(int)": "method",
-        "createPositiveCapacity(int)": "method"
+        "createPositiveCapacity(int)": "method",
+        "reallocate(int)": "method"
       },
       "cluster_id": 8,
       "quality_tier": "could",
@@ -93,7 +93,7 @@
       "quality_score": 50.0,
       "quality_reasons": [],
       "internal_cohesion": 1.0,
-      "external_coupling": 0.9007352941176472,
+      "external_coupling": 0.9007352941176473,
       "modularity": 167.81410659284367,
       "silhouette_score": null,
       "conductance": null,
@@ -143,7 +143,7 @@
       "quality_score": 40.0,
       "quality_reasons": [],
       "internal_cohesion": 0.6714285714285715,
-      "external_coupling": 0.8949468085106383,
+      "external_coupling": 0.8949468085106382,
       "modularity": 167.81410659284367,
       "silhouette_score": null,
       "conductance": null,
