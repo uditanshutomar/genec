@@ -27,7 +27,8 @@ def avg_cluster_size(per_class: list[dict]) -> float:
     total_suggestions = 0
     for entry in per_class:
         for s in entry.get("suggestions", []):
-            total_members += s.get("members", s.get("methods", 0))
+            members = s.get("members", s.get("methods", []))
+            total_members += len(members) if isinstance(members, list) else members
             total_suggestions += 1
     return round(total_members / total_suggestions, 1) if total_suggestions else 0.0
 
@@ -51,7 +52,8 @@ def main():
     genec_total_sug = 0
     for entry in genec["per_class"]:
         for s in entry.get("suggestions", []):
-            genec_total_members += s.get("members", s.get("methods", 0))
+            members = s.get("members", s.get("methods", []))
+            genec_total_members += len(members) if isinstance(members, list) else members
             genec_total_sug += 1
     genec_avg_size = round(genec_total_members / genec_total_sug, 1) if genec_total_sug else 0.0
 

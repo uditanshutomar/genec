@@ -3,7 +3,7 @@
   "class_name": "StringLookupFactory",
   "class_file": "src/main/java/org/apache/commons/text/lookup/StringLookupFactory.java",
   "status": "success",
-  "execution_time": 39.5,
+  "execution_time": 35.0,
   "original_metrics": {
     "lcom5": 0.9982,
     "tcc": 0.1878,
@@ -16,44 +16,163 @@
   "clusters_rejected": 34,
   "filter_pass_rate": 7.9,
   "suggestions_total": 3,
-  "suggestions_verified": 3,
+  "suggestions_verified": 2,
   "suggestions": [
     {
-      "name": "InterpolatorStringLookupFactory",
-      "methods": 4,
-      "verified": true,
+      "name": "SecuredStringLookupFactory",
+      "methods": [
+        "fileStringLookup(Path[])",
+        "propertiesStringLookup(Path[])",
+        "xmlStringLookup(Map)",
+        "xmlStringLookup(Map,Path[])",
+        "<init>()",
+        "<init>(Path[])",
+        "fileStringLookup()",
+        "xmlStringLookup()",
+        "propertiesStringLookup()"
+      ],
+      "fields": [
+        "fences"
+      ],
+      "members": [
+        "fileStringLookup(Path[])",
+        "propertiesStringLookup(Path[])",
+        "xmlStringLookup(Map)",
+        "xmlStringLookup(Map,Path[])",
+        "<init>()",
+        "<init>(Path[])",
+        "fences",
+        "fileStringLookup()",
+        "xmlStringLookup()",
+        "propertiesStringLookup()"
+      ],
+      "member_types": {
+        "fileStringLookup(Path[])": "method",
+        "propertiesStringLookup(Path[])": "method",
+        "xmlStringLookup(Map)": "method",
+        "xmlStringLookup(Map,Path[])": "method",
+        "<init>()": "method",
+        "<init>(Path[])": "method",
+        "fences": "field",
+        "fileStringLookup()": "method",
+        "xmlStringLookup()": "method",
+        "propertiesStringLookup()": "method"
+      },
+      "cluster_id": 1,
+      "quality_tier": null,
+      "quality_score": 0.0,
+      "quality_reasons": [],
+      "internal_cohesion": 0.6041666666666666,
+      "external_coupling": 1.0,
+      "modularity": 120.31388888888931,
+      "silhouette_score": null,
+      "conductance": null,
+      "coverage": null,
+      "is_connected": true,
+      "stability_score": null,
+      "verified": false,
+      "verification_status": "failed",
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive factory unit specifically for creating InterpolatorStringLookup instances with different configuration options. Extracting them into a specialized factory improves separa",
+      "rationale": "These methods form a cohesive unit responsible for creating StringLookup instances with path-based security constraints (fences). Extracting them into a SecuredStringLookupFactory separates the security concern from general StringLookup creation, improving single responsibility and enabling reuse of secured lookup creation logic.",
+      "reasoning": "\nStep 1: Primary Responsibility Analysis\nThese methods share the primary responsibility of creating StringLookup instances that are secured with path fences. All methods accept Path[] fences as parameters and create corresponding StringLookup implementations (FileStringLookup, PropertiesStringLookup, XmlStringLookup) with these security constraints applied.\n\nStep 2: Shared Concept/Domain\nThese members represent the \"secured StringLookup creation\" domain concept. They form a cohesive subsystem focused on instantiating StringLookup objects with path-based security restrictions. The fences field and all methods work together to ensure that created lookups operate within defined path boundaries.\n\nStep 3: Extraction Benefits\n- Single Responsibility Principle: Isolates the concern of creating security-constrained StringLookups from other factory responsibilities\n- Code reusability: The secured factory can be reused wherever path-restricted lookups are needed\n- Complexity reduction: Removes security-related creation logic from the main factory class\n- Testability: Security constraints and fence validation can be tested in isolation\n\nStep 4: Design Justification\nThis follows the Extract Class refactoring pattern to separate the specialized concern of creating secured StringLookup instances. It also aligns with the Factory pattern, where this extracted class would be a specialized factory focused solely on security-constrained object creation.\n",
+      "naming_votes": null,
+      "naming_agreement": null,
+      "post_lcom5": 0.0,
+      "post_tcc": 0.0
+    },
+    {
+      "name": "InterpolatorStringLookupFactory",
+      "methods": [
+        "interpolatorStringLookup(Map,StringLookup,boolean)",
+        "interpolatorStringLookup(Map)",
+        "interpolatorStringLookup(StringLookup)",
+        "interpolatorStringLookup()"
+      ],
+      "fields": [],
+      "members": [
+        "interpolatorStringLookup(Map,StringLookup,boolean)",
+        "interpolatorStringLookup(Map)",
+        "interpolatorStringLookup(StringLookup)",
+        "interpolatorStringLookup()"
+      ],
+      "member_types": {
+        "interpolatorStringLookup(Map,StringLookup,boolean)": "method",
+        "interpolatorStringLookup(Map)": "method",
+        "interpolatorStringLookup(StringLookup)": "method",
+        "interpolatorStringLookup()": "method"
+      },
+      "cluster_id": 3,
+      "quality_tier": null,
+      "quality_score": 0.0,
+      "quality_reasons": [],
+      "internal_cohesion": 0.6,
+      "external_coupling": 1.0,
+      "modularity": 120.31388888888931,
+      "silhouette_score": null,
+      "conductance": null,
+      "coverage": null,
+      "is_connected": true,
+      "stability_score": null,
+      "verified": true,
+      "verification_status": "verified",
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive factory unit specifically for creating InterpolatorStringLookup instances with different configuration options. Extracting them into a specialized factory improves separation of concerns by isolating the construction logic for this specific StringLookup implementation from the general-purpose factory.",
+      "reasoning": "\nStep 1: Primary Responsibility Analysis\nThese methods share a single, focused responsibility: creating InterpolatorStringLookup instances with different configuration options. All three methods are factory methods that instantiate the same type (InterpolatorStringLookup) but with varying parameters - one with full configuration options, one with a map, and one with just a default lookup.\n\nStep 2: Shared Concept/Domain\nThese methods belong to the \"factory\" domain specifically for InterpolatorStringLookup creation. They represent different construction strategies for the same complex object type, handling various initialization scenarios while encapsulating the construction logic.\n\nStep 3: Extraction Benefits\n- Single Responsibility Principle: Isolates InterpolatorStringLookup creation logic from other factory methods\n- Code reusability: The factory can be used independently wherever InterpolatorStringLookup instances are needed\n- Complexity reduction: Removes specialized construction logic from the general-purpose StringLookupFactory\n- Testability: InterpolatorStringLookup creation can be tested in isolation\n\nStep 4: Design Justification\nThis follows the Extract Class refactoring pattern combined with the Factory Method pattern. The extraction creates a specialized factory that focuses solely on one product type, improving cohesion by grouping related construction methods while reducing coupling with the broader factory class.\n",
+      "naming_votes": null,
+      "naming_agreement": null,
       "post_lcom5": 0.9966,
       "post_tcc": 0.1695
     },
     {
-      "name": "StringLookupRegistry",
-      "methods": 24,
-      "verified": true,
-      "confidence": 0.9,
-      "rationale": "These methods form a cohesive registry of StringLookup implementations, providing centralized access to various lookup types (date, DNS, file, XML, etc.). Extracting them into a StringLookupRegistry i",
-      "post_lcom5": 0.9875,
-      "post_tcc": 0.35
-    },
-    {
       "name": "Base64DecoderProvider",
-      "methods": 2,
+      "methods": [
+        "base64DecoderStringLookup()",
+        "base64StringLookup()"
+      ],
+      "fields": [
+        "INSTANCE_BASE64_DECODER"
+      ],
+      "members": [
+        "base64DecoderStringLookup()",
+        "base64StringLookup()",
+        "INSTANCE_BASE64_DECODER"
+      ],
+      "member_types": {
+        "base64DecoderStringLookup()": "method",
+        "base64StringLookup()": "method",
+        "INSTANCE_BASE64_DECODER": "field"
+      },
+      "cluster_id": 2,
+      "quality_tier": null,
+      "quality_score": 0.0,
+      "quality_reasons": [],
+      "internal_cohesion": 0.5555555555555555,
+      "external_coupling": 0.0,
+      "modularity": 120.31388888888931,
+      "silhouette_score": null,
+      "conductance": null,
+      "coverage": null,
+      "is_connected": true,
+      "stability_score": null,
       "verified": true,
-      "confidence": 0.88,
-      "rationale": "These methods form a cohesive unit responsible for providing base64 decoding string lookup functionality. Extracting them into a specialized provider improves separation of concerns and allows the bas",
+      "verification_status": "verified",
+      "confidence": 0.82,
+      "rationale": "These methods form a cohesive unit responsible for providing Base64 decoding StringLookup instances. They share the same underlying decoder instance and represent a specialized provider within the lookup system that should be extracted to improve separation of concerns.",
+      "reasoning": "\nStep 1: Primary Responsibility Analysis\nThese methods share the responsibility of providing access to Base64 decoding functionality. Both `base64DecoderStringLookup()` and `base64StringLookup()` return the same `INSTANCE_BASE64_DECODER` instance, suggesting they are alternative access points to the same Base64 decoding capability.\n\nStep 2: Shared Concept/Domain\nThese members belong to the \"Base64 decoding\" domain within the string lookup system. They represent a cohesive subsystem focused specifically on Base64 decoding operations, separate from other lookup types like environment variables, system properties, or URL encoding.\n\nStep 3: Extraction Benefits\n- Single Responsibility Principle: Isolates Base64 decoding concerns from the broader factory\n- Code reusability: Base64 decoder can be used independently without the full factory\n- Complexity reduction: Removes Base64-specific logic from the main factory class\n- Testability: Base64 decoding functionality can be tested in isolation\n\nStep 4: Design Justification\nThis follows the Extract Class refactoring pattern to separate concerns. The Factory pattern principle suggests that specialized factories can be extracted when they handle a specific type of object creation, in this case Base64 decoders.\n",
+      "naming_votes": null,
+      "naming_agreement": null,
       "post_lcom5": 0.9982,
       "post_tcc": 0.1878
     }
   ],
   "post_refactoring": {
-    "methods_extracted": 30,
-    "methods_remaining": 11,
-    "extraction_coverage": 73.2,
+    "methods_extracted": 6,
+    "methods_remaining": 35,
+    "extraction_coverage": 14.6,
     "single_extraction_lcom5": 0.9982,
     "single_extraction_tcc": 0.1878,
-    "cumulative_methods_remaining": 13,
+    "cumulative_methods_remaining": 33,
     "cumulative_lcom5": 1.0,
-    "cumulative_tcc": 0.0
+    "cumulative_tcc": 0.2084
   }
 }

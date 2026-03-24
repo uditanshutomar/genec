@@ -176,8 +176,10 @@ def run_single_class(entry: dict) -> dict:
                     "members": s.cluster.member_names if s.cluster else [],
                     "member_types": s.cluster.member_types if s.cluster else {},
                     "cluster_id": s.cluster.id if s.cluster else None,
-                    "quality_tier": s.quality_tier,
-                    "quality_score": s.quality_score,
+                    "quality_tier": (s.cluster.quality_tier.value if s.cluster and hasattr(s.cluster, 'quality_tier') and s.cluster.quality_tier else
+                                    s.quality_tier),
+                    "quality_score": (s.cluster.quality_score if s.cluster and hasattr(s.cluster, 'quality_score') and s.cluster.quality_score
+                                     else s.quality_score),
                     "quality_reasons": s.quality_reasons if s.quality_reasons else [],
                     "internal_cohesion": s.cluster.internal_cohesion if s.cluster else None,
                     "external_coupling": s.cluster.external_coupling if s.cluster else None,
