@@ -89,9 +89,7 @@ Comparison metrics: `scripts/compare_with_baselines.py`
 Configs in `configs/`: full, no_evolutionary, no_llm, no_verification, high_static
 
 Note: The ablation verified% metric uses total clusters as denominator, not
-filtered suggestions. The HECS benchmark (92 instances) provides a cleaner
-comparison: evolutionary coupling raises member-selection F1 from 0.076
-(static-only) to 0.478 (with evo), a 6.3x improvement.
+filtered suggestions.
 
 ## HECS ECAccEval Benchmark (92 instances)
 
@@ -101,12 +99,22 @@ containing 92 Extract Class refactoring oracles across 18 open-source projects.
 | Subset | N | Precision | Recall | F1 |
 |--------|---|-----------|--------|-----|
 | All instances | 92 | 0.136 | 0.297 | 0.167 |
-| With evolutionary coupling | 21 | 0.405 | 0.758 | 0.478 |
-| Static-only (no Git history) | 71 | 0.057 | 0.161 | 0.076 |
+| Instances with Git history | 21 | 0.405 | 0.758 | 0.478 |
+| Instances without Git history | 71 | 0.057 | 0.161 | 0.076 |
 | Multi-member extractions | 49 | 0.228 | 0.476 | 0.281 |
 
-Key finding: Evolutionary coupling raises F1 by 6.3x (0.076 to 0.478),
-validating the paper's core contribution.
+**Controlled ablation on the 21 instances with Git history:** Running GenEC
+with `--no-evo` on the same 21 instances produces identical F1 (0.478).
+This means the F1 difference between the 21-instance and 71-instance
+subsets is due to **project context** (having a compilable repo with imports
+and dependencies) rather than evolutionary coupling specifically. The
+71 static-only instances use standalone `old.java` files without project
+context, which degrades dependency analysis quality.
+
+On the **live 23-class benchmark** (where full repos with build systems are
+available), evolutionary coupling adds 21% more clusters (ablation:
+68.6 vs 53.9 clusters), demonstrating its value when combined with
+rich project context.
 
 ## User Study
 
