@@ -3,7 +3,7 @@
   "class_name": "PiePlot",
   "class_file": "src/main/java/org/jfree/chart/plot/pie/PiePlot.java",
   "status": "success",
-  "execution_time": 0.3,
+  "execution_time": 6.5,
   "original_metrics": {
     "lcom5": 0.9628,
     "tcc": 0.0929,

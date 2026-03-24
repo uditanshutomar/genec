@@ -3,7 +3,7 @@
   "class_name": "SystemUtils",
   "class_file": "src/main/java/org/apache/commons/lang3/SystemUtils.java",
   "status": "success",
-  "execution_time": 47.1,
+  "execution_time": 48.6,
   "original_metrics": {
     "lcom5": 1.0,
     "tcc": 0.0435,
@@ -11,21 +11,22 @@
     "num_methods": 23,
     "num_fields": 130
   },
-  "clusters_found": 137,
+  "clusters_found": 130,
   "clusters_filtered": 3,
-  "clusters_rejected": 134,
-  "filter_pass_rate": 2.2,
+  "clusters_rejected": 127,
+  "filter_pass_rate": 2.3,
   "suggestions_total": 3,
-  "suggestions_verified": 3,
+  "suggestions_verified": 2,
   "suggestions": [
     {
-      "name": "OperatingSystemMatcher",
+      "name": "OsMatcher",
       "methods": [
         "getOsMatches(String,String)",
         "getOsNameMatches(String)",
         "isOsMatch(String,String,String,String)",
         "isOsNameMatch(String,String)",
-        "isOsVersionMatch(String,String)"
+        "isOsVersionMatch(String,String)",
+        "getOsMatchesName(String)"
       ],
       "fields": [
         "OS_NAME",
@@ -38,7 +39,8 @@
         "isOsNameMatch(String,String)",
         "isOsVersionMatch(String,String)",
         "OS_NAME",
-        "OS_VERSION"
+        "OS_VERSION",
+        "getOsMatchesName(String)"
       ],
       "member_types": {
         "getOsMatches(String,String)": "method",
@@ -47,70 +49,30 @@
         "isOsNameMatch(String,String)": "method",
         "isOsVersionMatch(String,String)": "method",
         "OS_NAME": "field",
-        "OS_VERSION": "field"
+        "OS_VERSION": "field",
+        "getOsMatchesName(String)": "method"
       },
-      "cluster_id": 0,
-      "quality_tier": "COULD",
-      "quality_score": 62,
+      "cluster_id": 1,
+      "quality_tier": "should",
+      "quality_score": 80.0,
       "quality_reasons": [],
-      "internal_cohesion": 0.5475000000000001,
+      "internal_cohesion": 0.4688139270753976,
       "external_coupling": 0.0,
-      "modularity": 18.138596491228068,
+      "modularity": 96.29287310777497,
       "silhouette_score": null,
       "conductance": null,
       "coverage": null,
       "is_connected": true,
       "stability_score": null,
-      "verified": true,
-      "verification_status": "verified",
-      "confidence": 0.92,
-      "rationale": "These methods form a cohesive unit responsible for matching and comparing operating system names and versions against specified criteria. Extracting them into an OperatingSystemMatcher class isolates OS detection logic, improves testability, and creates a reusable component with a single, well-defined responsibility.",
-      "reasoning": "\nStep 1: Primary Responsibility Analysis\nThese methods share a single, well-defined responsibility: matching and comparing operating system information. They collectively provide functionality to determine if the current OS matches specific name and version criteria through various matching strategies (name-only, version-only, or combined matching).\n\nStep 2: Shared Concept/Domain\nAll methods belong to the \"operating system detection/matching\" domain. They work exclusively with OS_NAME and OS_VERSION fields to perform pattern matching operations. The methods form a cohesive unit that encapsulates the logic for OS identification and comparison, including sophisticated version matching that handles semantic versioning correctly.\n\nStep 3: Extraction Benefits\n- Single Responsibility Principle: Isolates OS matching logic from other system utilities\n- Code Reusability: OS matching functionality can be reused across different contexts\n- Testability: OS matching logic can be unit tested in isolation with mock OS values\n- Complexity Reduction: Removes OS-specific logic from the broader SystemUtils class, making it more focused\n\nStep 4: Design Justification\nThis follows the Extract Class refactoring pattern to separate concerns. The extracted class will have high cohesion (all methods work together to match OS information) and low coupling (minimal dependencies, only requiring OS name/version strings). This aligns with the Single Responsibility Principle by creating a focused component dedicated to OS matching operations.\n",
+      "verified": false,
+      "verification_status": "failed",
+      "confidence": 0.9,
+      "rationale": "These methods form a cohesive unit responsible for matching operating system names and versions against specified criteria. They share the common purpose of OS detection and comparison, with specialized logic for handling version semantics. Extracting them creates a focused component that encapsulates OS matching behavior.",
+      "reasoning": "\nStep 1: Primary Responsibility Analysis\nThese methods share the primary responsibility of matching and comparing operating system information. They collectively accomplish OS detection by comparing OS names and versions against specified prefixes, with specialized logic for version comparison that handles semantic versioning correctly.\n\nStep 2: Shared Concept/Domain\nThese members represent the \"OS matching/detection\" domain concept. They form a cohesive subsystem focused on determining whether the current operating system matches specified criteria, using both name prefix matching and sophisticated version comparison logic.\n\nStep 3: Extraction Benefits\n- Single Responsibility Principle: Isolates OS matching logic from other system utilities\n- Code reusability: OS matching functionality can be reused across different contexts\n- Complexity reduction: Removes specialized OS detection logic from the broader SystemUtils class\n- Testability: OS matching logic can be unit tested independently with mock OS values\n\nStep 4: Design Justification\nThis follows the Extract Class refactoring pattern to separate concerns. The Strategy pattern could be applied here, where different OS matching strategies could be implemented. The extraction creates a focused component with high cohesion (all methods work together for OS detection) and low coupling (minimal dependencies on external classes).\n",
       "naming_votes": null,
       "naming_agreement": null,
       "post_lcom5": 1.0,
       "post_tcc": 0.0237
-    },
-    {
-      "name": "JavaVersionMatcher",
-      "methods": [
-        "getJavaVersionMatches(String)",
-        "isJavaVersionMatch(String,String)"
-      ],
-      "fields": [
-        "JAVA_SPECIFICATION_VERSION"
-      ],
-      "members": [
-        "getJavaVersionMatches(String)",
-        "isJavaVersionMatch(String,String)",
-        "JAVA_SPECIFICATION_VERSION"
-      ],
-      "member_types": {
-        "getJavaVersionMatches(String)": "method",
-        "isJavaVersionMatch(String,String)": "method",
-        "JAVA_SPECIFICATION_VERSION": "field"
-      },
-      "cluster_id": 2,
-      "quality_tier": "COULD",
-      "quality_score": 57,
-      "quality_reasons": [],
-      "internal_cohesion": 0.54,
-      "external_coupling": 0.0,
-      "modularity": 18.138596491228068,
-      "silhouette_score": null,
-      "conductance": null,
-      "coverage": null,
-      "is_connected": true,
-      "stability_score": null,
-      "verified": true,
-      "verification_status": "verified",
-      "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit responsible for matching Java version strings against specified prefixes. Extracting them into a JavaVersionMatcher class isolates version detection logic and improves reusability across different system detection scenarios.",
-      "reasoning": "\nStep 1: Primary Responsibility Analysis\nThese methods share a single, focused responsibility: determining whether the current Java runtime version matches a specified version prefix. The `getJavaVersionMatches` method serves as a convenience wrapper that uses the system's Java specification version, while `isJavaVersionMatch` provides the core logic for comparing any version string against a prefix.\n\nStep 2: Shared Concept/Domain\nBoth methods belong to the \"Java version detection\" domain. They encapsulate the logic for version string comparison using prefix matching, which is a common pattern for checking Java version compatibility. The field `JAVA_SPECIFICATION_VERSION` provides the runtime context these methods operate on.\n\nStep 3: Extraction Benefits\n- Single Responsibility Principle: Isolates version matching logic from other system utilities\n- Code reusability: Version matching logic can be reused across different contexts beyond SystemUtils\n- Testability: Version matching behavior can be tested independently with various version strings\n- Complexity reduction: Removes version-specific logic from the broader SystemUtils class\n\nStep 4: Design Justification\nThis follows the Extract Class refactoring pattern to separate version detection concerns. The methods form a cohesive unit with high internal cohesion (all focused on version matching) and low coupling (minimal dependencies, only requiring string comparison logic).\n",
-      "naming_votes": null,
-      "naming_agreement": null,
-      "post_lcom5": 1.0,
-      "post_tcc": 0.0395
     },
     {
       "name": "JavaVersionComparator",
@@ -131,13 +93,13 @@
         "isJavaVersionAtMost(JavaVersion)": "method",
         "JAVA_SPECIFICATION_VERSION_ENUM": "field"
       },
-      "cluster_id": 1,
-      "quality_tier": "COULD",
-      "quality_score": 55,
+      "cluster_id": 3,
+      "quality_tier": "should",
+      "quality_score": 90.0,
       "quality_reasons": [],
-      "internal_cohesion": 0.5,
-      "external_coupling": 0.0,
-      "modularity": 18.138596491228068,
+      "internal_cohesion": 0.5769800358919501,
+      "external_coupling": 0.24675910297173717,
+      "modularity": 96.29287310777497,
       "silhouette_score": null,
       "conductance": null,
       "coverage": null,
@@ -146,22 +108,71 @@
       "verified": true,
       "verification_status": "verified",
       "confidence": 0.9,
-      "rationale": "These methods form a cohesive unit focused on comparing Java runtime versions against requirements. Extracting them into a JavaVersionComparator class improves separation of concerns by isolating version comparison logic from general system utilities, making the code more focused and reusable.",
-      "reasoning": "\nStep 1: Primary Responsibility Analysis\nThese methods share a single, focused responsibility: comparing the current Java runtime version against specified version requirements. Both methods perform version comparison operations - one checks if the current version meets a minimum requirement (atLeast), and the other checks if it doesn't exceed a maximum requirement (atMost).\n\nStep 2: Shared Concept/Domain\nThese members belong to the \"Java version comparison\" domain. They represent a cohesive abstraction for runtime version checking, which is commonly needed for compatibility checks, feature detection, and conditional logic based on Java capabilities. The shared field JAVA_SPECIFICATION_VERSION_ENUM provides the current version context for both comparison operations.\n\nStep 3: Extraction Benefits\n- Single Responsibility Principle: Isolates version comparison logic from the broader system utilities\n- Code reusability: Version comparison logic can be reused across different contexts without importing the entire SystemUtils class\n- Complexity reduction: Removes version-specific logic from the God class, making it more focused\n- Testability: Version comparison logic can be tested in isolation with mock JavaVersion instances\n\nStep 4: Design Justification\nThis follows the Extract Class refactoring pattern to separate concerns. The extraction creates a specialized component with high cohesion (all members deal with version comparison) and low coupling (minimal dependencies - only requires JavaVersion enum). This aligns with the Single Responsibility Principle by creating a class dedicated solely to Java version comparison operations.\n",
+      "rationale": "These methods form a cohesive unit responsible for comparing Java runtime versions against requirements. They share the same field dependency and provide complementary comparison operations (minimum and maximum version checks). Extracting them creates a focused component that encapsulates version compatibility logic.",
+      "reasoning": "\nStep 1: Primary Responsibility Analysis\nThese methods share a single, focused responsibility: comparing the current Java runtime version against specified version requirements. Both methods perform version comparison operations - one checks if the current version meets a minimum requirement (atLeast), and the other checks if it doesn't exceed a maximum requirement (atMost). They work together to provide comprehensive Java version compatibility checking.\n\nStep 2: Shared Concept/Domain\nThese members represent the \"Java Version Comparison\" domain concept. They encapsulate the logic for determining version compatibility by leveraging the JAVA_SPECIFICATION_VERSION_ENUM field and the JavaVersion enum's comparison capabilities. This is a cohesive subsystem focused solely on runtime version validation.\n\nStep 3: Extraction Benefits\n- Single Responsibility Principle: Isolates version comparison logic from the broader system utilities\n- Code Reusability: Version checking logic can be easily reused across different contexts without importing the entire SystemUtils class\n- Complexity Reduction: Removes version-specific logic from the god class, making SystemUtils more focused\n- Testability: Version comparison logic can be tested in isolation with mock JavaVersion instances\n\nStep 4: Design Justification\nThis follows the Extract Class refactoring pattern to separate concerns. The Strategy pattern principle applies here - these methods encapsulate version comparison algorithms that could be extended or modified independently. The extraction creates a focused component with high cohesion (all methods deal with version comparison) and low coupling (minimal dependencies beyond JavaVersion enum).\n",
       "naming_votes": null,
       "naming_agreement": null,
       "post_lcom5": 1.0,
       "post_tcc": 0.0395
+    },
+    {
+      "name": "UserContextProvider",
+      "methods": [
+        "getUserDir()",
+        "getUserDirPath()",
+        "getUserHome()",
+        "getUserHomePath()",
+        "getUserName()",
+        "getUserName(String)"
+      ],
+      "fields": [],
+      "members": [
+        "getUserDir()",
+        "getUserDirPath()",
+        "getUserHome()",
+        "getUserHomePath()",
+        "getUserName()",
+        "getUserName(String)"
+      ],
+      "member_types": {
+        "getUserDir()": "method",
+        "getUserDirPath()": "method",
+        "getUserHome()": "method",
+        "getUserHomePath()": "method",
+        "getUserName()": "method",
+        "getUserName(String)": "method"
+      },
+      "cluster_id": 2,
+      "quality_tier": "should",
+      "quality_score": 70.0,
+      "quality_reasons": [],
+      "internal_cohesion": 0.4367705340840037,
+      "external_coupling": 0.48294741583941414,
+      "modularity": 96.29287310777497,
+      "silhouette_score": null,
+      "conductance": null,
+      "coverage": null,
+      "is_connected": true,
+      "stability_score": null,
+      "verified": true,
+      "verification_status": "verified",
+      "confidence": 0.88,
+      "rationale": "These methods form a cohesive unit focused on providing user-specific system context information. They all retrieve different aspects of the current user's environment (directories, username) and are commonly used together when applications need to understand the user's system context.",
+      "reasoning": "\nStep 1: Primary Responsibility Analysis\nThese methods share a common responsibility: retrieving user-specific system information. They all focus on accessing user-related system properties like user directory, user home directory, and username. Each method provides convenient access to user context information from the operating system.\n\nStep 2: Shared Concept/Domain\nAll methods belong to the \"user context\" domain within system information. They represent different aspects of the current user's environment - their home directory, current working directory, and identity. This is a cohesive subset of system properties that specifically relate to user session information.\n\nStep 3: Extraction Benefits\n- Improves Single Responsibility Principle: Separates user-specific system queries from general system utilities\n- Enhances Reusability: User context information is commonly needed together across applications\n- Reduces Complexity: The original SystemUtils class becomes more focused on non-user-specific system information\n- Improves Testability: User context can be mocked or stubbed independently for testing\n\nStep 4: Design Justification\nFollows the Extract Class refactoring pattern to separate user-specific concerns from general system utilities. This creates a focused abstraction around user context that has high cohesion (all methods relate to current user information) and low coupling (minimal dependencies beyond SystemProperties).\n",
+      "naming_votes": null,
+      "naming_agreement": null,
+      "post_lcom5": 1.0,
+      "post_tcc": 0.0356
     }
   ],
   "post_refactoring": {
-    "methods_extracted": 9,
-    "methods_remaining": 14,
-    "extraction_coverage": 39.1,
+    "methods_extracted": 8,
+    "methods_remaining": 15,
+    "extraction_coverage": 34.8,
     "single_extraction_lcom5": 1.0,
-    "single_extraction_tcc": 0.0395,
-    "cumulative_methods_remaining": 13,
+    "single_extraction_tcc": 0.0356,
+    "cumulative_methods_remaining": 14,
     "cumulative_lcom5": 1.0,
-    "cumulative_tcc": 0.044
+    "cumulative_tcc": 0.0667
   }
 }
