@@ -148,6 +148,11 @@
                     "command": "genec.showGraph",
                     "when": "view == genec.suggestions",
                     "group": "navigation"
+                },
+                {
+                    "command": "genec.setApiKey",
+                    "when": "view == genec.settings",
+                    "group": "navigation"
                 }
             ],
             "view/item/context": [
