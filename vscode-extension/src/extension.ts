@@ -36,20 +36,12 @@ export function activate(context: vscode.ExtensionContext) {
     const configService = ConfigService.getInstance();
     configService.setContext(context); // Enable secret storage for API key
 
-    // Prompt for API key on first activation if not set
-    (async () => {
+    // Check API key and set context for welcome view
+    const updateApiKeyContext = async () => {
         const existingKey = await configService.getApiKeyAsync();
-        if (!existingKey) {
-            const action = await vscode.window.showWarningMessage(
-                'GenEC: No Anthropic API key configured. LLM-powered naming will be disabled.',
-                'Set API Key',
-                'Later'
-            );
-            if (action === 'Set API Key') {
-                void vscode.commands.executeCommand('genec.setApiKey');
-            }
-        }
-    })();
+        await vscode.commands.executeCommand('setContext', 'genec.hasApiKey', !!existingKey);
+    };
+    updateApiKeyContext();
 
     // Create status bar item
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
@@ -496,6 +488,7 @@ export function activate(context: vscode.ExtensionContext) {
             if (apiKey) {
                 await configService.setApiKey(apiKey);
                 settingsProvider.refresh();
+                await updateApiKeyContext(); // Update welcome view
                 vscode.window.showInformationMessage('API key saved successfully');
             }
         })

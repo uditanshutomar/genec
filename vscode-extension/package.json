@@ -58,7 +58,13 @@
         "viewsWelcome": [
             {
                 "view": "genec.suggestions",
-                "contents": "No suggestions yet.\n[Analyze Current Class](command:genec.analyzeClass)\nOpen a Java file and click the button above to find refactoring opportunities."
+                "contents": "$(key) **Anthropic API Key**\n[Set API Key](command:genec.setApiKey)\nRequired for LLM-powered class naming.\n\n---\n\nNo suggestions yet.\n[Analyze Current Class](command:genec.analyzeClass)\nOpen a Java file and click above to find refactoring opportunities.",
+                "when": "!genec.hasApiKey"
+            },
+            {
+                "view": "genec.suggestions",
+                "contents": "No suggestions yet.\n[Analyze Current Class](command:genec.analyzeClass)\nOpen a Java file and click above to find refactoring opportunities.",
+                "when": "genec.hasApiKey"
             },
             {
                 "view": "genec.history",
