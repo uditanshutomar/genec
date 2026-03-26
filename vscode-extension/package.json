@@ -58,21 +58,21 @@
         "viewsWelcome": [
             {
                 "view": "genec.suggestions",
-                "contents": "$(key) **Anthropic API Key**\n[Set API Key](command:genec.setApiKey)\nRequired for LLM-powered class naming.\n\n---\n\nNo suggestions yet.\n[Analyze Current Class](command:genec.analyzeClass)\nOpen a Java file and click above to find refactoring opportunities.",
+                "contents": "$(key) Set up your API key to enable AI-powered class naming.\n[Set Anthropic API Key](command:genec.setApiKey)\n\n$(beaker) Ready to refactor? Open a Java file and analyze it.\n[Analyze Current Class](command:genec.analyzeClass)",
                 "when": "!genec.hasApiKey"
             },
             {
                 "view": "genec.suggestions",
-                "contents": "No suggestions yet.\n[Analyze Current Class](command:genec.analyzeClass)\nOpen a Java file and click above to find refactoring opportunities.",
+                "contents": "$(check) API key configured.\n\n$(beaker) Open a Java file and analyze it for Extract Class opportunities.\n[Analyze Current Class](command:genec.analyzeClass)",
                 "when": "genec.hasApiKey"
             },
             {
                 "view": "genec.history",
-                "contents": "No refactoring history.\nApplied refactorings will appear here."
+                "contents": "$(history) No refactoring history yet.\n\nApplied extractions will appear here with undo support."
             },
             {
                 "view": "genec.settings",
-                "contents": "[Set API Key](command:genec.setApiKey)\nConfigure your Anthropic API key to enable LLM-powered suggestions."
+                "contents": "$(gear) Configure GenEC settings.\n[Set API Key](command:genec.setApiKey)\n[Open Settings](command:genec.configure)"
             }
         ],
         "commands": [
