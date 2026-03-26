@@ -93,7 +93,6 @@ export class GenECService extends EventEmitter {
         this.log(`Command: ${pythonPath} ${args.join(' ')}`);
 
         return new Promise((resolve, reject) => {
-            const config = this.configService.getConfig();
             const TIMEOUT_MS = (config.analysisTimeout || 10) * 60 * 1000;
             let timeoutId: NodeJS.Timeout | undefined;
             let stdout = '';

@@ -2,6 +2,8 @@
  * ConfigService - Handles VS Code settings and environment configuration
  */
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
 import { GenECConfig } from '../types';
 
 export class ConfigService {
@@ -115,8 +117,6 @@ export class ConfigService {
      * Get Python path, checking for bundled binary first
      */
     public getPythonPath(extensionPath: string): string {
-        const fs = require('fs');
-        const path = require('path');
 
         // Check for bundled binary
         const bundledPath = path.join(extensionPath, 'dist', 'genec');
@@ -136,8 +136,6 @@ export class ConfigService {
      * Check if using bundled binary
      */
     public isBundled(extensionPath: string): boolean {
-        const fs = require('fs');
-        const path = require('path');
 
         const bundledPath = path.join(extensionPath, 'dist', 'genec');
         const bundledExePath = path.join(extensionPath, 'dist', 'genec.exe');
