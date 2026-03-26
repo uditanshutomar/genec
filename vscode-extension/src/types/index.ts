@@ -147,11 +147,6 @@ export interface GenECConfig {
     apiKey?: string;
     autoApply: boolean;
     analysisTimeout: number;
-    clustering: {
-        minClusterSize: number;
-        maxClusterSize: number;
-        minCohesion: number;
-    };
 }
 
 // ============================================================================

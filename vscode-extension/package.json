@@ -199,21 +199,6 @@
                     "default": false,
                     "description": "Automatically apply SHOULD-tier suggestions"
                 },
-                "genec.clustering.minClusterSize": {
-                    "type": "number",
-                    "default": 3,
-                    "description": "Minimum methods in a cluster"
-                },
-                "genec.clustering.maxClusterSize": {
-                    "type": "number",
-                    "default": 30,
-                    "description": "Maximum methods in a cluster"
-                },
-                "genec.clustering.minCohesion": {
-                    "type": "number",
-                    "default": 0.35,
-                    "description": "Minimum cohesion score (0.0-1.0)"
-                },
                 "genec.analysisTimeout": {
                     "type": "number",
                     "default": 10,

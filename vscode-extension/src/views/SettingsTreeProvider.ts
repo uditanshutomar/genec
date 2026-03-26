@@ -107,11 +107,13 @@ export class SettingsTreeProvider implements vscode.TreeDataProvider<SettingTree
         return element;
     }
 
-    getChildren(element?: SettingTreeItem): Thenable<SettingTreeItem[]> {
+    async getChildren(element?: SettingTreeItem): Promise<SettingTreeItem[]> {
         if (element) {
-            return Promise.resolve([]);
+            return [];
         }
 
+        // Use async key check to include secret storage
+        const apiKey = await this.configService.getApiKeyAsync() || '';
         const config = this.configService.getConfig();
         const items: SettingTreeItem[] = [];
 
@@ -121,7 +123,7 @@ export class SettingsTreeProvider implements vscode.TreeDataProvider<SettingTree
                 type: 'apiKey',
                 key: 'apiKey',
                 label: 'Anthropic API Key',
-                value: config.apiKey || ''
+                value: apiKey
             },
             vscode.TreeItemCollapsibleState.None
         ));
@@ -137,27 +139,6 @@ export class SettingsTreeProvider implements vscode.TreeDataProvider<SettingTree
             vscode.TreeItemCollapsibleState.None
         ));
 
-        // Clustering settings
-        items.push(new SettingTreeItem(
-            {
-                type: 'setting',
-                key: 'minClusterSize',
-                label: 'Min Cluster Size',
-                value: config.clustering.minClusterSize
-            },
-            vscode.TreeItemCollapsibleState.None
-        ));
-
-        items.push(new SettingTreeItem(
-            {
-                type: 'setting',
-                key: 'maxClusterSize',
-                label: 'Max Cluster Size',
-                value: config.clustering.maxClusterSize
-            },
-            vscode.TreeItemCollapsibleState.None
-        ));
-
         // Open full settings
         items.push(new SettingTreeItem(
             {
@@ -167,6 +148,6 @@ export class SettingsTreeProvider implements vscode.TreeDataProvider<SettingTree
             vscode.TreeItemCollapsibleState.None
         ));
 
-        return Promise.resolve(items);
+        return items;
     }
 }

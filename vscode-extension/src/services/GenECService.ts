@@ -72,13 +72,6 @@ export class GenECService extends EventEmitter {
             '--json'
         );
 
-        // Add clustering config
-        args.push(
-            '--min-cluster-size', config.clustering.minClusterSize.toString(),
-            '--max-cluster-size', config.clustering.maxClusterSize.toString(),
-            '--min-cohesion', config.clustering.minCohesion.toString()
-        );
-
         if (options?.maxSuggestions) {
             args.push('--max-suggestions', options.maxSuggestions.toString());
         }

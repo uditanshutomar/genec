@@ -29,25 +29,11 @@ export class ConfigService {
     public getConfig(): GenECConfig {
         const config = vscode.workspace.getConfiguration('genec');
 
-        // Validate constraints
-        const minSize = config.get<number>('clustering.minClusterSize') || 3;
-        const maxSize = config.get<number>('clustering.maxClusterSize') || 30;
-        if (minSize > maxSize) {
-            vscode.window.showWarningMessage(
-                `GenEC config: minClusterSize (${minSize}) > maxClusterSize (${maxSize}). Using defaults.`
-            );
-        }
-
         return {
             pythonPath: config.get<string>('pythonPath') || 'python3',
             apiKey: this.getApiKey(),
             autoApply: config.get<boolean>('autoApply') || false,
             analysisTimeout: config.get<number>('analysisTimeout') || 10,
-            clustering: {
-                minClusterSize: minSize > maxSize ? 3 : minSize,
-                maxClusterSize: minSize > maxSize ? 30 : maxSize,
-                minCohesion: config.get<number>('clustering.minCohesion') || 0.35
-            }
         };
     }
 

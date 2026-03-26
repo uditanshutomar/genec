@@ -486,8 +486,8 @@ export function activate(context: vscode.ExtensionContext) {
                     if (!value || value.trim().length === 0) {
                         return 'API key is required';
                     }
-                    if (!value.startsWith('sk-ant-')) {
-                        return 'API key should start with sk-ant-';
+                    if (value.trim().length < 10) {
+                        return 'API key seems too short';
                     }
                     return null;
                 }
