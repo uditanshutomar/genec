@@ -167,9 +167,9 @@ class ClusterDetector:
     def __init__(
         self,
         min_cluster_size: int = 3,
-        max_cluster_size: int = 15,
-        min_cohesion: float = 0.5,
-        resolution: float = 1.0,
+        max_cluster_size: int = 30,
+        min_cohesion: float = 0.35,
+        resolution: float = 2.0,
         algorithm: str = "leiden",
         config: dict | None = None,
         seed: int | None = 42,
