@@ -21,7 +21,7 @@
 
 \lstdefinestyle{javacode}{
   language=Java,
-  basicstyle=\ttfamily\small,
+  basicstyle=\ttfamily\scriptsize,
   backgroundcolor=\color{codegray},
   keywordstyle=\color{keyblue}\bfseries,
   stringstyle=\color{strgreen},
@@ -35,7 +35,7 @@
   belowskip=6pt
 }
 \lstdefinestyle{shell}{
-  basicstyle=\ttfamily\small,
+  basicstyle=\ttfamily\scriptsize,
   backgroundcolor=\color{codegray},
   breaklines=true,
   frame=single,
@@ -46,7 +46,7 @@
   belowskip=6pt
 }
 \lstdefinestyle{textblock}{
-  basicstyle=\small,
+  basicstyle=\scriptsize,
   backgroundcolor=\color{codegray},
   breaklines=true,
   frame=single,
@@ -69,6 +69,8 @@
 \settopmatter{printfolios=true,printacmref=false}
 \renewcommand\footnotetextcopyrightpermission[1]{}
 \pagestyle{plain}
+
+\setlength{\emergencystretch}{3em}
 
 \title{GenEC: A Hybrid Framework for Safe and Explainable \emph{Extract Class} Refactoring}
 
@@ -596,25 +598,29 @@ in the class and $E_{\text{static}}(m_i, m_j)$ is a weighted edge representing
 dependency strength between methods $m_i$ and $m_j$.
 
 Edge weights are computed as:
+{\small
 \begin{equation}
-w_{\text{static}}(m_i, m_j) = \alpha_{\text{call}} \cdot \text{call\_count}(m_i, m_j)
-  + \alpha_{\text{field}} \cdot \text{shared\_fields}(m_i, m_j)
+w_{\text{static}}(m_i, m_j) = \alpha_{\text{call}} \!\cdot\! \text{call\_count}(m_i, m_j)
+  + \alpha_{\text{field}} \!\cdot\! \text{shared\_fields}(m_i, m_j)
 \label{eq:static}
 \end{equation}
-where $\text{call\_count}(m_i,m_j)$ is the number of times method $m_i$ calls
-$m_j$, $\text{shared\_fields}(m_i,m_j)$ is the number of class fields accessed
-by both methods, $\alpha_{\text{call}}=1.0$, $\alpha_{\text{field}}=0.8$, with
-an additional $\alpha_{\text{shared\_field}}=0.9$ for shared field access
-(configurable weights).
+}%
+where $\text{call\_count}(m_i,m_j)$ is the number of times $m_i$ calls
+$m_j$, $\text{shared\_fields}(m_i,m_j)$ is the number of fields accessed
+by both methods, $\alpha_{\text{call}}{=}1.0$, $\alpha_{\text{field}}{=}0.8$,
+with an additional $\alpha_{\text{shared\_field}}{=}0.9$ for shared field
+access (configurable weights).
 
 \textit{Stage~2: Evolutionary Coupling Mining.}  We traverse Git history to
 compute a co-change matrix $C$, where $C[i,j]$ represents how often methods
 $m_i$ and $m_j$ changed together:
+{\small
 \begin{equation}
-C[i,j] = \sum_t \text{idf}(\text{commit}_t) \cdot \text{recency\_decay}(t)
-  \cdot \delta(m_i, m_j, \text{commit}_t)
+C[i,j] = \sum_t \text{idf}(\text{commit}_t) \!\cdot\! \text{recency\_decay}(t)
+  \!\cdot\! \delta(m_i, m_j, \text{commit}_t)
 \label{eq:cochange}
 \end{equation}
+}%
 where $\delta(m_i,m_j,\text{commit}_t) = 1$ if both methods changed in
 commit~$t$ (else 0), $\text{idf}(\text{commit}_t) = 1/\sqrt{N}$ where $N$ is
 the number of methods changed in commit~$t$ (inverse-document-frequency
@@ -625,10 +631,12 @@ $\text{decay}=0.8$, an exponential decay weighting recent changes higher (e.g.,
 $\approx 0.33$).
 
 Coupling strength is then normalized:
+{\small
 \begin{equation}
-\text{coupling}(m_i,m_j) = \frac{C[i,j]}{\sqrt{\text{commits}(m_i) \cdot \text{commits}(m_j)}}
+\text{coupling}(m_i,m_j) = \frac{C[i,j]}{\sqrt{\text{commits}(m_i) \!\cdot\! \text{commits}(m_j)}}
 \label{eq:coupling}
 \end{equation}
+}%
 
 Same-name overloads receive a 50\% discount since they co-change trivially due
 to source adjacency. Pairs below a minimum coupling threshold (0.15) are
@@ -642,11 +650,13 @@ matrices are cached in \texttt{.genec\_cache/} for reuse.
 
 \textit{Stage~3: Graph Fusion and Clustering.}  We normalize both graphs to
 $[0,1]$ and fuse them with configurable $\alpha$:
+{\small
 \begin{equation}
-G_{\text{fused}} = \alpha \cdot \text{normalize}(G_{\text{static}})
-  + (1 - \alpha) \cdot \text{normalize}(G_{\text{evo}})
+G_{\text{fused}} = \alpha \!\cdot\! \text{norm}(G_{\text{static}})
+  + (1 {-} \alpha) \!\cdot\! \text{norm}(G_{\text{evo}})
 \label{eq:fusion}
 \end{equation}
+}%
 The configured default is $\alpha = 0.8$, weighting static structure more
 heavily. The pipeline applies \emph{adaptive hotspot-based fusion} where
 $\alpha$ varies per edge based on evolutionary activity: high-hotspot edges
@@ -657,8 +667,9 @@ toward 0.95, effectively falling back to structural-only analysis.
 
 Community detection uses the Leiden algorithm (preferred for stability) or
 Louvain (fallback).  The default resolution is 2.0 (favoring more, smaller
-clusters).  Multi-resolution search over $\{0.5,0.75,1.0,1.25,1.5\}$ is
-available but disabled by default.
+clusters).  Multi-resolution search over
+$\{0.5,\allowbreak 0.75,\allowbreak 1.0,\allowbreak 1.25,\allowbreak 1.5\}$
+is available but disabled by default.
 
 After detection, we validate that each cluster forms a connected subgraph and
 split disconnected clusters into their connected components. We then filter
@@ -670,17 +681,17 @@ than 80\% of the original class's methods (extraction, not renaming).
 tier based on a 100-point weighted score:
 
 \begin{table}[h]
-\centering\small
+\centering\scriptsize
 \caption{Quality tier scoring rubric.}
 \label{tab:tier-scoring}
 \begin{tabularx}{\columnwidth}{@{}lrX@{}}
 \toprule
 \textbf{Factor} & \textbf{Wt} & \textbf{Scoring} \\
 \midrule
-Evolutionary coupling & 30 & strong ($>$0.5)=30, moderate ($>$0.3)=20, weak ($>$0)=10, none=5 \\
-Internal cohesion & 35 & high ($>$0.7)=35, good ($>$0.5)=25, moderate ($>$0.3)=15, low=5 \\
-External coupling (inv.) & 25 & low ($<$0.3)=25, moderate ($<$0.5)=15, high ($<$0.7)=5, very high=0 \\
-Cluster size & 10 & optimal (3--10)=10, large ($>$10)=5 \\
+Evo.\ coupling & 30 & strong ({>}0.5)\,=\,30, mod.\ ({>}0.3)\,=\,20, weak\,=\,10, none\,=\,5 \\
+Int.\ cohesion & 35 & high ({>}0.7)\,=\,35, good ({>}0.5)\,=\,25, mod.\ ({>}0.3)\,=\,15, low\,=\,5 \\
+Ext.\ coupling (inv.) & 25 & low ({<}0.3)\,=\,25, mod.\ ({<}0.5)\,=\,15, high ({<}0.7)\,=\,5, v.high\,=\,0 \\
+Cluster size & 10 & optimal (3--10)\,=\,10, large ({>}10)\,=\,5 \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -749,7 +760,7 @@ through three verification tiers (Table~\ref{tab:verification-tiers}).
 \textbf{Tier} & \textbf{Check} & \textbf{Failure handling} \\
 \midrule
 T1: Compilation & Compile with stubs & Reject or structural plan \\
-T2: Structural  & Member completeness, dep.\ satisfaction, ref.\ consistency & Reject with explanation \\
+T2: Structural  & Members, deps, references & Reject with explanation \\
 T3: Behavioral  & Run existing tests & Reject if any test fails \\
 \bottomrule
 \end{tabularx}
@@ -798,14 +809,14 @@ JDT for mechanics.''}
 \centering\small
 \caption{Division of responsibilities between LLM and JDT.}
 \label{tab:llm-jdt}
-\begin{tabularx}{\columnwidth}{@{}lll@{}}
+\begin{tabularx}{\columnwidth}{@{}lXl@{}}
 \toprule
 \textbf{Task} & \textbf{Handled By} & \textbf{Rationale} \\
 \midrule
 Class naming & LLM (Claude) & Semantic understanding \\
-Rationale generation & LLM (Claude) & Natural language explanation \\
+Rationale gen. & LLM (Claude) & Natural language \\
 Code generation & Eclipse JDT & Deterministic, correct \\
-Reference updates & Eclipse JDT & Full source analysis required \\
+Ref.\ updates & Eclipse JDT & Full source analysis \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -868,7 +879,8 @@ miss.
 \textit{Tier~3: Behavioral Verification.}  When tests are available, we run
 them against the refactored code:
 \begin{lstlisting}[style=shell]
-mvn test -Dtest=*${className}* -DfailIfNoTests=false
+mvn test -Dtest=*${className}*
+    -DfailIfNoTests=false
 \end{lstlisting}
 Any test failure causes rejection, ensuring behavioral equivalence.
 
@@ -938,7 +950,7 @@ Commons Lang since 2002 and is used by thousands of downstream projects.
 Lines of Code & ${\sim}3{,}800$ \\
 Methods & 244 \\
 Fields & 10 \\
-LCOM5 & 0.970 (appears nearly maximally uncohesive) \\
+LCOM5 & 0.970 (nearly max.\ uncohesive) \\
 TCC & 0.062 (very low connectivity) \\
 CBO & 1 \\
 \bottomrule
@@ -1018,11 +1030,11 @@ Table~\ref{tab:stringutils-verify} shows the first 5 of 12 verified clusters.
 
 \begin{table}[h]
 \centering\small
-\caption{Verification results for StringUtils candidate extractions (first 5 of 12; all 12 verified).}
+\caption{Verification results for StringUtils (first 5 of 12; all verified).}
 \label{tab:stringutils-verify}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-\textbf{Cluster} & \textbf{T1: Compile} & \textbf{T2: Structural} & \textbf{T3: Behavioral} & \textbf{Result} \\
+\textbf{Cluster} & \textbf{T1} & \textbf{T2} & \textbf{T3} & \textbf{Result} \\
 \midrule
 StringReplacer  & Pass & Pass & Pass & Verified \\
 ArrayJoiner     & Pass & Pass & Pass & Verified \\
@@ -1042,11 +1054,12 @@ GenEC produces 12 verified suggestions for \texttt{StringUtils}. For example:
 
 \textbf{Verified Suggestion: StringReplacer.}
 \begin{itemize}
-  \item \textbf{Methods:} \texttt{replace(String,String,String)},
-        \texttt{replaceOnce(String,String,String)},
-        \texttt{replaceAll(String,String,String)},
-        \texttt{replaceChars(String,char,char)},
-        \texttt{replaceEach(String,String[],String[])}.
+  \item \textbf{Methods:} {\small\texttt{replace},
+        \texttt{replaceOnce},
+        \texttt{replaceAll},
+        \texttt{replaceChars},
+        \texttt{replaceEach}}
+        (all \texttt{String}-parameterized variants).
   \item \textbf{Fields:}  None (stateless extraction).
   \item \textbf{Quality tier:}  ``could'' (moderate).
   \item \textbf{LLM confidence:}  0.90.
@@ -1231,7 +1244,8 @@ cluster filter pass rate was 16.6\% (178 of 1,071 raw clusters).
 \textbf{Extraction coverage.}  Across the 21 classes with verified suggestions
 (2,303 methods total), GenEC extracted 600 unique methods (26.1\% mean
 per-class coverage). Per-class coverage ranged from 2.3\% (\texttt{IOUtils}, 4
-of 172 methods) to 78.3\% (\texttt{ChartPanel}, 90 of 115 methods). Five classes exceeded 50\% coverage: \texttt{ChartPanel} (78.3\%),
+of 172 methods) to 78.3\% (\texttt{ChartPanel}, 90 of 115 methods).
+Five classes exceeded 50\% coverage: \texttt{ChartPanel} (78.3\%),
 \texttt{Dfp} (56.6\%), \texttt{AccurateMath} (53.4\%), \texttt{FilenameUtils}
 (50.0\%), and \texttt{DateUtils} (49.3\%). These results show that GenEC
 produces non-trivial decompositions, not merely token extractions of a few
@@ -1441,11 +1455,11 @@ across 23 classes). Latency varies significantly by class complexity:
 
 \begin{table}[t]
 \centering\small
-\caption{Per-class latency and suggestion counts (selected classes).}
+\caption{Per-class latency and suggestion counts (selected).}
 \label{tab:rq4}
 \begin{tabular}{@{}llrrrr@{}}
 \toprule
-\textbf{Class} & \textbf{Project} & \textbf{Meth.} & \textbf{Time(s)} & \textbf{Sugg.} & \textbf{Verif.} \\
+\textbf{Class} & \textbf{Project} & \textbf{M.} & \textbf{T(s)} & \textbf{S.} & \textbf{V.} \\
 \midrule
 IOUtils          & commons-io   & 172 &  18.8 &  1 &  1 \\
 FileUtils        & commons-io   & 159 & 136.2 &  7 &  7 \\
@@ -1536,15 +1550,15 @@ fraction of post-filtering suggestions.
 \centering\small
 \caption{Ablation study results (8 classes, mean values).}
 \label{tab:ablation}
-\begin{tabular}{@{}lp{2.4cm}rrrr@{}}
+\begin{tabular}{@{}lp{2.0cm}rrrr@{}}
 \toprule
-\textbf{Variant} & \textbf{Description} & \textbf{Clust.} & \textbf{Verif.\%} & \textbf{Coh.} & \textbf{Time} \\
+\textbf{Variant} & \textbf{Description} & \textbf{Cl.} & \textbf{V.\%} & \textbf{Coh.} & \textbf{Time} \\
 \midrule
-full             & Complete pipeline       & 68.6 & 10.3\% & 0.171 & 138.4 \\
-no\_evo          & No evolutionary coupling & 53.9 & 11.2\% & 0.245 & 79.4  \\
-no\_llm          & No LLM naming/filtering & 68.1 & 10.3\% & 0.136 & 107.4 \\
-no\_verification & No compilation verif.   & 68.4 &  7.2\% & 0.124 &  63.9 \\
-high\_static     & Higher static ($\alpha{=}0.95$) & 68.0 & 8.3\% & 0.129 & 106.0 \\
+full             & Full pipeline       & 68.6 & 10.3\% & 0.171 & 138.4 \\
+no\_evo          & No evo.\ coupling   & 53.9 & 11.2\% & 0.245 & 79.4  \\
+no\_llm          & No LLM naming       & 68.1 & 10.3\% & 0.136 & 107.4 \\
+no\_verif        & No compilation      & 68.4 &  7.2\% & 0.124 &  63.9 \\
+high\_static     & $\alpha{=}0.95$     & 68.0 & 8.3\% & 0.129 & 106.0 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1751,11 +1765,11 @@ architecture.
 \toprule
 \textbf{Aspect} & \textbf{EM-Assist} & \textbf{PyCraft} & \textbf{GenEC} \\
 \midrule
-Refactoring    & Extract Method   & Code changes     & Extract Class \\
-LLM role       & Suggests fragments & Generates variants & Names + rationales only \\
-IDE engine     & IntelliJ IDEA    & TBE + IDE        & Eclipse JDT \\
-Verification   & IDE + tests      & Tests + PR review & Multi-tier \\
-Complexity     & Single method    & Single transform  & Multiple coordinated methods \\
+Refactoring    & Extr.\ Method   & Code changes     & Extr.\ Class \\
+LLM role       & Suggests frags. & Generates variants & Names + rationales \\
+IDE engine     & IntelliJ        & TBE + IDE        & Eclipse JDT \\
+Verification   & IDE + tests     & Tests + PR       & Multi-tier \\
+Complexity     & Single method   & Single transform & Multi-method \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -1809,7 +1823,7 @@ plans.
 \label{tab:rw-summary}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-\textbf{Capability} & \textbf{JDeodorant} & \textbf{HECS} & \textbf{EM-Assist} & \textbf{GenEC} \\
+\textbf{Capability} & \textbf{JDeod.} & \textbf{HECS} & \textbf{EM-A.} & \textbf{GenEC} \\
 \midrule
 Static analysis        & \cmark & \cmark & \cmark & \cmark \\
 Evolutionary coupling  & \xmark & \xmark & \xmark & \cmark \\
