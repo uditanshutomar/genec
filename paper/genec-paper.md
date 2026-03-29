@@ -462,7 +462,15 @@ GenEC produces one verified suggestion for IOUtils.
 3. **LLM adds semantic value:** "ResourceLoader" is far more meaningful than "IOUtils$Helper1" (the field-sharing baseline's name).
 4. **Honest limitations:** IOUtils' design (172 static utility methods with minimal interdependencies) resists decomposition. GenEC correctly identifies this by rejecting 36 of 37 clusters.
 
-## 5 Research Questions
+## 5 Definitions and Research Questions
+
+Before presenting results, we define key terms used throughout the evaluation to ensure consistent interpretation:
+
+- **Raw clusters:** All communities detected in the fused dependency graph by the Leiden algorithm, before any filtering.
+- **Candidate suggestions:** Clusters that survive size constraints (3-30 members), minimum cohesion threshold (0.35), and deduplication. Each candidate is assigned a quality tier ("should," "could," or "potential") based on internal cohesion and external coupling scores.
+- **Verified suggestions:** Candidates that pass all applicable verification tiers: Tier 1 (compilation with stub generation), Tier 2 (structural integrity), and Tier 3 (behavioral test validation, when tests are available).
+- **Verification rate:** The ratio of verified suggestions to candidate suggestions (i.e., #verified / #candidates).
+- **Structural transformation plans:** Actionable guidance documents generated for clusters rejected during pre-extraction validation (before code generation), describing the impediment and suggesting manual remediation steps.
 
 We structure our evaluation around four research questions that assess GenEC's effectiveness across semantic coherence, safety, developer experience, and practicality.
 
@@ -720,7 +728,7 @@ Large Language Models have recently been applied to code refactoring with mixed 
 
 **PyCraft** [15] further demonstrates the LLM+IDE synergy by fusing LLMs with transformation-by-example for Python code changes, achieving 83% pull request acceptance on real projects. **MM-assist** [16] applies the same paradigm to Move Method refactoring with refactoring-aware RAG, achieving 2.4x improvement over prior state-of-the-art.
 
-**Cassee et al.** [2] studied the impact of AI-assisted code generation on refactoring quality, coining "refuctoring" for LLM changes that degrade code. Their findings motivate GenEC's constrained LLM architecture.
+**Tornhill and Borg** [2] studied the impact of AI-assisted code generation on refactoring quality, coining "refuctoring" for LLM changes that degrade code. Their findings motivate GenEC's constrained LLM architecture.
 
 **Comparison with GenEC.**
 
@@ -762,7 +770,17 @@ Prior Extract Class tools lack multi-tier verification. JDeodorant [4] checks on
 | Structural fallback | ✗ | ✗ | ✗ | ✓ |
 | Extract Class | ✓ | ✓ | ✗ | ✓ |
 
-## 8 Conclusions
+## 8 Ethics, AI Disclosure, and Deployment Considerations
+
+**Generative AI disclosure.** In compliance with ACM and IEEE policies on generative AI in scientific publishing, we disclose the following: GenEC uses Anthropic's Claude Sonnet (model ID: `claude-sonnet-4-20250514`) as a pipeline component for generating class names, rationales, and confidence scores. The LLM is not listed as an author and did not contribute to the writing of this manuscript. All LLM outputs used in the evaluation are cached and included in the replication package to ensure reproducibility independent of API availability.
+
+**Data sent to the LLM.** For each candidate cluster, GenEC transmits: (1) method signatures and field declarations (not full method bodies), (2) co-change frequency counts, and (3) dependency edge weights. No proprietary source code, credentials, or personally identifiable information is sent. For projects with confidentiality constraints, GenEC supports configuration of local/on-premise LLM endpoints as a drop-in replacement.
+
+**Reproducibility.** To mitigate non-determinism in LLM responses, we pin the model version, set temperature to 0.3, and provide a deterministic "replay mode" that reads cached responses for exact reproduction of reported results. The replication package includes all prompts, cached outputs, evaluation scripts, and a Docker image for environment reproducibility.
+
+**Open-source commitment.** GenEC's complete source code, VS Code extension, evaluation harness, and datasets are publicly available under an open-source license at our GitHub repository [9].
+
+## 9 Conclusions
 
 This paper presented GenEC, a hybrid Extract Class refactoring framework that extends the "LLM for insight, IDE for correctness" paradigm—previously demonstrated for Extract Method [6] and Move Method [16]—to the harder Extract Class problem. By fusing static dependency analysis with evolutionary coupling and constraining LLM usage to semantic artifacts while delegating code generation to deterministic AST rewriting built on Eclipse JDT's infrastructure, GenEC produces verified, compilable, and explainable refactoring suggestions.
 
@@ -779,15 +797,15 @@ The key lessons are:
 
 ## References
 
-[1] Alcocer, J.P. et al. Move Method prediction using deep learning. MSR 2023.
+[1] Cui, D., Li, L., Wen, Z., and Jin, H. Three Heads Are Better Than One: Suggesting Move Method Refactoring Opportunities with Inter-class Code Entity Dependency Enhanced Hybrid Hypergraph Neural Network. ASE 2024.
 
-[2] Cassee, N. et al. The impact of AI-assisted code generation on code refactoring. ICSE 2024.
+[2] Tornhill, A., and Borg, M. Refactoring vs Refuctoring: Advancing the State of AI-Automated Code Improvements. CodeScene Whitepaper, 2024.
 
 [3] Chen, X. et al. One-to-One or One-to-Many? Suggesting Extract Class Refactoring Opportunities with Intra-class Dependency Hypergraph Neural Network. ISSTA 2024.
 
 [4] Fokaefs, M., Tsantalis, N., Stroulia, E., and Chatzigeorgiou, A. JDeodorant: Identification and Application of Extract Class Refactorings. ICSE 2011.
 
-[5] Liu, Y. et al. An empirical study of LLM code refactoring capability. arXiv 2024.
+[5] Liu, B. et al. An Empirical Study on the Potential of LLMs in Automated Software Refactoring. arXiv:2411.04444, 2024.
 
 [6] Pomian, D., Bellur, A., Dilhara, M., Kurbatova, Z., Bogomolov, E., Bryksin, T., and Dig, D. EM-Assist: Safe Automated ExtractMethod Refactoring with LLMs. ICSME 2024.
 
@@ -795,7 +813,7 @@ The key lessons are:
 
 [8] Rothermel, G. and Harrold, M.J. Analyzing regression test selection techniques. IEEE TSE 22(8), 1996.
 
-[9] GenEC Replication Package. https://github.com/genec-tool/genec
+[9] GenEC Replication Package. https://github.com/uditanshutomar/genec
 
 [10] Tornhill, A. Your Code as a Crime Scene: Use Forensic Techniques to Arrest Defects. Pragmatic Bookshelf, 2015.
 
