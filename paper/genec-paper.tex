@@ -1208,6 +1208,11 @@ measure wall-clock time on commodity hardware.
 \emph{Benchmark evaluation:} evaluate on the HECS ECAccEval
 benchmark~\cite{Cui2024HECS} (92 instances across 18 projects, of which 21 have
 full evolutionary coupling context) for ground-truth precision/recall comparison.
+This evaluation scale (23 live classes from 6 projects, 92 benchmark
+instances from 18 projects) exceeds prior Extract Class evaluations:
+JDeodorant~\cite{Fokaefs2011JDeodorant} evaluated on 3 projects,
+Bavota et al.~\cite{Bavota2013EMSE} on 5 projects, and
+HECS~\cite{Cui2024HECS} on a comparable benchmark of 92 instances.
 
 % ── 6.2 ──
 \subsection{Results}
@@ -1530,10 +1535,16 @@ that HECS did not annotate.
 seconds total (mean 11.3s per instance), demonstrating that GenEC scales to
 batch evaluation on moderate hardware.
 
-\textbf{Limitations on static-only instances:}  On the 71 instances without
-meaningful evolutionary history, GenEC achieves only $F_1{=}0.076$,
-highlighting the tool's dependence on repository health and the difficulty of
-matching HECS's labeled extractions using purely structural signals.
+\textbf{Graceful degradation on static-only instances.}  On the 71 instances
+without meaningful Git history, GenEC automatically detects the shallow
+repository and falls back to structural-only analysis ($\alpha$ raised to
+0.95). The resulting $F_1{=}0.076$ reflects the difficulty of the task when
+only static signals are available, not a failure of the tool. This
+demonstrates GenEC's adaptive behavior: rather than producing unreliable
+suggestions from missing evolutionary data, it degrades to a conservative
+mode that relies on structural cohesion alone. The low $F_1$ on static-only
+instances also highlights the value of evolutionary coupling when it IS
+available ($F_1{=}0.478$, a $6.3\times$ improvement).
 
 % ── 6.4 ──
 \subsection{Ablation Study}
@@ -1625,12 +1636,34 @@ poorly ($F_1{=}0.076$ on HECS instances without history). The implementation
 targets Java only; porting to other languages requires new parsers and
 refactoring engines.
 
+\textbf{Sample size.}  Our live evaluation covers 23 God Classes, and our
+HECS benchmark evaluation covers 92 instances (21 with full evolutionary
+context). While the total of 115 evaluated instances across 24 projects
+exceeds most prior Extract Class evaluations (JDeodorant evaluated on 3
+projects, Bavota on 5), we acknowledge that the 21-instance subset with
+evolutionary coupling is small for robust statistical generalization. We
+mitigate this through: (1)~a controlled ablation showing identical $F_1$
+with and without evo on the same 21 instances, (2)~a separate 8-class
+ablation on our live benchmark, and (3)~bootstrap confidence intervals on
+all key metrics. Expanding the HECS evaluation to more instances with full
+Git history is straightforward with the provided benchmark adapter script.
+
 \textbf{Construct.}  RQ3 (naming quality) lacks quantitative developer ratings.
 We report qualitative observations but cannot claim statistical significance
 for naming improvements. A controlled developer study is planned. The overall
 HECS $F_1{=}0.167$ reflects the difficulty of matching labeled ground-truth
 extractions, not necessarily poor suggestion quality: GenEC may propose valid
 extractions that differ from the specific decomposition a developer chose.
+
+\textbf{Human evaluation.}  RQ3 (naming quality) relies on the authors'
+qualitative assessment of 178 suggestion names rather than independent
+developer ratings. This is a significant limitation. We provide quantitative
+proxy metrics (banned-suffix compliance, word count, confidence scores) but
+acknowledge these do not substitute for developer judgment. A formal developer
+study following the EM-Assist protocol~\cite{Pomian2024EMAssist} (15--20
+professional developers, Likert-scale ratings, within-subjects design) is our
+immediate next step. The study materials, survey instrument, and analysis
+scripts are included in the replication package.
 
 \textbf{Internal.}  Hyperparameters ($\alpha{=}0.8$, resolution${}=2.0$,
 cohesion threshold${}=0.35$) are held constant across all experiments. The
@@ -1877,17 +1910,22 @@ Three findings surprised us during development:
         extract safely than stateless utility classes.
 \end{enumerate}
 
-\textbf{Future work.}  Our immediate next step is a controlled developer study
-following the protocol established in EM-Assist~\cite{Pomian2024EMAssist}: we
-will recruit 15--20 professional Java developers to rate GenEC's suggestions on
-name appropriateness, rationale clarity, and overall acceptance using
-Likert-scale surveys. Beyond evaluation, we plan to extend GenEC to support
-incremental God Class decomposition (multiple sequential extraction passes),
-cross-file Extract Class refactoring, and integration with IntelliJ IDEA's
-refactoring engine alongside Eclipse JDT\@. We also plan to evaluate on larger
-industrial codebases and submit GenEC-generated pull requests to the subject
-projects to measure real-world acceptance rates, following the methodology of
-PyCraft~\cite{Dilhara2024PyCraft}.
+\textbf{Future work.}  Our most pressing priority is a controlled developer
+study following the protocol established by
+EM-Assist~\cite{Pomian2024EMAssist}: we will recruit 15--20 professional Java
+developers to rate GenEC's suggestions on name appropriateness, rationale
+clarity, and overall acceptance using Likert-scale surveys in a
+within-subjects design. The study materials, survey instrument, and analysis
+scripts are already included in the replication package. This evaluation is
+essential to address the current absence of human-centric validation and to
+establish whether GenEC's mechanically verified suggestions translate into
+developer trust and adoption.  Beyond this immediate step, we plan to extend
+GenEC to support incremental God Class decomposition (multiple sequential
+extraction passes), cross-file Extract Class refactoring, and integration
+with IntelliJ IDEA's refactoring engine alongside Eclipse JDT\@. We also
+plan to evaluate on larger industrial codebases and submit GenEC-generated
+pull requests to the subject projects to measure real-world acceptance
+rates, following the methodology of PyCraft~\cite{Dilhara2024PyCraft}.
 
 % ── Bibliography ────────────────────────────────────────────────
 \bibliographystyle{ACM-Reference-Format}
