@@ -12,7 +12,7 @@ Vijay.Poloju@colorado.edu
 
 ## Abstract
 
-God Classes—monolithic Java behemoths that accumulate dozens of unrelated responsibilities—still plague even mature open-source libraries, yet existing refactoring tools either stay silent or suggest extractions that break compilation or semantics. Large Java classes with tangled concerns make maintenance and evolution risky, and approaches based solely on metrics, static dependencies, or unconstrained machine learning often surface refactorings that are semantically misaligned or unsafe. GenEC attacks this gap with a hybrid pipeline that fuses static dependency analysis with evolutionary coupling mined from version history, while constraining a Large Language Model (LLM) to generate only semantic artifacts (names, documentation, rationale) and delegating all structural edits to IDE-grade refactoring engines such as Eclipse JDT. Every candidate extraction is gated by multi-tier verification—compilation (with stub generation where needed), structural integrity checks, and behavioral test preservation—and clusters that fail these gates are not silently discarded but instead yield structural transformation plans for manual follow-up. Our empirical evaluation spans two complementary benchmarks: (1) 23 large real-world God Classes from 6 open-source projects (Apache Commons IO/Lang/Collections/Text/Math, JFreeChart) for suggestion quality and verification analysis, and (2) the HECS ECAccEval benchmark (92 Extract Class instances across 18 projects) for ground-truth precision/recall comparison. On the 23 God Classes, GenEC identifies semantically coherent extraction opportunities that metric-only baselines miss, while blocking 41.6% of proposals that would have broken compilation or equivalence. On the HECS benchmark, GenEC achieves macro F1=0.478 on the 21 instances with full evolutionary context. We release the complete tooling, prompts, evaluation harness, and replication package to support reproducibility and future work on safe, explainable automated refactoring.
+God Classes—monolithic Java behemoths that accumulate dozens of unrelated responsibilities—still plague even mature open-source libraries, yet existing refactoring tools either stay silent or suggest extractions that break compilation or semantics. Large Java classes with tangled concerns make maintenance and evolution risky, and approaches based solely on metrics, static dependencies, or unconstrained machine learning often surface refactorings that are semantically misaligned or unsafe. GenEC attacks this gap with a hybrid pipeline that fuses static dependency analysis with evolutionary coupling mined from version history, while constraining a Large Language Model (LLM) to generate only semantic artifacts (names, documentation, rationale) and delegating all structural edits to deterministic code generation built on Eclipse JDT's AST rewriting infrastructure. Every candidate extraction is gated by multi-tier verification—compilation (with stub generation where needed), structural integrity checks, and behavioral test validation—and clusters rejected during pre-extraction validation are not silently discarded but instead yield structural transformation plans for manual follow-up. Our empirical evaluation spans two complementary benchmarks: (1) 23 large real-world God Classes from 6 open-source projects (Apache Commons IO/Lang/Collections/Text/Math, JFreeChart) for suggestion quality and verification analysis, and (2) the HECS ECAccEval benchmark (92 Extract Class instances across 18 projects) for ground-truth precision/recall comparison. On the 23 God Classes, GenEC identifies semantically coherent extraction opportunities that metric-only baselines miss, while blocking 41.6% of proposals that would have broken compilation or equivalence. On the HECS benchmark, GenEC achieves macro F1=0.478 on the 21 instances with full evolutionary context. We release the complete tooling, prompts, evaluation harness, and replication package to support reproducibility and future work on safe, explainable automated refactoring.
 
 ## 1 Introduction
 
@@ -40,15 +40,15 @@ GenEC addresses these limitations through a hybrid architecture that fuses multi
 
 **Hybrid analysis.** We combine static dependency analysis (method calls, field sharing) with evolutionary coupling mined from Git history (which methods change together over time). Static analysis captures explicit dependencies; evolutionary coupling surfaces implicit relationships that reflect how developers actually work with the code. Community detection on the fused graph produces clusters aligned with both structure and history.
 
-**Constrained LLM semantics.** Rather than asking an LLM to generate code (which leads to hallucinations), we confine it to semantic artifacts: concise class names, one-sentence rationales, and optional grouping hints. The prompts include cluster members and evolutionary evidence to ground the LLM's suggestions in concrete data. All code generation is delegated to Eclipse JDT, a battle-tested refactoring engine.
+**Constrained LLM semantics.** Rather than asking an LLM to generate code (which leads to hallucinations), we confine it to semantic artifacts: concise class names, one-sentence rationales, and optional grouping hints. The prompts include cluster members and evolutionary evidence to ground the LLM's suggestions in concrete data. All code generation is delegated to a deterministic engine built on Eclipse JDT's AST rewriting APIs—parsing, node construction, and reference resolution are handled by JDT's DOM infrastructure, ensuring mechanical correctness without relying on LLM-generated code.
 
 **Multi-tier verification.** Every candidate extraction passes through three layers of verification:
 
 1. **Compilation** with stub generation for missing symbols
 2. **Structural integrity checking** for member completeness, dependency satisfaction, and reference consistency
-3. **Behavioral tests** when available, plus differential equivalence checking
+3. **Behavioral tests** when available, validating that existing test suites pass against the refactored code
 
-Clusters that fail verification are not silently discarded. Instead, GenEC produces *structural transformation plans* that describe the impediment (e.g., "circular dependency between methods X and Y prevents extraction") so developers can address the issue manually if desired.
+Clusters rejected during pre-extraction validation are not silently discarded. Instead, GenEC produces *structural transformation plans* that describe the impediment (e.g., "circular dependency between methods X and Y prevents extraction") so developers can address the issue manually if desired. Suggestions that fail post-extraction verification tiers (compilation, structural integrity, behavioral tests) are rejected with detailed explanations logged for debugging.
 
 ### 1.3 Illustrative Example
 
@@ -66,7 +66,7 @@ We evaluated GenEC on two complementary benchmarks totaling **115 classes across
 Key results:
 
 - GenEC produced **178 suggestions**, of which **104 passed multi-tier verification** (58.4% verification rate). Field-sharing baselines produced only 37 suggestions with no compilable extractions.
-- **Multi-tier verification blocked 41.6%** of proposed extractions that would have broken compilation or equivalence—preventing unsafe suggestions from reaching developers.
+- **Multi-tier verification blocked 41.6%** of proposed extractions that would have broken compilation, structural integrity, or test behavior, preventing unsafe suggestions from reaching developers.
 - **"Should"-tier suggestions verified at 88.9%**, "could"-tier at 57.7%, demonstrating quality-tier stratification.
 - **HECS benchmark:** On the 21 instances with evolutionary context, GenEC achieves macro F1=0.478 (precision 0.41, recall 0.76).
 - **Average end-to-end latency of 201.3 seconds per class** on commodity hardware, practical for batch analysis.
@@ -75,8 +75,8 @@ Key results:
 
 This paper makes the following contributions:
 
-1. **A hybrid Extract Class technique** that fuses static dependency analysis with evolutionary co-change mining and constrains an LLM to semantic artifacts only (names, rationales), while delegating all structural edits to Eclipse JDT—extending the "LLM for insight, IDE for correctness" paradigm [6, 15] from Extract Method to the harder Extract Class problem (Section 3).
-2. **A multi-tier verification pipeline** with compilation, structural integrity, and behavioral checks—plus structural transformation plans that provide actionable guidance when automatic extraction is not safe (Section 3.4).
+1. **A hybrid Extract Class technique** that fuses static dependency analysis with evolutionary co-change mining and constrains an LLM to semantic artifacts only (names, rationales), while delegating all structural edits to deterministic code generation built on Eclipse JDT's AST infrastructure—extending the "LLM for insight, IDE for correctness" paradigm [6, 15] from Extract Method to the harder Extract Class problem (Section 3).
+2. **A multi-tier verification pipeline** with compilation, structural integrity, and behavioral checks—plus structural transformation plans generated during pre-extraction validation that provide actionable guidance when automatic extraction is not safe (Section 3.4).
 3. **An empirical evaluation** spanning 115 classes across 24 projects—23 large God Classes for suggestion quality analysis and 92 HECS benchmark instances for ground-truth comparison—demonstrating 4.8x more extraction opportunities than metric-only baselines (178 vs. 37, Wilcoxon p=0.0005), 41.6% of unsafe proposals blocked, and macro F1=0.478 on HECS instances with evolutionary context (Section 6).
 4. **A replication package** including complete tooling, prompts, evaluation harness, and VS Code extension, available in our public repository [9].
 
@@ -102,7 +102,7 @@ Large Language Models excel at semantic tasks: understanding intent, generating 
 
 Studies report that 40–76% of LLM-generated refactorings fail to compile [2, 5]. This is not a minor issue—it fundamentally undermines trust. A developer who sees one broken suggestion may never use the tool again.
 
-*GenEC's response.* We confine the LLM to semantic artifacts only: short (2–4 word) class names, one-sentence rationales, and optional grouping hints. The LLM never sees or generates code. All structural edits are delegated to Eclipse JDT, a deterministic refactoring engine with decades of testing. This architecture preserves the LLM's semantic intelligence while eliminating its mechanical failures.
+*GenEC's response.* We confine the LLM to semantic artifacts only: short (2–4 word) class names, one-sentence rationales, and optional grouping hints. The LLM never sees or generates code. All structural edits are delegated to a deterministic code generator built on Eclipse JDT's AST rewriting APIs (`ASTParser`, `ASTRewrite`, `ListRewrite`), which handles class creation, method migration, field transfer, and reference updates through direct AST manipulation. This architecture preserves the LLM's semantic intelligence while eliminating its mechanical failures.
 
 ### C3: Guaranteeing Behavior Preservation at Scale
 
@@ -119,9 +119,9 @@ Manual verification of each suggestion is impractical at scale. A tool proposing
 
 1. **Tier 1 (Compilation):** Compile with stub generation for missing symbols.
 2. **Tier 2 (Structural Integrity):** Verify member completeness, dependency satisfaction, and reference consistency across original and extracted classes.
-3. **Tier 3 (Behavioral):** Run existing tests and differential equivalence checks when available.
+3. **Tier 3 (Behavioral):** Run existing test suites against the refactored code when available; optionally, an equivalence checking layer compares before/after test outcomes to catch behavioral divergence.
 
-Suggestions that fail any tier are rejected before developers see them, or converted to structural plans when partial remediation is possible.
+Suggestions that fail any tier are rejected before developers see them. Separately, clusters that fail pre-extraction validation (before code generation is attempted) are converted to structural transformation plans when partial remediation is possible.
 
 ### C4: Mining Reliable Historical Signal
 
@@ -153,11 +153,11 @@ Even worse, when a suggestion cannot be applied (due to circular dependencies, v
 - **Evolutionary evidence** when available (e.g., "These 4 methods changed together in 8 commits").
 - **Verification status** showing which tiers passed.
 
-When extraction fails, GenEC produces *structural transformation plans* describing the impediment: "Circular dependency between `initBuffer()` and `getDefaultSize()` prevents extraction. Consider extracting `getDefaultSize()` to a constants class first." This gives developers actionable guidance rather than silent failure.
+When pre-extraction validation rejects a cluster (e.g., due to circular dependencies or unsupported constructs), GenEC produces *structural transformation plans* describing the impediment: "Circular dependency between `initBuffer()` and `getDefaultSize()` prevents extraction. Consider extracting `getDefaultSize()` to a constants class first." This gives developers actionable guidance rather than silent failure.
 
 ## 3 The GenEC Approach
 
-GenEC orchestrates three complementary analyses—static dependency analysis, evolutionary coupling mining, and constrained LLM semantics—under a deterministic refactoring engine with multi-tier verification. Figure 1 shows the overall architecture. The pipeline flows through four main stages: (1) hybrid analysis fusing static dependencies with evolutionary coupling into a weighted graph, (2) Leiden community detection with quality tier scoring and filtering, (3) constrained LLM naming with chain-of-thought prompting and confidence scoring, and (4) JDT-based refactoring execution with multi-tier verification. Clusters rejected during filtering produce structural transformation plans for manual follow-up.
+GenEC orchestrates three complementary analyses—static dependency analysis, evolutionary coupling mining, and constrained LLM semantics—under a deterministic refactoring engine with multi-tier verification. Figure 1 shows the overall architecture. The pipeline flows through four main stages: (1) hybrid analysis fusing static dependencies with evolutionary coupling into a weighted graph, (2) Leiden community detection with quality tier scoring and filtering, (3) constrained LLM naming with chain-of-thought prompting and confidence scoring, and (4) deterministic refactoring execution via JDT AST rewriting with multi-tier verification. Clusters rejected during pre-extraction validation produce structural transformation plans for manual follow-up.
 
 ![Figure 1: GenEC pipeline architecture. Solid arrows show the main data flow; dashed arrows indicate rejection paths and external tool dependencies. Stage numbers correspond to Section 3.1.](figures/genec-architecture.pdf)
 
@@ -238,33 +238,36 @@ The prompt is designed to:
 - Constrain output to semantic artifacts only — **no code generation**.
 - Request explicit confidence (0.0–1.0) for downstream filtering.
 
-*Stage 5: Refactoring Execution.* Eclipse JDT performs the actual Extract Class refactoring:
+*Stage 5: Refactoring Execution.* A deterministic code generator built on Eclipse JDT's AST rewriting infrastructure (`ASTParser`, `ASTRewrite`, `ListRewrite`) performs the actual Extract Class transformation. Given a refactoring specification (class name, methods, fields), the generator:
 
-1. Create the extracted class with package-private visibility.
-2. Move methods while maintaining their original signatures.
-3. Transfer fields required by the moved methods.
-4. Generate delegating methods in the original class.
-5. Update references throughout the codebase.
+1. Parses the source file into a JDT AST (`AST.JLS17`).
+2. Creates a new `TypeDeclaration` for the extracted class with package-private visibility.
+3. Copies method and field declarations via AST node construction (not text manipulation).
+4. Generates delegating methods in the original class.
+5. Updates references and qualifies cross-class method calls.
 
-JDT's refactoring engine handles:
+JDT's AST infrastructure handles:
 
 - Visibility adjustments (private → package-private for shared access).
-- Import management
-- Reference updates in other files
+- Import management and type resolution.
+- Reference updates in other files.
+
+Note: We use JDT's AST rewriting APIs for deterministic code generation rather than JDT's built-in `ExtractClassRefactoring` processor, which provides insufficient control over member selection and delegation strategy for our pipeline's needs.
 
 *Stage 6: Multi-Tier Verification.* Each extraction candidate passes through three verification tiers:
 
 | Tier | Check | Failure handling |
 |------|-------|-----------------|
-| T1: Compilation | Compile with stub generation for missing symbols | Reject or generate structural plan |
+| T1: Compilation | Compile with stub generation for missing symbols | Reject with detailed explanation |
 | T2: Structural Integrity | Member completeness, dependency satisfaction, reference consistency | Reject with detailed explanation |
 | T3: Behavioral | Run existing tests if available | Reject if any test fails |
 
-Verification produces one of three outcomes:
+Verification produces one of two outcomes:
 
 1. **Pass:** Suggestion is verified and ready for developer review.
-2. **Reject:** Suggestion is discarded (logged for debugging).
-3. **Plan:** Structural transformation plan describes impediment and remediation steps.
+2. **Reject:** Suggestion is discarded with a detailed explanation logged for debugging.
+
+Note: Structural transformation plans are generated separately during pre-extraction validation (before code generation is attempted), not as a verification outcome. See Section 3.4 for details.
 
 ### 3.2 Hybrid Candidate Detection
 
@@ -284,14 +287,14 @@ This fusion is particularly valuable for utility classes where static metrics su
 
 ### 3.3 Constrained LLM for Semantic Artifacts
 
-GenEC's LLM integration follows the principle: **"LLM for semantics, JDT for mechanics."**
+GenEC's LLM integration follows the principle: **"LLM for semantics, deterministic AST rewriting for mechanics."**
 
 | Task | Handled By | Rationale |
 |------|-----------|-----------|
 | Class naming | LLM (Claude) | Semantic understanding, domain vocabulary |
 | Rationale generation | LLM (Claude) | Natural language explanation |
-| Code generation | Eclipse JDT | Deterministic, battle-tested, correct |
-| Reference updates | Eclipse JDT | Full source analysis required |
+| Code generation | JDT AST rewriting | Deterministic, AST-level, correct |
+| Reference updates | JDT AST rewriting | Full source analysis required |
 
 This division eliminates the 40–76% hallucination rate observed when LLMs generate refactored code [2, 5] while preserving the semantic intelligence that makes LLM-generated names meaningful.
 
@@ -324,7 +327,7 @@ This allows compilation verification even when full dependency resolution is not
 - **Dependency satisfaction:** The extracted class contains all fields required by its methods.
 - **Reference consistency:** No dangling references to moved members remain in the original class.
 
-Additionally, an equivalence checking layer runs differential testing (executing the same inputs against original and refactored code) when test harnesses are available, catching behavioral divergence that structural checks alone would miss.
+Additionally, an optional equivalence checking layer runs the same test suite against original and refactored code in sequence (before/after comparison) when test harnesses are available, catching behavioral divergence that structural checks alone would miss. This layer is disabled by default due to performance overhead on large repositories, but can be enabled via configuration for projects where behavioral regression risk is high.
 
 *Tier 3: Behavioral Verification.* When tests are available, we run them against the refactored code:
 
@@ -334,9 +337,9 @@ mvn test -Dtest=*${className}* -DfailIfNoTests=false
 
 Any test failure causes rejection, ensuring behavioral equivalence.
 
-*Pre-Extraction Validation.* Before attempting JDT refactoring, an `ExtractionValidator` checks whether the cluster can be safely extracted. It detects abstract method calls (which require the original class context), private helper methods called from extracted methods but not included in the cluster (auto-fixed by iteratively expanding the cluster), and inner class references. If static validation rejects a cluster, an LLM-based semantic validator provides a second opinion (overriding the rejection if confidence ≥ 0.7), and if that also fails, an LLM pattern transformer suggests design pattern alternatives (Strategy, Template Method, Visitor) that would enable the extraction.
+*Pre-Extraction Validation.* Before attempting refactoring, an `ExtractionValidator` checks whether the cluster can be safely extracted. It detects abstract method calls (which require the original class context), private helper methods called from extracted methods but not included in the cluster (auto-fixed by iteratively expanding the cluster), and inner class references. If static validation rejects a cluster, an LLM-based semantic validator provides a second opinion (overriding the rejection if confidence ≥ 0.7), and if that also fails, an LLM pattern transformer suggests design pattern alternatives (Strategy, Template Method, Visitor) that would enable the extraction.
 
-*Structural Transformation Plans.* When extraction fails verification, GenEC generates actionable plans:
+*Structural Transformation Plans.* When clusters are rejected during pre-extraction validation (e.g., due to unsupported constructs, circular dependencies, or abstract method constraints), GenEC generates actionable plans rather than silently discarding them:
 
 > Extraction of {cluster} failed at Tier 2 (Semantic).
 >
@@ -725,7 +728,7 @@ Large Language Models have recently been applied to code refactoring with mixed 
 |--------|----------|---------|-------|
 | Refactoring type | Extract Method | Code changes | Extract Class |
 | LLM role | Suggests code fragments | Generates variants | Names + rationales only |
-| IDE engine | IntelliJ IDEA | TBE + IDE | Eclipse JDT |
+| IDE engine | IntelliJ IDEA | TBE + IDE | JDT AST rewriting |
 | Verification | IDE + tests | Tests + PR review | Multi-tier (compile + semantic + tests) |
 | Complexity | Single method | Single transformation | Multiple coordinated methods |
 
@@ -745,7 +748,7 @@ Safe refactoring requires more than compilation checking.
 
 Regression test selection [8] identifies which tests to run after code changes, enabling efficient behavioral verification. RefactoringMiner [11] provides the foundation for detecting refactorings in commit histories, which we leverage for evolutionary coupling mining.
 
-Prior Extract Class tools lack multi-tier verification. JDeodorant [4] checks only compilation; HECS [3] provides no verification. GenEC combines compilation, semantic/equivalence checking, and behavioral testing with structural fallback plans.
+Prior Extract Class tools lack multi-tier verification. JDeodorant [4] checks only compilation; HECS [3] provides no verification. GenEC combines compilation, structural integrity checking, and behavioral testing (with optional before/after equivalence comparison) plus structural fallback plans.
 
 **Summary of positioning.**
 
@@ -761,7 +764,7 @@ Prior Extract Class tools lack multi-tier verification. JDeodorant [4] checks on
 
 ## 8 Conclusions
 
-This paper presented GenEC, a hybrid Extract Class refactoring framework that extends the "LLM for insight, IDE for correctness" paradigm—previously demonstrated for Extract Method [6] and Move Method [16]—to the harder Extract Class problem. By fusing static dependency analysis with evolutionary coupling and constraining LLM usage to semantic artifacts while delegating code generation to Eclipse JDT, GenEC produces verified, compilable, and explainable refactoring suggestions.
+This paper presented GenEC, a hybrid Extract Class refactoring framework that extends the "LLM for insight, IDE for correctness" paradigm—previously demonstrated for Extract Method [6] and Move Method [16]—to the harder Extract Class problem. By fusing static dependency analysis with evolutionary coupling and constraining LLM usage to semantic artifacts while delegating code generation to deterministic AST rewriting built on Eclipse JDT's infrastructure, GenEC produces verified, compilable, and explainable refactoring suggestions.
 
 Our evaluation spans 115 classes across 24 projects. On 23 large God Classes, GenEC identifies 4.8x more extraction opportunities than metric-only baselines (178 vs. 37 suggestions, Wilcoxon p=0.0005) and blocks 41.6% of unsafe proposals through multi-tier verification. On the HECS benchmark (92 instances across 18 projects), GenEC achieves macro F1=0.478 on instances with evolutionary context.
 
@@ -772,7 +775,7 @@ The key lessons are:
 3. **Multi-tier verification is essential** for developer trust—41.6% of proposed extractions were blocked across compilation, structural integrity, and behavioral tiers before reaching developers.
 4. **Structural transformation plans** turn failures into actionable guidance, making the tool useful even when automatic extraction is not safe.
 
-**Future work.** Our immediate next step is a controlled developer study following the protocol established in EM-Assist [6]: we will recruit 15--20 professional Java developers to rate GenEC's suggestions on name appropriateness, rationale clarity, and overall acceptance using Likert-scale surveys. Beyond evaluation, we plan to extend GenEC to support incremental God Class decomposition (multiple sequential extraction passes), cross-file Extract Class refactoring, and integration with IntelliJ IDEA's refactoring engine alongside Eclipse JDT. We also plan to evaluate on larger industrial codebases and submit GenEC-generated pull requests to the subject projects to measure real-world acceptance rates, following the methodology of PyCraft [15].
+**Future work.** Our immediate next step is a controlled developer study following the protocol established in EM-Assist [6]: we will recruit 15--20 professional Java developers to rate GenEC's suggestions on name appropriateness, rationale clarity, and overall acceptance using Likert-scale surveys. Beyond evaluation, we plan to extend GenEC to support incremental God Class decomposition (multiple sequential extraction passes), cross-file Extract Class refactoring, and integration with IntelliJ IDEA's refactoring infrastructure alongside Eclipse JDT. We also plan to evaluate on larger industrial codebases and submit GenEC-generated pull requests to the subject projects to measure real-world acceptance rates, following the methodology of PyCraft [15].
 
 ## References
 
