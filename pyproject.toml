@@ -8,16 +8,26 @@ version = "1.0.0"
 description = "GenEC: Generative Extract Class Refactoring Framework"
 readme = "README.md"
 requires-python = ">=3.10"
+license = {text = "MIT"}
 authors = [
-    {name = "GenEC Team"}
+    {name = "Uditanshu Tomar", email = "Uditanshu.Tomar@colorado.edu"},
+    {name = "Vijay Kumar Poloju", email = "Vijay.Poloju@colorado.edu"},
+    {name = "Danny Dig", email = "danny.dig@colorado.edu"},
 ]
+keywords = ["refactoring", "extract-class", "god-class", "llm", "static-analysis", "evolutionary-coupling"]
 classifiers = [
+    "License :: OSI Approved :: MIT License",
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
+
+[project.urls]
+Homepage = "https://github.com/uditanshutomar/genec"
+Repository = "https://github.com/uditanshutomar/genec"
+Issues = "https://github.com/uditanshutomar/genec/issues"
 
 [project.optional-dependencies]
 websocket = [

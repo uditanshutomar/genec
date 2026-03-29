@@ -22,8 +22,12 @@ wheels/
 
 # Virtual environments
 venv/
+.venv/
 ENV/
 env/
+
+# Claude Code
+.claude/
 
 # IDEs
 .vscode/

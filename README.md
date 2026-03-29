@@ -1,18 +1,30 @@
-# GenEC: Generative Extract Class Refactoring Framework
+# GenEC: Safe and Explainable Extract Class Refactoring
 
-A hybrid framework for automated Extract Class refactoring in Java that combines static dependency analysis, evolutionary coupling from Git history, and constrained LLM interaction with multi-layer verification.
+[![CI](https://github.com/uditanshutomar/genec/actions/workflows/ci.yml/badge.svg)](https://github.com/uditanshutomar/genec/actions/workflows/ci.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+A hybrid framework for automated Extract Class refactoring in Java. GenEC fuses static dependency analysis with evolutionary coupling mined from Git history, uses a constrained LLM (Claude Sonnet) for semantic artifacts only (names, rationales, confidence), and delegates all structural edits to deterministic code generation built on Eclipse JDT's AST rewriting infrastructure. Multi-tier verification ensures no unsafe suggestion reaches the developer.
+
+> **Paper:** Uditanshu Tomar, Vijay Kumar Poloju, Danny Dig. *"GenEC: A Hybrid Framework for Safe and Explainable Extract Class Refactoring."* Targeting ICSE 2027.
+
+## Key Results
+
+- **178 candidate suggestions** across 23 large God Classes from 6 open-source projects
+- **58.4% verification rate** (104 of 178 pass multi-tier verification)
+- **41.6% of unsafe proposals blocked** before reaching developers
+- **Macro F1 = 0.478** on the HECS ECAccEval benchmark (21 instances with evolutionary context)
+- **4.8x more extraction opportunities** than metric-only baselines (Wilcoxon p=0.0005)
 
 ## Features
 
-- **Static Dependency Analysis**: Parses Java AST to extract method calls and field accesses
-- **Evolutionary Coupling Mining**: Analyzes Git history to identify co-changing methods
-- **Graph Fusion**: Combines static and evolutionary dependencies into unified graph
-- **Cluster Detection**: Uses Leiden algorithm to identify cohesive method groups
-- **LLM-Guided Refactoring**: Generates refactoring suggestions using Claude Sonnet 4
-- **Multi-Layer Verification**: Validates refactorings syntactically, semantically, and behaviorally
-- **Transactional Application**: Applies changes atomically with automatic rollback on failure
-- **Git Integration**: Creates feature branches and atomic commits for each refactoring
-- **Dry-Run & Preview**: Generates unified diffs and previews before applying changes
+- **Hybrid Analysis**: Fuses static dependency graphs with evolutionary co-change coupling from Git history
+- **Constrained LLM**: Claude Sonnet generates only semantic artifacts (class names, rationales, confidence scores); never generates or modifies code
+- **Deterministic Code Generation**: Eclipse JDT AST rewriting handles all structural transformations
+- **Multi-Tier Verification**: Compilation (with stub generation), structural integrity, and behavioral test validation
+- **Structural Transformation Plans**: Actionable guidance when automatic extraction is not safe
+- **VS Code Extension**: Interactive UI for reviewing and applying suggestions
+- **Reproducibility**: Cached LLM outputs, deterministic replay mode, configurable random seeds
 
 ## Prerequisites
 
@@ -206,8 +218,33 @@ pytest tests/
 ## Documentation
 
 - **[Architecture Guide](docs/ARCHITECTURE.md)**: Detailed architecture documentation including the three-tier validation system
-- **[Developer Guide](docs/DEVELOPER_GUIDE.md)**: Guide for extending GenEC and adding new validation rules
+- **[Evaluation README](evaluation/README.md)**: Comprehensive evaluation methodology, benchmarks, and reproduction instructions
+
+## Citation
+
+If you use GenEC in your research, please cite:
+
+```bibtex
+@inproceedings{tomar2027genec,
+  title     = {GenEC: A Hybrid Framework for Safe and Explainable Extract Class Refactoring},
+  author    = {Tomar, Uditanshu and Poloju, Vijay Kumar and Dig, Danny},
+  booktitle = {Proceedings of the International Conference on Software Engineering (ICSE)},
+  year      = {2027},
+  note      = {Under submission}
+}
+```
+
+## Related Work
+
+GenEC extends the "LLM for semantics, IDE for mechanics" paradigm established by:
+- **[EM-Assist](https://arxiv.org/abs/2405.20551)** (FSE 2024) - Extract Method refactoring with LLMs
+- **[MM-Assist](https://arxiv.org/abs/2503.20934)** (ICSME 2025) - Move Method refactoring with LLMs and semantic embeddings
+- **[PyCraft](https://danny.cs.colorado.edu/papers/PyCraft_FSE2024.pdf)** (FSE 2024) - LLM + Transformation by Example for Python
 
 ## License
 
-MIT License
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+This work is conducted at the University of Colorado Boulder under the supervision of Prof. Danny Dig. GenEC uses Anthropic's Claude Sonnet API for semantic artifact generation.
