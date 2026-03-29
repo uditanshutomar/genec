@@ -123,7 +123,7 @@ class AnalysisStage(PipelineStage):
 
         # Adaptive alpha: if git history is too shallow (< 5 commits),
         # evolutionary coupling is unreliable — increase alpha toward static-only.
-        configured_alpha = fusion_config.get("alpha", 0.6)
+        configured_alpha = fusion_config.get("alpha", 0.8)
         total_commits = getattr(evo_data, 'total_commits', 0)
         if total_commits < 5 and G_evo.number_of_edges() > 0:
             # Shallow history: use mostly static analysis

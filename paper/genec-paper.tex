@@ -277,9 +277,9 @@ Key results:
         ``could''-tier at 57.7\%, demonstrating quality-tier stratification.
   \item \textbf{HECS benchmark:} On the 21 instances with evolutionary
         context, GenEC achieves macro $F_1=0.478$ (precision 0.41, recall 0.76).
-  \item \textbf{Verified suggestions extract 21.8\% of methods} on average
-        across 21 classes with verified output, with per-class coverage ranging
-        from 2.3\% to 78.3\%.
+  \item \textbf{Verified suggestions extract 21.3\% of methods} (600 unique
+        methods across 21 classes), with per-class coverage ranging from 2.3\%
+        to 78.3\%.
   \item \textbf{Average end-to-end latency of 201.3 seconds per class} on
         commodity hardware, practical for batch analysis.
 \end{itemize}
@@ -690,7 +690,7 @@ Tier thresholds: \textbf{``should''} (strong recommendation) $\geq 70$,
 (informational) $< 40$.
 
 \textit{Stage~4: Constrained LLM Semantics.}  For each valid cluster, we prompt
-the LLM (Claude Sonnet, temperature~0.3) with a structured request that
+the LLM (Claude Sonnet, temperature~0.2) with a structured request that
 includes:
 \begin{enumerate}
   \item \textbf{System persona:}  A ``Senior Java Architect'' role with SOLID
@@ -1246,12 +1246,12 @@ with mean internal cohesion of 0.77 (95\% CI: $[0.74, 0.79]$). The overall
 cluster filter pass rate was 16.6\% (178 of 1,071 raw clusters).
 
 \textbf{Extraction coverage.}  Across the 21 classes with verified suggestions,
-GenEC extracted a total of 615 methods out of 2,823 original methods (21.8\%
+GenEC extracted 600 unique methods out of 2,823 original methods (21.3\%
 overall). Per-class coverage ranged from 2.3\% (\texttt{IOUtils}, 4 of 172
 methods) to 78.3\% (\texttt{ChartPanel}, 90 of 115 methods), with a mean of
-30.3\%. Five classes exceeded 50\% coverage: \texttt{ChartPanel} (78.3\%),
-\texttt{Dfp} (57.5\%), \texttt{AccurateMath} (56.8\%), \texttt{FilenameUtils}
-(54.2\%), and \texttt{DateUtils} (52.2\%). These results show that GenEC
+26.1\%. Five classes exceeded 50\% coverage: \texttt{ChartPanel} (78.3\%),
+\texttt{Dfp} (56.6\%), \texttt{AccurateMath} (53.4\%), \texttt{FilenameUtils}
+(50.0\%), and \texttt{DateUtils} (49.3\%). These results show that GenEC
 produces non-trivial decompositions, not merely token extractions of a few
 methods.
 
@@ -1601,7 +1601,7 @@ extractions that differ from the specific decomposition a developer chose.
 cohesion threshold${}=0.35$) are held constant across all experiments. The
 ablation and sensitivity analyses (Sections~\ref{sec:ablation}
 and~\ref{sec:alpha}) partially address this, but optimal parameters may vary
-per project. The LLM (Claude Sonnet, temperature~0.3) introduces
+per project. The LLM (Claude Sonnet, temperature~0.2) introduces
 non-determinism: repeated runs may produce different names and confidence
 scores. We mitigate this with response caching and a fixed random seed for
 clustering.

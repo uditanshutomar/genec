@@ -65,7 +65,7 @@ class ClusteringConfig(BaseModel):
         default=30, ge=2, description="Maximum number of members in a cluster."
     )
     min_cohesion: float = Field(
-        default=0.3, ge=0.0, le=1.0, description="Minimum cohesion score for a cluster (0-1)."
+        default=0.35, ge=0.0, le=1.0, description="Minimum cohesion score for a cluster (0-1)."
     )
     resolution: float = Field(
         default=2.0,

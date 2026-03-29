@@ -70,3 +70,14 @@ commons-lang/
 vscode-extension/node_modules/
 vscode-extension/out/
 vscode-extension/*.vsix
+
+# LaTeX build artifacts
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.out
+paper/*.log
+paper/*.pdf
+paper/figures/*.aux
+paper/figures/*.log
+paper/figures/*.pdf
