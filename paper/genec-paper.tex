@@ -587,9 +587,8 @@ numbers correspond to Section~\ref{sec:pipeline}.}
 \subsection{Pipeline Stages}
 \label{sec:pipeline}
 
-The pipeline consists of four main stages (shown in Figure~\ref{fig:architecture}),
-with graph fusion and verification as sub-stages within
-Stages~1 and~4 respectively.
+The pipeline consists of six sequential stages (shown in
+Figure~\ref{fig:architecture}).
 
 \textit{Stage~1: Static Dependency Analysis.}  We parse the Java source using
 tree-sitter (with javalang and Eclipse JDT as fallbacks) to extract the
@@ -681,7 +680,7 @@ than 80\% of the original class's methods (extraction, not renaming).
 \textit{Quality Tier Scoring.}  Each surviving cluster is assigned a quality
 tier based on a 100-point weighted score:
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering\scriptsize
 \caption{Quality tier scoring rubric.}
 \label{tab:tier-scoring}
@@ -702,7 +701,7 @@ Tier thresholds: \textbf{``should''} (strong recommendation) $\geq 70$,
 (informational) $< 40$.
 
 \textit{Stage~4: Constrained LLM Semantics.}  For each valid cluster, we prompt
-the LLM (Claude Sonnet, temperature~0.2) with a structured request that
+the LLM (Claude Sonnet, temperature~0.3) with a structured request that
 includes:
 \begin{enumerate}
   \item \textbf{System persona:}  A ``Senior Java Architect'' role with SOLID
@@ -753,7 +752,7 @@ other files.
 \textit{Stage~6: Multi-Tier Verification.}  Each extraction candidate passes
 through three verification tiers (Table~\ref{tab:verification-tiers}).
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering\small
 \caption{Verification tiers.}
 \label{tab:verification-tiers}
@@ -781,7 +780,7 @@ cluster cannot be safely extracted.
 The key insight driving hybrid detection is that static structure and
 evolutionary history capture complementary information:
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering\small
 \caption{Complementary signals in hybrid detection.}
 \label{tab:signals}
@@ -808,7 +807,7 @@ cohesion due to shared infrastructure.
 GenEC's LLM integration follows the principle: \textbf{``LLM for semantics,
 JDT for mechanics.''}
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering\small
 \caption{Division of responsibilities between LLM and JDT.}
 \label{tab:llm-jdt}
@@ -900,8 +899,7 @@ enable the extraction.
 when a cluster cannot be safely extracted, GenEC generates actionable plans:
 
 \begin{lstlisting}[style=textblock]
-Extraction of {cluster} failed at Tier 2
-  (Structural Integrity).
+Pre-extraction validation rejected {cluster}.
 
 Impediment: Circular dependency between
   initConfig() and getDefaultPath().
@@ -940,7 +938,7 @@ exemplifies the challenges of Extract Class refactoring.
 providing string manipulation convenience functions. It has been part of Apache
 Commons Lang since 2002 and is used by thousands of downstream projects.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering\small
 \caption{StringUtils class statistics.}
 \label{tab:stringutils-stats}
@@ -1029,7 +1027,7 @@ responsibility of its cluster members.
 All 12 candidate extractions pass through the multi-tier verification pipeline.
 Table~\ref{tab:stringutils-verify} shows the first 5 of 12 verified clusters.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering\small
 \caption{Verification results for StringUtils (first 5 of 12; all verified).}
 \label{tab:stringutils-verify}
@@ -1079,99 +1077,8 @@ classes with 244 methods can be effectively decomposed when static and
 evolutionary signals are fused.
 
 % ================================================================
-\section{Research Questions}
-\label{sec:rqs}
-
-We structure our evaluation around four research questions that assess GenEC's
-effectiveness across semantic coherence, safety, developer experience, and
-practicality.
-
-\subsection{RQ1: Semantic Coherence}
-
-\textbf{Question.}  Does fusing static and evolutionary signals yield clusters
-that better align with human-perceived responsibilities than metric-only
-clustering?
-
-\textbf{Motivation.}  Evolutionary coupling captures latent responsibilities
-that static analysis misses. Methods that change together often share a
-conceptual responsibility even when they do not share explicit dependencies.
-
-\textbf{Metrics.}  Number of viable clusters detected (compared to baselines);
-internal cohesion score of extracted clusters; external coupling score between
-extracted and original class; Wilcoxon signed-rank test and Cliff's delta for
-statistical comparison.
-
-\textbf{Finding:}  GenEC produced 178 suggestions across 23 classes versus 37
-for the field-sharing baseline (Wilcoxon $p{=}0.0005$, Cliff's
-$\delta{=}0.828$, ``large'' effect). Verified suggestions average 5.9 methods
-with mean internal cohesion of 0.77 (95\% CI: $[0.74, 0.79]$). See
-Section~\ref{sec:results}.
-
-\subsection{RQ2: Verification Effectiveness}
-
-\textbf{Question.}  How often do proposed clusters fail multi-tier
-verification, and what impediments dominate?
-
-\textbf{Motivation.}  Compilation is necessary but not sufficient for safe
-refactoring. A refactoring can compile yet break structural integrity through missing
-members, dangling references, or incorrect delegation. Additionally, behavioral
-regression (test failures) requires deeper analysis that most tools lack.
-
-\textbf{Metrics.}  Pass rate at each verification tier (T1:~Compilation,
-T2:~Structural Integrity, T3:~Behavioral); distribution of failure causes;
-behavioral preservation rate.
-
-\textbf{Finding:}  Multi-tier verification blocked 41.6\% of proposed
-extractions (74 of 178). ``Should''-tier suggestions verified at 88.9\%
-(16/18), ``could''-tier at 57.7\% (86/149), and ``potential''-tier at 18.2\%
-(2/11). The strong correlation between quality tier and verification rate
-validates the tier stratification. See Section~\ref{sec:results}.
-
-\subsection{RQ3: Semantic Artifact Quality}
-
-\textbf{Question.}  Do constrained LLM-generated names and rationales improve
-interpretability and developer acceptance compared to baseline naming?
-
-\textbf{Motivation.}  A suggestion like ``ResourceLoader: These methods form a
-cohesive unit responsible for loading classpath resources'' provides far more
-context for decision-making than ``IOUtils\$Helper1'' or ``Cluster3.''
-
-\textbf{Metrics.}  Developer ratings for name appropriateness (5-point Likert);
-developer ratings for rationale clarity (5-point Likert); developer ratings for
-semantic alignment (5-point Likert); overall acceptance rate.
-
-\textbf{Finding:}  We report qualitative observations from the automated
-evaluation. A controlled developer study is planned as future work
-(Section~\ref{sec:conclusions}). Qualitative inspection of LLM-generated names
-across all 104 verified suggestions reveals consistently meaningful semantic
-labels (e.g., ``ResourceLoader,'' ``ByteSizeFormatter,''
-``ShutdownFileDeleter,'' ``DirectoryCreator'') compared to baseline alternatives
-(``IOUtils\$Helper1,'' ``FileUtils\$Helper2,'' ``RandomGroup1''). Each
-suggestion includes a one-sentence rationale grounded in the cluster's methods
-and co-change evidence. See Section~\ref{sec:results}.
-
-\subsection{RQ4: Performance}
-
-\textbf{Question.}  Is the end-to-end latency practical for interactive
-refactoring sessions?
-
-\textbf{Motivation.}  Developer tools must be responsive. A refactoring
-assistant that takes 10+ minutes per class will not be used in practice,
-regardless of quality.
-
-\textbf{Metrics.}  Total end-to-end latency per class; latency variation across
-class sizes and complexity.
-
-\textbf{Finding:}  Total latency averaged 201.3 seconds (approximately 3.4
-minutes) per class across all 23 subjects, with total wall-clock time of 4,629
-seconds. \texttt{IOUtils} (172 methods) completed in only 18.8 seconds due to
-its sparse dependency structure, while larger classes like JFreeChart's
-\texttt{CategoryPlot} and \texttt{XYPlot} took longer (up to 569 seconds). See
-Section~\ref{sec:results}.
-
-% ================================================================
 \section{Definitions and Research Questions}
-\label{sec:definitions}
+\label{sec:rqs}
 
 Before presenting results, we define key terms used throughout the evaluation
 to ensure consistent interpretation:
@@ -1194,6 +1101,63 @@ to ensure consistent interpretation:
     generation), describing the impediment and suggesting manual remediation
     steps.
 \end{description}
+
+We structure our evaluation around four research questions:
+
+\subsection{RQ1: Semantic Coherence}
+
+\textbf{Question.}  Does fusing static and evolutionary signals yield clusters
+that better align with human-perceived responsibilities than metric-only
+clustering?
+
+\textbf{Motivation.}  Evolutionary coupling captures latent responsibilities
+that static analysis misses. Methods that change together often share a
+conceptual responsibility even when they do not share explicit dependencies.
+
+\textbf{Metrics.}  Number of viable clusters detected (compared to baselines);
+internal cohesion score of extracted clusters; external coupling score between
+extracted and original class; Wilcoxon signed-rank test and Cliff's delta for
+statistical comparison.
+
+\subsection{RQ2: Verification Effectiveness}
+
+\textbf{Question.}  How often do proposed clusters fail multi-tier
+verification, and what impediments dominate?
+
+\textbf{Motivation.}  Compilation is necessary but not sufficient for safe
+refactoring. A refactoring can compile yet break structural integrity through missing
+members, dangling references, or incorrect delegation. Additionally, behavioral
+regression (test failures) requires deeper analysis that most tools lack.
+
+\textbf{Metrics.}  Pass rate at each verification tier (T1:~Compilation,
+T2:~Structural Integrity, T3:~Behavioral); distribution of failure causes;
+behavioral preservation rate.
+
+\subsection{RQ3: Semantic Artifact Quality}
+
+\textbf{Question.}  Do constrained LLM-generated names and rationales improve
+interpretability compared to baseline naming?
+
+\textbf{Motivation.}  A suggestion like ``ResourceLoader: These methods form a
+cohesive unit responsible for loading classpath resources'' provides far more
+context for decision-making than ``IOUtils\$Helper1'' or ``Cluster3.''
+
+\textbf{Metrics.}  Banned-suffix compliance rate; mean word count per name;
+qualitative inspection of semantic labels. A controlled developer study with
+Likert-scale ratings is planned as future work
+(Section~\ref{sec:conclusions}).
+
+\subsection{RQ4: Performance}
+
+\textbf{Question.}  Is the end-to-end latency practical for interactive
+refactoring sessions?
+
+\textbf{Motivation.}  Developer tools must be responsive. A refactoring
+assistant that takes 10+ minutes per class will not be used in practice,
+regardless of quality.
+
+\textbf{Metrics.}  Total end-to-end latency per class; latency variation across
+class sizes and complexity.
 
 % ================================================================
 \section{Empirical Evaluation}
@@ -1696,7 +1660,7 @@ scripts are included in the replication package.
 cohesion threshold${}=0.35$) are held constant across all experiments. The
 ablation and sensitivity analyses (Sections~\ref{sec:ablation}
 and~\ref{sec:alpha}) partially address this, but optimal parameters may vary
-per project. The LLM (Claude Sonnet, temperature~0.2) introduces
+per project. The LLM (Claude Sonnet, temperature~0.3) introduces
 non-determinism: repeated runs may produce different names and confidence
 scores. We mitigate this with response caching and a fixed random seed for
 clustering.
@@ -1850,7 +1814,7 @@ architectural analysis, enabling ``temporal coupling'' visualization. However,
 prior work has not fused evolutionary signals with static structure specifically
 for Extract Class refactoring.
 
-\textbf{GenEC's contribution.}  We are the first to combine evolutionary
+\textbf{GenEC's contribution.}  To our knowledge, we are the first to combine evolutionary
 coupling with static dependency analysis for Extract Class, using adaptive
 $\alpha$-weighting to balance signals based on repository health. Our controlled
 ablation reveals a nuanced finding: evolutionary coupling improves candidate
