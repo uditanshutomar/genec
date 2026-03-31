@@ -226,7 +226,7 @@
         "@types/node": "18.x",
         "@types/vscode": "^1.80.0",
         "@types/ws": "^8.5.10",
-        "typescript": "^5.1.3"
+        "typescript": "^6.0.2"
     },
     "dependencies": {
         "vis-network": "^9.1.9",
