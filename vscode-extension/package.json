@@ -224,7 +224,7 @@
     },
     "devDependencies": {
         "@types/node": "18.x",
-        "@types/vscode": "^1.80.0",
+        "@types/vscode": "^1.115.0",
         "@types/ws": "^8.5.10",
         "typescript": "^5.1.3"
     },
