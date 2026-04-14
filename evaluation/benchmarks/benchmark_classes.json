@@ -2,32 +2,32 @@
   "repositories": {
     "commons-io": {
       "repo_url": "https://github.com/apache/commons-io.git",
-      "commit_sha": "HEAD",
+      "commit_sha": "01de46e5b7792be6b7e7a6f11f9d034248a6b9f4",
       "clone_path": "/tmp/commons-io"
     },
     "commons-lang": {
       "repo_url": "https://github.com/apache/commons-lang.git",
-      "commit_sha": "HEAD",
+      "commit_sha": "045d29e161cddaaa602db05dff23df6f20d2bd2c",
       "clone_path": "/tmp/commons-lang"
     },
     "commons-collections": {
       "repo_url": "https://github.com/apache/commons-collections.git",
-      "commit_sha": "HEAD",
+      "commit_sha": "05af07abafd8fcc80550e92551cde8ab72533b1a",
       "clone_path": "/tmp/commons-collections"
     },
     "jfreechart": {
       "repo_url": "https://github.com/jfree/jfreechart.git",
-      "commit_sha": "HEAD",
+      "commit_sha": "98d9c90b6e0a1e553a506497daaf64a5704a4413",
       "clone_path": "/tmp/jfreechart"
     },
     "commons-math": {
       "repo_url": "https://github.com/apache/commons-math.git",
-      "commit_sha": "HEAD",
+      "commit_sha": "2a20334b85b9dc60ea568db20d38ea101fa1d182",
       "clone_path": "/tmp/commons-math"
     },
     "commons-text": {
       "repo_url": "https://github.com/apache/commons-text.git",
-      "commit_sha": "HEAD",
+      "commit_sha": "ec54a3464869df0487080a57b9c52c745aeea796",
       "clone_path": "/tmp/commons-text"
     }
   },

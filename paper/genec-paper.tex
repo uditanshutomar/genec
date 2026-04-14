@@ -1883,6 +1883,10 @@ local/on-premise LLM endpoints as a drop-in replacement.
 \textbf{Reproducibility.}  To mitigate non-determinism in LLM responses, we pin
 the model version, set temperature to 0.3, and provide a deterministic ``replay
 mode'' that reads cached responses for exact reproduction of reported results.
+To avoid data contamination from repository version mismatch, all subject
+repositories are pinned to specific commit SHAs recorded in the replication
+package; the HECS benchmark instances use the exact parent commit of each
+ground-truth refactoring.
 The replication package includes all prompts, cached outputs, evaluation scripts,
 and a Docker image for environment reproducibility.
 

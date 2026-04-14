@@ -29,14 +29,12 @@ for name, repo in data.get('repositories', {}).items():
     if [ -d "$clone_path/.git" ]; then
         echo "[SKIP] $clone_path already exists"
     else
-        echo "[CLONE] $repo_url -> $clone_path"
-        git clone --depth=1 "$repo_url" "$clone_path" 2>/dev/null || \
-            git clone "$repo_url" "$clone_path"
+        echo "[CLONE] $repo_url -> $clone_path (full history for evolutionary coupling)"
+        git clone "$repo_url" "$clone_path"
 
         if [ "$commit_sha" != "HEAD" ]; then
             echo "[CHECKOUT] $commit_sha"
             cd "$clone_path"
-            git fetch --depth=1 origin "$commit_sha" 2>/dev/null || true
             git checkout "$commit_sha" 2>/dev/null || echo "[WARN] Could not checkout $commit_sha"
             cd - >/dev/null
         fi
