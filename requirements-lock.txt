@@ -9,7 +9,7 @@ docstring_parser==0.17.0
 fonttools==4.60.1
 -e git+https://github.com/uditanshutomar/genec.git@de071004d9465d856b9f0eb782d2065a6007e47c#egg=genec
 gitdb==4.0.12
-GitPython==3.1.40
+GitPython==3.1.46
 h11==0.16.0
 httpcore==1.0.9
 httpx==0.28.1
