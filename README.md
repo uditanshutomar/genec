@@ -4,7 +4,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-A hybrid framework for automated Extract Class refactoring in Java. GenEC fuses static dependency analysis with evolutionary coupling mined from Git history, uses a constrained LLM (Claude Sonnet) for semantic artifacts only (names, rationales, confidence), and delegates all structural edits to deterministic code generation built on Eclipse JDT's AST rewriting infrastructure. Multi-tier verification ensures no unsafe suggestion reaches the developer.
+A hybrid framework for automated Extract Class refactoring in Java. GenEC fuses static dependency analysis with evolutionary coupling mined from Git history, uses a constrained LLM (Claude Sonnet) for semantic artifacts only (names, rationales, confidence), and delegates all structural edits to deterministic code generation built on Eclipse JDT's AST rewriting infrastructure. Compilation, structural checks, and behavioral tests filter suggestions before review; their coverage depends on the target project and available tests.
 
 > **Paper:** Uditanshu Tomar, Vijay Kumar Poloju, Danny Dig. *"GenEC: A Hybrid Framework for Safe and Explainable Extract Class Refactoring."* Targeting ICSE 2027.
 
@@ -12,9 +12,11 @@ A hybrid framework for automated Extract Class refactoring in Java. GenEC fuses 
 
 - **178 candidate suggestions** across 23 large God Classes from 6 open-source projects
 - **58.4% verification rate** (104 of 178 pass multi-tier verification)
-- **41.6% of unsafe proposals blocked** before reaching developers
+- **74 of 178 candidates filtered out** by verification; this is not a measured rate of all unsafe refactorings
 - **Macro F1 = 0.478** on the HECS ECAccEval benchmark (21 instances with evolutionary context)
 - **4.8x more extraction opportunities** than metric-only baselines (Wilcoxon p=0.0005)
+
+The counts above are recorded in the [evaluation output](evaluation/results/live_evaluation/aggregate_results.json). See the [evaluation methodology](evaluation/README.md) and [artifact guide](ARTIFACT_README.md) for datasets, setup, and reproduction details. This is collaborative research in progress, not an accepted ICSE publication.
 
 ## Features
 
@@ -225,12 +227,11 @@ pytest tests/
 If you use GenEC in your research, please cite:
 
 ```bibtex
-@inproceedings{tomar2027genec,
-  title     = {GenEC: A Hybrid Framework for Safe and Explainable Extract Class Refactoring},
-  author    = {Tomar, Uditanshu and Poloju, Vijay Kumar and Dig, Danny},
-  booktitle = {Proceedings of the International Conference on Software Engineering (ICSE)},
-  year      = {2027},
-  note      = {Under submission}
+@unpublished{tomar_genec,
+  title  = {GenEC: A Hybrid Framework for Safe and Explainable Extract Class Refactoring},
+  author = {Tomar, Uditanshu and Poloju, Vijay Kumar and Dig, Danny},
+  note   = {Research in progress},
+  url    = {https://github.com/uditanshutomar/genec}
 }
 ```
 
